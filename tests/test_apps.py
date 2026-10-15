@@ -531,3 +531,80 @@ def test_guardian_scorecard_reports_what_the_behavioural_layer_recovers() -> Non
     # And the cost is reported alongside it, not left out.
     assert "benign_escalated" in paired
     assert paired["benign_escalated"] <= paired["benign"]
+
+
+# ------------------------------------------------- the model arms (04, 05, 06)
+
+from projects.p04_spec_to_wire.app import app as spec_to_wire  # noqa: E402
+from projects.p05_policy_from_prose.app import app as policy_from_prose  # noqa: E402
+from projects.p06_model_vs_lexicon.app import app as model_vs_lexicon  # noqa: E402
+
+MODEL_APPS = [spec_to_wire, policy_from_prose, model_vs_lexicon]
+
+
+@pytest.mark.parametrize("app", MODEL_APPS, ids=lambda app: app.name)
+def test_a_model_arm_serves_its_dashboard_without_a_model(app: App) -> None:
+    # The dashboards read committed results and a committed reply cache. A page that
+    # needed a GPU to render would be a page nobody else can look at.
+    status, body = call(app, "GET", "/")
+    assert status == 200
+    assert b"<title>" in body
+    assert b'href="/theme.css"' in body
+    assert call(app, "GET", "/theme.css")[0] == 200
+
+
+@pytest.mark.parametrize("app", MODEL_APPS, ids=lambda app: app.name)
+def test_a_model_arm_serves_its_input_output_proof(app: App) -> None:
+    status, body = call(app, "GET", "/io")
+    assert status == 200
+    assert b"input" in body.lower()
+
+
+@pytest.mark.parametrize("app", MODEL_APPS, ids=lambda app: app.name)
+def test_a_model_arm_exposes_its_results_and_counters(app: App) -> None:
+    status, data = call(app, "GET", "/api/results")
+    assert status == 200
+    assert data["setup"]["models"]
+    assert "usage" in data
+    status, metrics = call(app, "GET", "/api/metrics")
+    assert status == 200
+    assert metrics["app"] == app.name
+
+
+@pytest.mark.parametrize("app", MODEL_APPS, ids=lambda app: app.name)
+def test_a_model_arm_names_its_deterministic_baseline_on_the_page(app: App) -> None:
+    # The whole claim of these three is that they are scored against a baseline that does
+    # not move. The page has to say which one.
+    _, body = call(app, "GET", "/")
+    text = body.decode("utf-8")
+    assert "project 0" in text, "the page must name the project whose grader scores it"
+
+
+@pytest.mark.parametrize("app", MODEL_APPS, ids=lambda app: app.name)
+def test_a_model_arm_declares_what_it_did_not_run(app: App) -> None:
+    _, data = call(app, "GET", "/api/results")
+    # The key must exist even when empty: a page that silently omits unrun cases implies
+    # a full sweep it did not do.
+    assert "incomplete" in data
+    assert isinstance(data["incomplete"], list)
+
+
+def test_the_model_dashboards_show_every_reply_the_grader_saw() -> None:
+    # A mean score says how it went; the row where the model said 60000 for "saat hazaar"
+    # says why. Hiding the replies behind an average asks to be believed, not read.
+    _, body = call(model_vs_lexicon, "GET", "/")
+    text = body.decode("utf-8")
+    assert "Every case" in text
+
+
+@pytest.mark.parametrize("app", MODEL_APPS, ids=lambda app: app.name)
+def test_a_model_arm_answers_over_a_real_socket(app: App) -> None:
+    with BackgroundServer(app) as server:
+        page = urllib.request.urlopen(server.base_url + "/", timeout=30).read()
+        assert b"<title>" in page
+        proof = urllib.request.urlopen(server.base_url + "/io", timeout=30).read()
+        assert proof
+        results = json.loads(
+            urllib.request.urlopen(server.base_url + "/api/results", timeout=30).read()
+        )
+        assert results["setup"]

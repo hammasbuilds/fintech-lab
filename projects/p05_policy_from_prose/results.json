@@ -1,0 +1,65 @@
+{
+  "setup": {
+    "models": [
+      "qwen2.5:14b-instruct"
+    ],
+    "arms": [
+      "bare"
+    ],
+    "policy_cases": 5,
+    "notice_cases": 5,
+    "borrowers": 5000,
+    "token_budget": {
+      "compile": 1100,
+      "notice": 400
+    },
+    "what_the_arms_differ_by": "bare gives the prose and the task; spec adds the grammar, an example policy and the field list. Nothing else differs."
+  },
+  "usage": {
+    "calls": 0,
+    "served_from_cache": 0,
+    "generated": 0,
+    "hit_the_token_cap": 0,
+    "wall_clock_seconds": 0.0,
+    "response_tokens": 0,
+    "models": []
+  },
+  "cache": {
+    "entries": 7,
+    "bytes": 3326
+  },
+  "incomplete": [
+    "qwen2.5:14b-instruct bare compile:starter",
+    "qwen2.5:14b-instruct bare compile:thresholds",
+    "qwen2.5:14b-instruct bare compile:contradiction",
+    "qwen2.5:14b-instruct bare compile:nano_v1",
+    "qwen2.5:14b-instruct bare compile:nano_v2",
+    "qwen2.5:14b-instruct bare notice:gate-income-en",
+    "qwen2.5:14b-instruct bare notice:gate-default-ur",
+    "qwen2.5:14b-instruct bare notice:short-score-en",
+    "qwen2.5:14b-instruct bare notice:short-score-ur",
+    "qwen2.5:14b-instruct bare notice:approved-en"
+  ],
+  "baseline": {
+    "what": "project 02's hand-written policies and template notices",
+    "compile": {
+      "cases": 5,
+      "compiled": 5,
+      "behaved_identically": 5,
+      "mean_agreement": 1.0,
+      "worst_agreement": 1.0,
+      "compiled_but_different": 0
+    },
+    "notice": {
+      "cases": 5,
+      "mean_score": 1.0,
+      "all_checks_passed": 5,
+      "safe": 5,
+      "invented_a_reason": 0,
+      "promised_something": 0
+    }
+  },
+  "by_model_and_arm": {},
+  "compile_rows": [],
+  "notice_rows": []
+}

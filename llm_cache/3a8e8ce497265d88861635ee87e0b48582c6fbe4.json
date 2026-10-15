@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "A payment switch checks a two-message flow against this invariant:\n\n  L09  The response echoes the account number\n  A response carrying a different PAN would post to the wrong cardholder.\n\nProduce a request and a response that break it, so that a test suite would catch a switch that does not enforce it. Break that invariant and no other.\n\nReply with a JSON object and nothing else, of the form\n{\"request\": {\"mti\": \"0200\", \"fields\": {\"2\": \"...\"}}, \"response\": {\"mti\": \"0210\", \"fields\": {\"2\": \"...\"}}}\nValues are element contents as strings, padded to their fixed width. Do not include a bitmap.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1400
+  },
+  "json_mode": false,
+  "response": "{\"request\": {\"mti\": \"0200\", \"fields\": {\"2\": \"4012000000000000\"}}, \"response\": {\"mti\": \"0210\", \"fields\": {\"2\": \"4012000000000001\"}}}",
+  "prompt_tokens": 200,
+  "response_tokens": 77,
+  "truncated": false,
+  "generated_at": "2026-10-15T21:44:15"
+}

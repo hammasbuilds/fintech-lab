@@ -23,6 +23,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 REPO = "https://github.com/hammasbuilds/fintech-lab"
 
+#: The suite size shown on the badge. A hand-written number here would be the first
+#: thing to go stale, so a test asserts it against what pytest actually collected -
+#: see test_the_published_page_quotes_the_real_test_count.
+TESTS = 585
+
 sys.path.insert(0, str(ROOT))
 
 from observatory.registry import PROJECTS, format_value  # noqa: E402
@@ -78,17 +83,40 @@ CLAIMS = {
         "published. Judging the transfer instead escalates 4 of 4, at a cost of 1 ordinary "
         "transfer in 5 also slowed.",
     ),
+    "spec-to-wire": (
+        "A local model asked to produce ISO 8583 traffic, graded by project 01's own "
+        "parser and its 22 invariants.",
+        "Every grade is computed, not judged: a message either packs or it does not, and "
+        "the invariants either hold or name what broke. The deterministic generator sits "
+        "in the comparison table at 1.00 on every family.",
+    ),
+    "policy-from-prose": (
+        "A local model asked to turn a written credit policy into project 02's language, "
+        "and then judged on what it decides.",
+        "A compiled policy can be run, so the grader runs it over all 5,000 borrowers. The "
+        "column that matters is the one no text check can see: policies that compile, read "
+        "sensibly, and approve a different set of applicants.",
+    ),
+    "model-vs-lexicon": (
+        "Project 03's test set answered by a local model and by the rules, through the "
+        "same grader.",
+        "Both columns come from the same cases. The rules score 0 of 4 on the scams they "
+        "publicly miss - the one place a model has room to win - and the cost of winning "
+        "there is counted in false alarms on ordinary traffic.",
+    ),
 }
 
 
 def build() -> str:
     cards = []
+    model_cards = []
     for project in PROJECTS:
         claim, number = CLAIMS[project.key]
         rows = "".join(
             f"<dt>{escape(label)}</dt><dd>{escape(value)}</dd>" for label, value in figures(project)
         )
-        cards.append(
+        target = model_cards if project.needs_model else cards
+        target.append(
             f"""      <div class="card proj">
         <span class="num">{escape(project.number)}</span>
         <h2>{escape(project.name)}</h2>
@@ -130,6 +158,9 @@ def build() -> str:
   .claim {{ font-size: 13.5px; margin: 10px 0 0; flex: 1 1 auto; }}
   .opener {{ display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }}
   .opener a {{ text-decoration: none; font-size: 12.5px; padding: 6px 11px; }}
+  h2.group {{ font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-2); margin: 30px 0 10px; font-weight: 650; }}
+  .lead {{ color: var(--ink-2); font-size: 13.5px; max-width: 80ch; margin: -2px 0 14px; }}
   code.cmd {{ font-family: var(--mono); background: var(--surface-sunken); padding: 2px 6px; border-radius: 5px; }}
 </style>
 </head>
@@ -137,13 +168,16 @@ def build() -> str:
 <div class="wrap">
   <div class="hero">
     <h1>fintech-lab</h1>
-    <p>Three fintech products that run on the standard library: an ISO 8583 payment-message
-       workbench, a lending-policy sandbox, and a transaction assistant for Roman Urdu.</p>
-    <p>No dependencies, no model, no GPU, no API key, no network call. In all three the thing
-       deciding the outcome is small enough to read, and what grades it is deterministic code
-       rather than a model's opinion.</p>
+    <p>Six fintech projects on the standard library. Three products &mdash; an ISO 8583
+       payment-message workbench, a lending-policy sandbox, and a transaction assistant for
+       Roman Urdu &mdash; and three that ask a local model to do those same jobs and are
+       scored by the products' own graders.</p>
+    <p>No dependencies anywhere, and no model needed for the first three: the thing deciding
+       the outcome is small enough to read, and what grades it is deterministic code rather
+       than a model's opinion. That is also what makes the model arms worth anything &mdash;
+       there is a baseline on the same cases that does not move.</p>
     <div class="badges">
-      <span class="pill neutral"><span class="dot"></span><span>474 tests</span></span>
+      <span class="pill neutral"><span class="dot"></span><span>{TESTS} tests</span></span>
       <span class="pill good"><span class="dot"></span><span>zero runtime dependencies</span></span>
       <span class="pill good"><span class="dot"></span><span>GPU not required</span></span>
       <span class="pill neutral"><span class="dot"></span><span>Python 3.11+</span></span>
@@ -155,8 +189,19 @@ def build() -> str:
     </div>
   </div>
 
+  <h2 class="group">Built with code &mdash; no model, no GPU</h2>
   <div class="grid3">
 {chr(10).join(cards)}
+  </div>
+
+  <h2 class="group">The model arms &mdash; the same jobs, asked of a local model</h2>
+  <p class="lead">Each one asks a local model to do what its pair does with code, and is
+     scored by that pair's own grader. The deterministic version is in every comparison
+     table, because a model number with no baseline beside it invites the reader to supply
+     their own idea of what good looks like. Every reply is cached and the cache is
+     committed, so the numbers can be rechecked without a GPU.</p>
+  <div class="grid3">
+{chr(10).join(model_cards)}
   </div>
 
   <div class="card">
@@ -200,6 +245,12 @@ uv run python -m observatory --start-all      # then open http://127.0.0.1:8100<
       <li><strong>Guardian</strong> misses every scam that avoids its vocabulary, and the layer
           that recovers those also slows one ordinary transfer in five. Both halves are
           measured; reporting only the first would be advertising.</li>
+      <li><strong>The model arms</strong> report what they cost and what they could not do:
+          replies that hit the token cap, cases with no cached reply that were therefore
+          <em>not run</em> rather than scored, and the two models excluded from the
+          headline with the reason stated &mdash; one does not fit this machine's 16 GB
+          without running partly on CPU, and the other is a base model that answered
+          &ldquo;reply with OK&rdquo; with &ldquo;88888888&rdquo;.</li>
     </ul>
   </div>
 

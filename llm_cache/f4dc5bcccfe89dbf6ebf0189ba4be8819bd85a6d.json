@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "Balance inquiry. A zero-amount financial request answered with DE 54. It is a balance inquiry from the cardholder's savings account. The requested amount is zero. The card number is 4111111111111111, the terminal is ATM00417, the acquirer is 0037101, the currency code is 586, and the trace number is 004712. The transmission date and time is 1015093012 (MMDDhhmmss). The account identification is PK12ABCD0000001234.\n\nGive the data elements of the *request* message as a JSON object and nothing else, of the form {\"mti\": \"0200\", \"fields\": {\"2\": \"...\", \"3\": \"...\"}}. Keys of 'fields' are data element numbers as strings; values are the element contents as strings, already padded to their fixed width where they have one. Do not include a bitmap - it is computed from which elements are present.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 900
+  },
+  "json_mode": false,
+  "response": "{\n  \"mti\": \"0200\",\n  \"fields\": {\n    \"2\": \"4111111111111111\",\n    \"3\": \"ATM00417\",\n    \"4\": \"0037101\",\n    \"7\": \"586\",\n    \"11\": \"000000\",\n    \"12\": \"0000000000000000\",\n    \"13\": \"0000000000000000\",\n    \"22\": \"004712\",\n    \"110\": \"1015093012\",\n    \"123\": \"PK12ABCD0000001234\"\n  }\n}",
+  "prompt_tokens": 289,
+  "response_tokens": 191,
+  "truncated": false,
+  "generated_at": "2026-10-15T21:41:54"
+}

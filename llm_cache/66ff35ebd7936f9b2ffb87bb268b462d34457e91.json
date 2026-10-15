@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "Here is one ISO 8583 message in ASCII framing:\n\n0800822000000000000004000000000000001015093012004712301\n\nReply with a JSON object and nothing else, with these keys:\n  \"mti\": the 4-character message type indicator\n  \"transaction\": what kind of transaction it is, in two or three words\n  \"amount_minor_units\": the transaction amount as an integer in minor units\n  \"currency\": the 3-digit currency code\n  \"trace\": the system trace audit number\n",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 260
+  },
+  "json_mode": false,
+  "response": "{\n  \"mti\": \"0800\",\n  \"transaction\": \"Debit Purchase\",\n  \"amount_minor_units\": 150930,\n  \"currency\": \"004\",\n  \"trace\": \"712301\"\n}",
+  "prompt_tokens": 201,
+  "response_tokens": 58,
+  "truncated": false,
+  "generated_at": "2026-10-15T21:43:27"
+}

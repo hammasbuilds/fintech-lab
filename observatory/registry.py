@@ -34,6 +34,12 @@ class Project:
     module: str
     port: int
     folder: str
+    #: True for the model arms (04-06). The panel says so, because "it needs a local
+    #: model running" is the difference between a project that will start and one that
+    #: starts and then has nothing to answer with.
+    needs_model: bool = False
+    #: The project whose grader scores this one, for the link between a pair.
+    pairs_with: str = ""
     #: The headline figures to pull out of the project's ``results.json``, as
     #: (label, dotted path, formatter name).
     headline: tuple[tuple[str, str, str], ...] = field(default_factory=tuple)
@@ -60,7 +66,16 @@ class Project:
 
     def links(self) -> list[dict[str, str]]:
         """Everything you might want to open for this project, in one list."""
-        return [
+        paired = []
+        if self.pairs_with:
+            paired = [
+                {
+                    "label": "Its baseline",
+                    "href": f"http://127.0.0.1:{BY_KEY[self.pairs_with].port}/",
+                    "kind": "local",
+                }
+            ]
+        return paired + [
             {"label": "Dashboard", "href": self.base_url + "/", "kind": "local"},
             {"label": "Input and output", "href": self.base_url + "/io", "kind": "local"},
             {"label": "Source", "href": self.source_url, "kind": "external"},
@@ -135,6 +150,73 @@ PROJECTS: tuple[Project, ...] = (
                 "paired.scams_escalated_by_behaviour",
                 "over:paired.scams",
             ),
+        ),
+    ),
+    # 04-06 are the model arms of 01-03. Each one asks a local model to do the job its
+    # pair does with code, and is scored by that pair's own grader - which is the only
+    # reason the numbers mean anything, since the deterministic baseline sits in every
+    # comparison table.
+    Project(
+        key="spec-to-wire",
+        number="04",
+        name="Spec to wire",
+        tagline=(
+            "A local model generating ISO 8583, graded by project 01's parser and its 22 invariants"
+        ),
+        module="projects.p04_spec_to_wire.app",
+        port=8104,
+        folder="p04_spec_to_wire",
+        needs_model=True,
+        pairs_with="switchboard",
+        headline=(
+            ("Cases", "setup.cases", "int"),
+            ("Replies generated", "usage.generated", "int"),
+            ("Served from cache", "usage.served_from_cache", "int"),
+            ("Hit the token cap", "usage.hit_the_token_cap", "int"),
+        ),
+    ),
+    Project(
+        key="policy-from-prose",
+        number="05",
+        name="Policy from prose",
+        tagline=(
+            "A local model turning written policy into project 02's language, graded on "
+            "whether it decides the same 5,000 borrowers"
+        ),
+        module="projects.p05_policy_from_prose.app",
+        port=8105,
+        folder="p05_policy_from_prose",
+        needs_model=True,
+        pairs_with="policy-bench",
+        headline=(
+            ("Policies in prose", "setup.policy_cases", "int"),
+            ("Notice cases", "setup.notice_cases", "int"),
+            ("Replies generated", "usage.generated", "int"),
+            ("Borrowers each decides", "setup.borrowers", "int"),
+        ),
+    ),
+    Project(
+        key="model-vs-lexicon",
+        number="06",
+        name="Model against lexicon",
+        tagline=(
+            "Project 03's test set answered by a model and by the rules, same grader, "
+            "including the blind spot the rules publish"
+        ),
+        module="projects.p06_model_vs_lexicon.app",
+        port=8106,
+        folder="p06_model_vs_lexicon",
+        needs_model=True,
+        pairs_with="guardian",
+        headline=(
+            ("Cases", "setup.cases", "int"),
+            ("Rules: amounts", "rules.amount.correct", "over:rules.amount.cases"),
+            (
+                "Rules on the blind spot",
+                "rules.coercion.caught_of_those",
+                "over:rules.coercion.cases_the_lexicon_misses",
+            ),
+            ("Replies generated", "usage.generated", "int"),
         ),
     ),
 )

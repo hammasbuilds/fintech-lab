@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "Network echo test. The keep-alive that proves the link rather than the card. The card number is None, the terminal is , the acquirer is None, the currency code is None, and the trace number is 004712. The transmission date and time is 1015093012 (MMDDhhmmss).\n\nGive the data elements of the *request* message as a JSON object and nothing else, of the form {\"mti\": \"0200\", \"fields\": {\"2\": \"...\", \"3\": \"...\"}}. Keys of 'fields' are data element numbers as strings; values are the element contents as strings, already padded to their fixed width where they have one. Do not include a bitmap - it is computed from which elements are present.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 900
+  },
+  "json_mode": false,
+  "response": "{\n  \"mti\": \"0200\",\n  \"fields\": {\n    \"11\": \"1015093012\",\n    \"41\": \"004712\",\n    \"42\": \"000000\"\n  }\n}",
+  "prompt_tokens": 219,
+  "response_tokens": 64,
+  "truncated": false,
+  "generated_at": "2026-10-15T21:43:32"
+}

@@ -25,6 +25,9 @@
   .claim { font-size: 13.5px; margin: 10px 0 0; flex: 1 1 auto; }
   .opener { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }
   .opener a { text-decoration: none; font-size: 12.5px; padding: 6px 11px; }
+  h2.group { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-2); margin: 30px 0 10px; font-weight: 650; }
+  .lead { color: var(--ink-2); font-size: 13.5px; max-width: 80ch; margin: -2px 0 14px; }
   code.cmd { font-family: var(--mono); background: var(--surface-sunken); padding: 2px 6px; border-radius: 5px; }
 </style>
 </head>
@@ -32,13 +35,16 @@
 <div class="wrap">
   <div class="hero">
     <h1>fintech-lab</h1>
-    <p>Three fintech products that run on the standard library: an ISO 8583 payment-message
-       workbench, a lending-policy sandbox, and a transaction assistant for Roman Urdu.</p>
-    <p>No dependencies, no model, no GPU, no API key, no network call. In all three the thing
-       deciding the outcome is small enough to read, and what grades it is deterministic code
-       rather than a model's opinion.</p>
+    <p>Six fintech projects on the standard library. Three products &mdash; an ISO 8583
+       payment-message workbench, a lending-policy sandbox, and a transaction assistant for
+       Roman Urdu &mdash; and three that ask a local model to do those same jobs and are
+       scored by the products' own graders.</p>
+    <p>No dependencies anywhere, and no model needed for the first three: the thing deciding
+       the outcome is small enough to read, and what grades it is deterministic code rather
+       than a model's opinion. That is also what makes the model arms worth anything &mdash;
+       there is a baseline on the same cases that does not move.</p>
     <div class="badges">
-      <span class="pill neutral"><span class="dot"></span><span>474 tests</span></span>
+      <span class="pill neutral"><span class="dot"></span><span>585 tests</span></span>
       <span class="pill good"><span class="dot"></span><span>zero runtime dependencies</span></span>
       <span class="pill good"><span class="dot"></span><span>GPU not required</span></span>
       <span class="pill neutral"><span class="dot"></span><span>Python 3.11+</span></span>
@@ -50,6 +56,7 @@
     </div>
   </div>
 
+  <h2 class="group">Built with code &mdash; no model, no GPU</h2>
   <div class="grid3">
       <div class="card proj">
         <span class="num">01</span>
@@ -85,6 +92,51 @@
         <div class="opener">
           <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p03_guardian">Source</a>
           <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p03_guardian/README.md">What it does and what it measures</a>
+        </div>
+      </div>
+  </div>
+
+  <h2 class="group">The model arms &mdash; the same jobs, asked of a local model</h2>
+  <p class="lead">Each one asks a local model to do what its pair does with code, and is
+     scored by that pair's own grader. The deterministic version is in every comparison
+     table, because a model number with no baseline beside it invites the reader to supply
+     their own idea of what good looks like. Every reply is cached and the cache is
+     committed, so the numbers can be rechecked without a GPU.</p>
+  <div class="grid3">
+      <div class="card proj">
+        <span class="num">04</span>
+        <h2>Spec to wire</h2>
+        <p class="tag">A local model asked to produce ISO 8583 traffic, graded by project 01&#x27;s own parser and its 22 invariants.</p>
+        <dl class="figs"><dt>Cases</dt><dd>29</dd><dt>Replies generated</dt><dd>34</dd><dt>Served from cache</dt><dd>4</dd><dt>Hit the token cap</dt><dd>0</dd></dl>
+        <p class="hint small">From the project's own results.json, written by its benchmark.</p>
+        <p class="claim">Every grade is computed, not judged: a message either packs or it does not, and the invariants either hold or name what broke. The deterministic generator sits in the comparison table at 1.00 on every family.</p>
+        <div class="opener">
+          <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p04_spec_to_wire">Source</a>
+          <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p04_spec_to_wire/README.md">What it does and what it measures</a>
+        </div>
+      </div>
+      <div class="card proj">
+        <span class="num">05</span>
+        <h2>Policy from prose</h2>
+        <p class="tag">A local model asked to turn a written credit policy into project 02&#x27;s language, and then judged on what it decides.</p>
+        <dl class="figs"><dt>Policies in prose</dt><dd>5</dd><dt>Notice cases</dt><dd>5</dd><dt>Replies generated</dt><dd>0</dd><dt>Borrowers each decides</dt><dd>5,000</dd></dl>
+        <p class="hint small">From the project's own results.json, written by its benchmark.</p>
+        <p class="claim">A compiled policy can be run, so the grader runs it over all 5,000 borrowers. The column that matters is the one no text check can see: policies that compile, read sensibly, and approve a different set of applicants.</p>
+        <div class="opener">
+          <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p05_policy_from_prose">Source</a>
+          <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p05_policy_from_prose/README.md">What it does and what it measures</a>
+        </div>
+      </div>
+      <div class="card proj">
+        <span class="num">06</span>
+        <h2>Model against lexicon</h2>
+        <p class="tag">Project 03&#x27;s test set answered by a local model and by the rules, through the same grader.</p>
+        <dl class="figs"><dt>Cases</dt><dd>73</dd><dt>Rules: amounts</dt><dd>20/20</dd><dt>Rules on the blind spot</dt><dd>0/4</dd><dt>Replies generated</dt><dd>0</dd></dl>
+        <p class="hint small">From the project's own results.json, written by its benchmark.</p>
+        <p class="claim">Both columns come from the same cases. The rules score 0 of 4 on the scams they publicly miss - the one place a model has room to win - and the cost of winning there is counted in false alarms on ordinary traffic.</p>
+        <div class="opener">
+          <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p06_model_vs_lexicon">Source</a>
+          <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p06_model_vs_lexicon/README.md">What it does and what it measures</a>
         </div>
       </div>
   </div>
@@ -130,6 +182,12 @@ uv run python -m observatory --start-all      # then open http://127.0.0.1:8100<
       <li><strong>Guardian</strong> misses every scam that avoids its vocabulary, and the layer
           that recovers those also slows one ordinary transfer in five. Both halves are
           measured; reporting only the first would be advertising.</li>
+      <li><strong>The model arms</strong> report what they cost and what they could not do:
+          replies that hit the token cap, cases with no cached reply that were therefore
+          <em>not run</em> rather than scored, and the two models excluded from the
+          headline with the reason stated &mdash; one does not fit this machine's 16 GB
+          without running partly on CPU, and the other is a base model that answered
+          &ldquo;reply with OK&rdquo; with &ldquo;88888888&rdquo;.</li>
     </ul>
   </div>
 

@@ -1,0 +1,1457 @@
+{
+  "setup": {
+    "models": [
+      "qwen2.5:14b-instruct"
+    ],
+    "arms": [
+      "bare",
+      "spec"
+    ],
+    "cases": 29,
+    "families": [
+      "decode",
+      "fields",
+      "negative",
+      "wire"
+    ],
+    "token_budget": {
+      "decode": 260,
+      "fields": 900,
+      "wire": 420,
+      "negative": 1400
+    },
+    "models_available_locally": [
+      "nomic-embed-text:latest",
+      "qwen2.5-coder:14b",
+      "qwen2.5:14b-instruct",
+      "qwen2.5:7b-instruct",
+      "qwen3.6:27b"
+    ],
+    "excluded": {
+      "qwen3.6:27b": "does not fit this machine's 16 GB alongside anything else, so it runs partly on CPU (about 13 seconds per token measured), and it spends its budget on hidden reasoning before emitting content. A property of the setup, not of the model.",
+      "qwen2.5-coder:14b": "a base model, not instruction-tuned: asked to reply with 'OK' it replied '88888888'. It would be measuring the wrong thing."
+    }
+  },
+  "usage": {
+    "calls": 38,
+    "served_from_cache": 4,
+    "generated": 34,
+    "hit_the_token_cap": 0,
+    "wall_clock_seconds": 580.2,
+    "response_tokens": 6055,
+    "models": [
+      "qwen2.5:14b-instruct"
+    ]
+  },
+  "cache": {
+    "entries": 43,
+    "bytes": 140617
+  },
+  "incomplete": [
+    "qwen2.5:14b-instruct bare fields:atm_withdrawal_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:atm_withdrawal_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:atm_partial_approval: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare fields:atm_insufficient_funds: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:atm_insufficient_funds: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:balance_inquiry: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:cardholder_transfer: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:pos_purchase_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:pos_refund: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare wire:network_echo_test: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct bare negative:L04: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:atm_withdrawal_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:atm_partial_approval: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:atm_insufficient_funds: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:balance_inquiry: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:cardholder_transfer: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:pos_purchase_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec fields:pos_refund: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:pos_refund: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
+    "qwen2.5:14b-instruct spec wire:network_echo_test: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only."
+  ],
+  "baseline": {
+    "what": "project 01's deterministic generator and fault injector, on the same cases",
+    "summary": {
+      "decode": {
+        "cases": 8,
+        "mean_score": 1.0,
+        "perfect": 8,
+        "parsed": 8,
+        "packs": 8,
+        "invariants_hold": 8
+      },
+      "fields": {
+        "cases": 8,
+        "mean_score": 1.0,
+        "perfect": 8,
+        "parsed": 8,
+        "packs": 8,
+        "invariants_hold": 8
+      },
+      "negative": {
+        "cases": 5,
+        "mean_score": 1.0,
+        "perfect": 5,
+        "parsed": 5,
+        "packs": 5,
+        "invariants_hold": 5
+      },
+      "wire": {
+        "cases": 8,
+        "mean_score": 1.0,
+        "perfect": 8,
+        "parsed": 8,
+        "packs": 8,
+        "invariants_hold": 8
+      }
+    }
+  },
+  "by_model_and_arm": {
+    "qwen2.5:14b-instruct / bare": {
+      "decode": {
+        "cases": 8,
+        "mean_score": 0.325,
+        "perfect": 0,
+        "parsed": 8,
+        "packs": 0,
+        "invariants_hold": 0
+      },
+      "fields": {
+        "cases": 6,
+        "mean_score": 0.0239,
+        "perfect": 0,
+        "parsed": 5,
+        "packs": 0,
+        "invariants_hold": 0
+      },
+      "negative": {
+        "cases": 4,
+        "mean_score": 0.125,
+        "perfect": 0,
+        "parsed": 4,
+        "packs": 2,
+        "invariants_hold": 0
+      }
+    },
+    "qwen2.5:14b-instruct / spec": {
+      "decode": {
+        "cases": 8,
+        "mean_score": 0.45,
+        "perfect": 0,
+        "parsed": 8,
+        "packs": 0,
+        "invariants_hold": 0
+      },
+      "fields": {
+        "cases": 7,
+        "mean_score": 0.2882,
+        "perfect": 0,
+        "parsed": 7,
+        "packs": 5,
+        "invariants_hold": 3
+      },
+      "negative": {
+        "cases": 5,
+        "mean_score": 0.4,
+        "perfect": 0,
+        "parsed": 5,
+        "packs": 5,
+        "invariants_hold": 1
+      }
+    }
+  },
+  "rows": [
+    {
+      "case": "decode:atm_withdrawal_approved",
+      "family": "decode",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace, transaction",
+      "fields_right": 1,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 500000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cash withdrawal"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 150930120047,
+        "currency": "PKR",
+        "trace": "",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "decode:atm_partial_approval",
+      "family": "decode",
+      "scenario": "atm_partial_approval",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace, transaction",
+      "fields_right": 1,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 1000000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cash withdrawal"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 1528096,
+        "currency": "37",
+        "trace": "150930",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "fields:atm_partial_approval",
+      "family": "fields",
+      "scenario": "atm_partial_approval",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 3 (Processing code) is n6: expected exactly 6 characters, got 7; DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 16; DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 8; DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 5; DE 25 (Point of service condition code) is n2: expected exactly 2 characters, got 8; DE 37 (Retrieval reference number) is an12: expected exactly 12 characters, got 18",
+      "elements_expected": 21,
+      "elements_given": 9,
+      "elements_matching": 0,
+      "missing": [
+        7,
+        13,
+        14,
+        32,
+        33,
+        41,
+        42,
+        43,
+        49,
+        52,
+        55,
+        102
+      ],
+      "extra": [],
+      "differing": [
+        2,
+        3,
+        4,
+        11,
+        12,
+        18,
+        22,
+        25,
+        37
+      ],
+      "value_problems": [
+        "DE 3 (Processing code) is n6: expected exactly 6 characters, got 7",
+        "DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 16",
+        "DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 8",
+        "DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 5"
+      ],
+      "hit_token_cap": false,
+      "seconds": 11.1
+    },
+    {
+      "case": "decode:atm_insufficient_funds",
+      "family": "decode",
+      "scenario": "atm_insufficient_funds",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace, transaction",
+      "fields_right": 1,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 500000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cash withdrawal"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 150930120047,
+        "currency": "PKR",
+        "trace": "",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "decode:balance_inquiry",
+      "family": "decode",
+      "scenario": "balance_inquiry",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace, transaction",
+      "fields_right": 1,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 0,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "balance inquiry"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 305,
+        "currency": "840",
+        "trace": "150930",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.0
+    },
+    {
+      "case": "fields:balance_inquiry",
+      "family": "fields",
+      "scenario": "balance_inquiry",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0435,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 3 (Processing code) is n6: expected exactly 6 characters, got 8; DE 3 (Processing code) is class n: 'AMT' is not allowed in that class; DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 16; DE 13 (Local transaction date) is n4: expected exactly 4 characters, got 16; DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 6; 'data element 110 is not in the dictionary'",
+      "elements_expected": 21,
+      "elements_given": 10,
+      "elements_matching": 1,
+      "missing": [
+        14,
+        18,
+        25,
+        32,
+        33,
+        37,
+        41,
+        42,
+        43,
+        49,
+        52,
+        55,
+        102
+      ],
+      "extra": [
+        110,
+        123
+      ],
+      "differing": [
+        3,
+        4,
+        7,
+        11,
+        12,
+        13,
+        22
+      ],
+      "value_problems": [
+        "DE 3 (Processing code) is n6: expected exactly 6 characters, got 8",
+        "DE 3 (Processing code) is class n: 'AMT' is not allowed in that class",
+        "DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 16",
+        "DE 13 (Local transaction date) is n4: expected exactly 4 characters, got 16"
+      ],
+      "hit_token_cap": false,
+      "seconds": 13.8
+    },
+    {
+      "case": "decode:cardholder_transfer",
+      "family": "decode",
+      "scenario": "cardholder_transfer",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace, transaction",
+      "fields_right": 1,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 750000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cardholder transfer"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 75000,
+        "currency": "",
+        "trace": "7",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 4.9
+    },
+    {
+      "case": "fields:cardholder_transfer",
+      "family": "fields",
+      "scenario": "cardholder_transfer",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 16; DE 18 (Merchant category code) is n4: expected exactly 4 characters, got 7; DE 19 (Acquiring institution country code) is n3: expected exactly 3 characters, got 8; DE 19 (Acquiring institution country code) is class n: 'AMT' is not allowed in that class; DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 6; 'data element 110 is not in the dictionary'; 'data element 122 is not in the dictionary'",
+      "elements_expected": 22,
+      "elements_given": 9,
+      "elements_matching": 0,
+      "missing": [
+        4,
+        7,
+        12,
+        13,
+        14,
+        25,
+        32,
+        33,
+        37,
+        41,
+        42,
+        43,
+        49,
+        52,
+        55,
+        102,
+        103
+      ],
+      "extra": [
+        19,
+        110,
+        122,
+        123
+      ],
+      "differing": [
+        2,
+        3,
+        11,
+        18,
+        22
+      ],
+      "value_problems": [
+        "DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 16",
+        "DE 18 (Merchant category code) is n4: expected exactly 4 characters, got 7",
+        "DE 19 (Acquiring institution country code) is n3: expected exactly 3 characters, got 8",
+        "DE 19 (Acquiring institution country code) is class n: 'AMT' is not allowed in that class"
+      ],
+      "hit_token_cap": false,
+      "seconds": 13.0
+    },
+    {
+      "case": "decode:pos_purchase_approved",
+      "family": "decode",
+      "scenario": "pos_purchase_approved",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.6,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: trace, transaction",
+      "fields_right": 3,
+      "fields_asked": 5,
+      "wrong": [
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "purchase"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "15093012",
+        "transaction": "authorization request"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.1
+    },
+    {
+      "case": "fields:pos_purchase_approved",
+      "family": "fields",
+      "scenario": "pos_purchase_approved",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "unusable answer: field key '11D' is not a data element number",
+      "hit_token_cap": false,
+      "seconds": 11.7
+    },
+    {
+      "case": "decode:pos_refund",
+      "family": "decode",
+      "scenario": "pos_refund",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.6,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: trace, transaction",
+      "fields_right": 3,
+      "fields_asked": 5,
+      "wrong": [
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "refund"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "9505",
+        "transaction": "authorization request"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.0
+    },
+    {
+      "case": "fields:pos_refund",
+      "family": "fields",
+      "scenario": "pos_refund",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.1,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 3 (Processing code) is n6: expected exactly 6 characters, got 7; DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 10; DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 12; DE 25 (Point of service condition code) is n2: expected exactly 2 characters, got 8; DE 25 (Point of service condition code) is class n: 'OPS' is not allowed in that class; DE 37 (Retrieval reference number) is an12: expected exactly 12 characters, got 18",
+      "elements_expected": 20,
+      "elements_given": 8,
+      "elements_matching": 2,
+      "missing": [
+        4,
+        7,
+        13,
+        14,
+        32,
+        33,
+        41,
+        42,
+        43,
+        49,
+        55,
+        102
+      ],
+      "extra": [],
+      "differing": [
+        3,
+        12,
+        18,
+        22,
+        25,
+        37
+      ],
+      "value_problems": [
+        "DE 3 (Processing code) is n6: expected exactly 6 characters, got 7",
+        "DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 10",
+        "DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 12",
+        "DE 25 (Point of service condition code) is n2: expected exactly 2 characters, got 8"
+      ],
+      "hit_token_cap": false,
+      "seconds": 11.6
+    },
+    {
+      "case": "decode:network_echo_test",
+      "family": "decode",
+      "scenario": "network_echo_test",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.4,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace",
+      "fields_right": 2,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace"
+      ],
+      "expected": {
+        "mti": "0800",
+        "amount_minor_units": 0,
+        "currency": "",
+        "trace": "4712",
+        "transaction": "purchase"
+      },
+      "got": {
+        "mti": "0800",
+        "amount_minor_units": 150930,
+        "currency": "4",
+        "trace": "712301",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 4.6
+    },
+    {
+      "case": "fields:network_echo_test",
+      "family": "fields",
+      "scenario": "network_echo_test",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 10",
+      "elements_expected": 3,
+      "elements_given": 3,
+      "elements_matching": 0,
+      "missing": [
+        7,
+        70
+      ],
+      "extra": [
+        41,
+        42
+      ],
+      "differing": [
+        11
+      ],
+      "value_problems": [
+        "DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 10"
+      ],
+      "hit_token_cap": false,
+      "seconds": 5.0
+    },
+    {
+      "case": "negative:L03",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L03",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 2 (Primary account number) is n..19: at most 19 characters, got 32",
+      "hit_token_cap": false,
+      "seconds": 8.6
+    },
+    {
+      "case": "negative:L06",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L06",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 2 (Primary account number) is n..19: at most 19 characters, got 32",
+      "hit_token_cap": false,
+      "seconds": 8.7
+    },
+    {
+      "case": "negative:L09",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L09",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.5,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "broke L09, and also L03, L19",
+      "asked_for": "L09",
+      "rules_fired": [
+        "L03",
+        "L09",
+        "L19"
+      ],
+      "collateral": [
+        "L03",
+        "L19"
+      ],
+      "hit_token_cap": false,
+      "seconds": 6.1
+    },
+    {
+      "case": "negative:L13",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L13",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "did not break L13; broke L03, L09, L19",
+      "asked_for": "L13",
+      "rules_fired": [
+        "L03",
+        "L09",
+        "L19"
+      ],
+      "collateral": [
+        "L03",
+        "L09",
+        "L19"
+      ],
+      "hit_token_cap": false,
+      "seconds": 4.1
+    },
+    {
+      "case": "decode:atm_withdrawal_approved",
+      "family": "decode",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.4,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, trace, transaction",
+      "fields_right": 2,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 500000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cash withdrawal"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 50000,
+        "currency": "586",
+        "trace": "150930",
+        "transaction": "debit"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.8
+    },
+    {
+      "case": "fields:atm_withdrawal_approved",
+      "family": "fields",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.1905,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "1 invariant finding(s): L19",
+      "elements_expected": 21,
+      "elements_given": 9,
+      "elements_matching": 4,
+      "missing": [
+        12,
+        13,
+        14,
+        18,
+        22,
+        25,
+        32,
+        33,
+        37,
+        43,
+        52,
+        55
+      ],
+      "extra": [],
+      "differing": [
+        2,
+        3,
+        4,
+        7,
+        42
+      ],
+      "value_problems": [],
+      "hit_token_cap": false,
+      "seconds": 14.1
+    },
+    {
+      "case": "decode:atm_partial_approval",
+      "family": "decode",
+      "scenario": "atm_partial_approval",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.4,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, trace, transaction",
+      "fields_right": 2,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 1000000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cash withdrawal"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 1509301200,
+        "currency": "586",
+        "trace": "1",
+        "transaction": "debit"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.7
+    },
+    {
+      "case": "fields:atm_partial_approval",
+      "family": "fields",
+      "scenario": "atm_partial_approval",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2857,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": true,
+      "detail": "6/21 elements agree",
+      "elements_expected": 21,
+      "elements_given": 10,
+      "elements_matching": 6,
+      "missing": [
+        12,
+        13,
+        14,
+        18,
+        22,
+        25,
+        33,
+        37,
+        43,
+        52,
+        55
+      ],
+      "extra": [],
+      "differing": [
+        3,
+        4,
+        7,
+        42
+      ],
+      "value_problems": [],
+      "hit_token_cap": false,
+      "seconds": 14.9
+    },
+    {
+      "case": "decode:atm_insufficient_funds",
+      "family": "decode",
+      "scenario": "atm_insufficient_funds",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.4,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, trace, transaction",
+      "fields_right": 2,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 500000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cash withdrawal"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 50000,
+        "currency": "586",
+        "trace": "150930",
+        "transaction": "debit"
+      },
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "fields:atm_insufficient_funds",
+      "family": "fields",
+      "scenario": "atm_insufficient_funds",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.3182,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": true,
+      "detail": "7/22 elements agree",
+      "elements_expected": 21,
+      "elements_given": 11,
+      "elements_matching": 7,
+      "missing": [
+        12,
+        13,
+        14,
+        18,
+        22,
+        25,
+        33,
+        42,
+        43,
+        52,
+        55
+      ],
+      "extra": [
+        39
+      ],
+      "differing": [
+        3,
+        4,
+        37
+      ],
+      "value_problems": [],
+      "hit_token_cap": false,
+      "seconds": 15.9
+    },
+    {
+      "case": "decode:balance_inquiry",
+      "family": "decode",
+      "scenario": "balance_inquiry",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.4,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, trace, transaction",
+      "fields_right": 2,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 0,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "balance inquiry"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 15093012,
+        "currency": "586",
+        "trace": "1",
+        "transaction": "debit"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.8
+    },
+    {
+      "case": "fields:balance_inquiry",
+      "family": "fields",
+      "scenario": "balance_inquiry",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.3333,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": true,
+      "detail": "7/21 elements agree",
+      "elements_expected": 21,
+      "elements_given": 9,
+      "elements_matching": 7,
+      "missing": [
+        12,
+        13,
+        14,
+        18,
+        22,
+        25,
+        33,
+        37,
+        42,
+        43,
+        52,
+        55
+      ],
+      "extra": [],
+      "differing": [
+        3,
+        7
+      ],
+      "value_problems": [],
+      "hit_token_cap": false,
+      "seconds": 14.7
+    },
+    {
+      "case": "decode:cardholder_transfer",
+      "family": "decode",
+      "scenario": "cardholder_transfer",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.6,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: trace, transaction",
+      "fields_right": 3,
+      "fields_asked": 5,
+      "wrong": [
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 750000,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "cardholder transfer"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 750000,
+        "currency": "586",
+        "trace": "7",
+        "transaction": "debit"
+      },
+      "hit_token_cap": false,
+      "seconds": 5.7
+    },
+    {
+      "case": "fields:cardholder_transfer",
+      "family": "fields",
+      "scenario": "cardholder_transfer",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.3182,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 42 (Card acceptor identification code) is ans15: expected exactly 15 characters, got 16",
+      "elements_expected": 22,
+      "elements_given": 12,
+      "elements_matching": 7,
+      "missing": [
+        12,
+        13,
+        14,
+        18,
+        22,
+        25,
+        33,
+        37,
+        52,
+        55
+      ],
+      "extra": [],
+      "differing": [
+        3,
+        4,
+        7,
+        42,
+        43
+      ],
+      "value_problems": [
+        "DE 42 (Card acceptor identification code) is ans15: expected exactly 15 characters, got 16"
+      ],
+      "hit_token_cap": false,
+      "seconds": 17.8
+    },
+    {
+      "case": "decode:pos_purchase_approved",
+      "family": "decode",
+      "scenario": "pos_purchase_approved",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.6,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: trace, transaction",
+      "fields_right": 3,
+      "fields_asked": 5,
+      "wrong": [
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "purchase"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "1",
+        "transaction": "debit"
+      },
+      "hit_token_cap": false,
+      "seconds": 17.2
+    },
+    {
+      "case": "fields:pos_purchase_approved",
+      "family": "fields",
+      "scenario": "pos_purchase_approved",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2857,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "1 invariant finding(s): L19",
+      "elements_expected": 21,
+      "elements_given": 16,
+      "elements_matching": 6,
+      "missing": [
+        14,
+        33,
+        37,
+        52,
+        55
+      ],
+      "extra": [],
+      "differing": [
+        2,
+        3,
+        4,
+        7,
+        12,
+        13,
+        18,
+        22,
+        42,
+        43
+      ],
+      "value_problems": [],
+      "hit_token_cap": false,
+      "seconds": 26.9
+    },
+    {
+      "case": "decode:pos_refund",
+      "family": "decode",
+      "scenario": "pos_refund",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.6,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: trace, transaction",
+      "fields_right": 3,
+      "fields_asked": 5,
+      "wrong": [
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "4712",
+        "transaction": "refund"
+      },
+      "got": {
+        "mti": "0200",
+        "amount_minor_units": 249900,
+        "currency": "586",
+        "trace": "95",
+        "transaction": "debit purchase"
+      },
+      "hit_token_cap": false,
+      "seconds": 13.2
+    },
+    {
+      "case": "decode:network_echo_test",
+      "family": "decode",
+      "scenario": "network_echo_test",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "wrong: amount_minor_units, currency, trace, transaction",
+      "fields_right": 1,
+      "fields_asked": 5,
+      "wrong": [
+        "amount_minor_units",
+        "currency",
+        "trace",
+        "transaction"
+      ],
+      "expected": {
+        "mti": "0800",
+        "amount_minor_units": 0,
+        "currency": "",
+        "trace": "4712",
+        "transaction": "purchase"
+      },
+      "got": {
+        "mti": "0800",
+        "amount_minor_units": 15093012,
+        "currency": "4",
+        "trace": "10",
+        "transaction": "credit adjustment"
+      },
+      "hit_token_cap": false,
+      "seconds": 11.0
+    },
+    {
+      "case": "fields:network_echo_test",
+      "family": "fields",
+      "scenario": "network_echo_test",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.2857,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 2 (Primary account number) is n..19: at most 19 characters, got 20; DE 41 (Card acceptor terminal identification) is ans8: expected exactly 8 characters, got 26",
+      "elements_expected": 3,
+      "elements_given": 7,
+      "elements_matching": 2,
+      "missing": [],
+      "extra": [
+        2,
+        3,
+        41,
+        42
+      ],
+      "differing": [
+        70
+      ],
+      "value_problems": [
+        "DE 2 (Primary account number) is n..19: at most 19 characters, got 20",
+        "DE 41 (Card acceptor terminal identification) is ans8: expected exactly 8 characters, got 26"
+      ],
+      "hit_token_cap": false,
+      "seconds": 20.3
+    },
+    {
+      "case": "negative:L03",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L03",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.5,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "broke L03, and also L19",
+      "asked_for": "L03",
+      "rules_fired": [
+        "L03",
+        "L19"
+      ],
+      "collateral": [
+        "L19"
+      ],
+      "hit_token_cap": false,
+      "seconds": 64.1
+    },
+    {
+      "case": "negative:L04",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L04",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.5,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "broke L04, and also L19",
+      "asked_for": "L04",
+      "rules_fired": [
+        "L04",
+        "L19"
+      ],
+      "collateral": [
+        "L19"
+      ],
+      "hit_token_cap": false,
+      "seconds": 65.6
+    },
+    {
+      "case": "negative:L06",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L06",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": true,
+      "detail": "did not break L06",
+      "asked_for": "L06",
+      "rules_fired": [],
+      "collateral": [],
+      "hit_token_cap": false,
+      "seconds": 65.3
+    },
+    {
+      "case": "negative:L09",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L09",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.5,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "broke L09, and also L12, L19",
+      "asked_for": "L09",
+      "rules_fired": [
+        "L09",
+        "L12",
+        "L19"
+      ],
+      "collateral": [
+        "L12",
+        "L19"
+      ],
+      "hit_token_cap": false,
+      "seconds": 57.8
+    },
+    {
+      "case": "negative:L13",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L13",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.5,
+      "parsed": true,
+      "packs": true,
+      "invariants_hold": false,
+      "detail": "broke L13, and also L03",
+      "asked_for": "L13",
+      "rules_fired": [
+        "L03",
+        "L13"
+      ],
+      "collateral": [
+        "L03"
+      ],
+      "hit_token_cap": false,
+      "seconds": 20.5
+    }
+  ]
+}

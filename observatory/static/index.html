@@ -23,6 +23,9 @@
   .figs dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
   pre.log { max-height: 260px; overflow: auto; font-size: 11.5px; }
   .banner { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  h2.group { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-2); margin: 22px 0 10px; font-weight: 650; }
+  .group-note { margin: -4px 0 12px; max-width: 80ch; }
 </style>
 </head>
 <body>
@@ -61,7 +64,21 @@
       </p>
     </div>
 
+    <div class="card" id="model-card">
+      <h2>The local model</h2>
+      <p class="hint" id="model-line">Checking...</p>
+    </div>
+
+    <h2 class="group">Built with code &mdash; no model, no GPU</h2>
     <div class="proj" id="projects"></div>
+
+    <h2 class="group">The model arms &mdash; the same jobs, asked of a local model</h2>
+    <p class="hint group-note">
+      Each of these asks a model to do what its pair does with code, and is scored by that
+      pair's own grader. Their dashboards read from committed results and a committed reply
+      cache, so they work with no model running; re-measuring needs one.
+    </p>
+    <div class="proj" id="model-projects"></div>
   </section>
 
   <section class="panel" id="p-telemetry" role="tabpanel" aria-labelledby="t-telemetry">
@@ -207,6 +224,11 @@ function card(item) {
   if (item.detail) {
     node.append(el("div", { class: "note " + (item.state === "stopped" ? "bad" : "warn"), text: item.detail }));
   }
+  if (item.needs_model) {
+    node.append(el("p", { class: "mini", style: "margin:6px 0 0",
+      text: "Scored by project " + item.pairs_with + "'s grader. Reads committed results; "
+        + "re-measuring needs a local model." }));
+  }
 
   if (item.headline.length) {
     const figs = el("dl", { class: "figs" });
@@ -263,9 +285,35 @@ function card(item) {
 }
 
 function renderProjects(projects) {
-  const host = $("#projects");
-  host.innerHTML = "";
-  for (const item of projects) host.append(card(item));
+  const plain = $("#projects");
+  const model = $("#model-projects");
+  plain.innerHTML = "";
+  model.innerHTML = "";
+  for (const item of projects) {
+    (item.needs_model ? model : plain).append(card(item));
+  }
+}
+
+async function renderModel() {
+  try {
+    const data = await api("/api/model");
+    const line = $("#model-line");
+    line.innerHTML = "";
+    const level = data.reachable ? "good" : "warning";
+    line.append(pill(level, data.reachable ? "ollama reachable" : "no model server"));
+    const resident = data.resident.map((m) => m.name).join(", ");
+    line.append(document.createTextNode(
+      "  " + (data.reachable
+        ? data.models.length + " model(s) installed"
+          + (resident ? "; loaded now: " + resident : "; none loaded")
+        : "nothing answering at " + data.host)
+      + ".  " + data.cache.entries + " cached replies ("
+      + Math.round(data.cache.bytes / 1024) + " KB) are committed, so the model arms show "
+      + "their numbers either way."
+    ));
+  } catch (error) {
+    $("#model-line").textContent = error.message;
+  }
 }
 
 async function refresh() {
@@ -389,9 +437,11 @@ $("#go-log").addEventListener("click", async () => {
     $("#log-project").append(el("option", { value: project.key, text: project.number + " " + project.name }));
   }
   await refresh();
+  await renderModel();
   await poll();
   setInterval(() => { if ($("#auto").checked) poll(); }, 5000);
   setInterval(refresh, 8000);
+  setInterval(renderModel, 30000);
 })();
 </script>
 </body>

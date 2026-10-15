@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "ATM withdrawal, approved. The baseline every other ATM scenario is a deviation from. It is a cash withdrawal from the cardholder's savings account. The amount is 5,000.00 PKR. The card number is 4111111111111111, the terminal is ATM00417, the acquirer is 0037101, the currency code is 586, and the trace number is 004712. The transmission date and time is 1015093012 (MMDDhhmmss). The account identification is PK12ABCD0000001234.\n\nGive the data elements of the *request* message as a JSON object and nothing else, of the form {\"mti\": \"0200\", \"fields\": {\"2\": \"...\", \"3\": \"...\"}}. Keys of 'fields' are data element numbers as strings; values are the element contents as strings, already padded to their fixed width where they have one. Do not include a bitmap - it is computed from which elements are present.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 900
+  },
+  "json_mode": false,
+  "response": "{\n  \"mti\": \"0200\",\n  \"fields\": {\n    \"2\": \"586\",\n    \"3\": \"0037101\",\n    \"4\": \"ATM00417\",\n    \"7\": \"4111111111111111\",\n    \"11\": \"004712\",\n    \"12\": \"1015093012\",\n    \"18\": \"500000\",\n    \"22\": \"586\",\n    \"25\": \"00000005000\",\n    \"37\": \"PK12ABCD0000001234\"\n  }\n}",
+  "prompt_tokens": 299,
+  "response_tokens": 171,
+  "truncated": false,
+  "generated_at": "2026-10-15T22:03:24"
+}

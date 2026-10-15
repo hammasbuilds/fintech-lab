@@ -60,6 +60,41 @@ def meta(_request: Request) -> Response:
     )
 
 
+@app.route("GET", "/api/model")
+def model(_request: Request) -> Response:
+    """Whether a local model is reachable, and which ones.
+
+    Projects 04-06 ask a model to do what 01-03 do with code. They will start without
+    one and then have nothing to answer with, so the panel reports the server's state
+    rather than letting a green "running" imply more than it means. Their dashboards
+    still work from the committed reply cache.
+    """
+    from shared import llm
+
+    models = llm.tags()
+    return Response.json(
+        {
+            "host": llm.DEFAULT_HOST,
+            "reachable": bool(models),
+            "models": models,
+            "resident": [
+                {
+                    "name": entry.get("name"),
+                    "size_vram": entry.get("size_vram"),
+                    "until": entry.get("expires_at"),
+                }
+                for entry in llm.resident()
+            ],
+            "cache": llm.cache_size(),
+            "note": (
+                "The model arms read their numbers from results.json and their replies "
+                "from the committed cache, so their dashboards work with no model running. "
+                "Re-running a benchmark with --live needs one."
+            ),
+        }
+    )
+
+
 @app.route("GET", "/api/status")
 def status(_request: Request) -> Response:
     """Every project's measured state. Polled by the page."""

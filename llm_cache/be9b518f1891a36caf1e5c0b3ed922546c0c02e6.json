@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:7b-instruct",
+  "system": "",
+  "prompt": "Reply with exactly: OK",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 8
+  },
+  "json_mode": false,
+  "response": "OK",
+  "prompt_tokens": 34,
+  "response_tokens": 2,
+  "truncated": false,
+  "generated_at": "2026-10-15T21:28:11"
+}

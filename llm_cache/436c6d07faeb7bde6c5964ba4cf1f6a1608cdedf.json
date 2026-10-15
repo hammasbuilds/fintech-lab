@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "Here is one ISO 8583 message in ASCII framing:\n\n0200F23C448188E092000000000004000000164111111111111111002000000000249900101509301200471209301210152809541105100070037101070037101415093000417POS01993MCC6011PK00417 IMTIAZ MART JOHAR TOWN LAHORE      PK   586A1B2C3D4E5F6071814082023C00950500000000009A032610159C01005F2A0205869F02060000002499009F100706010A03A000009F2608A1B2C3D4E5F607189F2701809F360200219F37041A2B3C4D18PK12ABCD0000001234\n\nReply with a JSON object and nothing else, with these keys:\n  \"mti\": the 4-character message type indicator\n  \"transaction\": what kind of transaction it is, in two or three words\n  \"amount_minor_units\": the transaction amount as an integer in minor units\n  \"currency\": the 3-digit currency code\n  \"trace\": the system trace audit number\n",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 260
+  },
+  "json_mode": false,
+  "response": "{\n  \"mti\": \"0200\",\n  \"transaction\": \"Authorization Request\",\n  \"amount_minor_units\": 249900,\n  \"currency\": \"586\",\n  \"trace\": \"15093012\"\n}",
+  "prompt_tokens": 501,
+  "response_tokens": 59,
+  "truncated": false,
+  "generated_at": "2026-10-15T21:42:37"
+}

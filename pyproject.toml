@@ -45,6 +45,11 @@ exclude = ["projects/p03_guardian/numerals.py", "projects/p03_guardian/testset.p
 # holds the published page's markup and its own CSS for the same reason.
 "shared/theme.py" = ["E501"]
 "scripts/build_pages.py" = ["E501"]
+# modelpage.py holds the model dashboards' markup and their JavaScript, and
+# build_model_readmes.py holds Markdown table rows. Same reason: breaking a line of
+# another language to satisfy a Python limit helps nobody.
+"shared/modelpage.py" = ["E501"]
+"scripts/build_model_readmes.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

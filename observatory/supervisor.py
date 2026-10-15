@@ -73,6 +73,8 @@ class Status:
             "base_url": self.project.base_url,
             "state": self.state,
             "running": self.running,
+            "needs_model": self.project.needs_model,
+            "pairs_with": self.project.pairs_with,
             "pid": self.pid if (self.pid or 0) > 0 else None,
             "stoppable": self.stoppable,
             "uptime_seconds": round(time.time() - self.since, 1) if self.since else None,

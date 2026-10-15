@@ -51,6 +51,11 @@ jobs:
           uv run python -m projects.p02_policy_bench.benchmark
           uv run python -m projects.p03_guardian.benchmark
 
+      # The model arms are deliberately not re-run here. They need a local model for
+      # --live, and running them cache-only would rewrite results.json with whatever the
+      # cache happens to hold - which the diff check below would then report as drift.
+      # Their graders are covered by the test suite, which needs no model.
+
       - name: Rebuild the published page
         run: uv run python scripts/build_pages.py
 

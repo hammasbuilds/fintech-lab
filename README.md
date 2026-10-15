@@ -1,11 +1,12 @@
 <h1 align="center">fintech-lab</h1>
-<p align="center"><i>Three fintech products that run on the standard library &mdash; a payment-message workbench, a lending-policy sandbox, and a vernacular transaction assistant</i></p>
+<p align="center"><i>Six fintech projects on the standard library &mdash; three products, and three that ask a local model to do the same jobs and are scored by the products' own graders</i></p>
 
 <p align="center">
   <a href="#what-it-does">What it does</a> &middot;
-  <a href="#projects">Projects</a> &middot;
+  <a href="#the-three-products">The products</a> &middot;
+  <a href="#the-three-model-arms">The model arms</a> &middot;
   <a href="#input--output">Input / Output</a> &middot;
-  <a href="#one-panel-for-all-three">One panel for all three</a> &middot;
+  <a href="#one-panel-for-all-six">One panel for all six</a> &middot;
   <a href="#scope">Scope</a>
 </p>
 
@@ -14,9 +15,9 @@
   <a href="https://hammasbuilds.github.io/fintech-lab/"><img src="https://img.shields.io/badge/page-live-success" alt="published page"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/dependencies-none-success" alt="dependencies">
-  <img src="https://img.shields.io/badge/GPU-not%20required-success" alt="gpu">
+  <img src="https://img.shields.io/badge/GPU-not%20required%20for%2001--03-success" alt="gpu">
   <img src="https://img.shields.io/badge/API%20keys-none-success" alt="api keys">
-  <img src="https://img.shields.io/badge/tests-505%20passing-success" alt="tests">
+  <img src="https://img.shields.io/badge/tests-585%20passing-success" alt="tests">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -24,46 +25,88 @@
 
 ## What it does
 
-Three tools for the surfaces fintech actually runs on: the message protocol behind every
-card transaction, the credit policy behind every small loan, and the Urdu-speaking
-customer at the other end of both.
+Three tools for the surfaces fintech actually runs on &mdash; the message protocol behind
+every card transaction, the credit policy behind every small loan, and the Urdu-speaking
+customer at the other end of both &mdash; and then three projects that ask a local model to
+do those same three jobs.
 
 ```mermaid
 flowchart LR
-    S["raw ISO 8583 traffic"] --> P1["01 Switchboard<br/>decode, generate, check"]
-    T["a credit policy in words"] --> P2["02 Policy Bench<br/>compile, back-test, diff"]
-    U["Roman Urdu speech"] --> P3["03 Guardian<br/>one action, read back, confirmed"]
+    S["raw ISO 8583 traffic"] --> P1["01 Switchboard"]
+    T["a credit policy in words"] --> P2["02 Policy Bench"]
+    U["Roman Urdu speech"] --> P3["03 Guardian"]
     P1 --> V["verified by code,<br/>not by a model"]
     P2 --> V
     P3 --> V
+    V --> G["the graders"]
+    G --> P4["04 Spec to wire"]
+    G --> P5["05 Policy from prose"]
+    G --> P6["06 Model against lexicon"]
+    M["a local model<br/>over HTTP"] --> P4
+    M --> P5
+    M --> P6
 
     style V fill:#2563eb,color:#fff
+    style G fill:#1baf7a,color:#fff
 ```
 
-**No dependencies, no model, no GPU, no API key, no network call.** Every engine, server
-and dashboard here is `python -m` and the standard library. That is not a limitation
-being worked around &mdash; in all three cases the thing deciding the outcome is small
-enough to read, and what grades it is deterministic code rather than a model's opinion.
+**No dependencies anywhere.** Every engine, server and dashboard is `python -m` and the
+standard library &mdash; the local model is reached over HTTP with `urllib`, not a client
+package. Projects 01&ndash;03 need no model and no GPU at all. In all three the thing
+deciding the outcome is small enough to read, and what grades it is deterministic code
+rather than a model's opinion.
 
-## Projects
+That is also the only reason the model arms are worth anything: **there is a baseline on
+the same cases that does not move.** Each of 04&ndash;06 is scored by the grader of the
+product it pairs with, so a model number always has 1.00-by-construction sitting next to
+it.
+
+## The three products
+
+Built with code. No model, no GPU, no API key.
 
 | | Project | What it is | The number that matters | Tests |
 |---|---|---|---|---|
-| [**01**](projects/p01_switchboard/) | [**Switchboard**](projects/p01_switchboard/) | An ISO 8583 workbench. Reads both the ASCII form and the **binary framing a real switch sends** (packed bitmap, BCD fields, length header), tells them apart on its own, expands DE 55 chip data as BER-TLV, and checks a flow against 22 invariants. | **38 of 38** injected faults killed, every one by the rule written for it, with **0** false positives across 14 valid flows. Of 2,000 random character corruptions, **651/651** illegal ones rejected; of 1,000 random byte corruptions of the binary form, **659** rejected. | 128 |
-| [**02**](projects/p02_policy_bench/) | [**Policy Bench**](projects/p02_policy_bench/) | A lending-policy language a product owner can read, compiled to something executable, back-tested on a borrower cohort &mdash; or **on your own, loaded as CSV** &mdash; with a cutoff sweep, Gini and KS, segment impact, and decline notices in two languages. | The v1&rarr;v2 tightening declines **1,238** more applicants: **47** would have defaulted, **1,191** would have repaid, precision **3.8%**. The sweep says why &mdash; the scorecard's Gini is **0.284**, so any cutoff cuts both groups at once &mdash; and finds **40** rather than 45 worth **+25,184 PKR**. | 74 |
-| [**03**](projects/p03_guardian/) | [**Guardian**](projects/p03_guardian/) | A transaction assistant for Roman Urdu, Urdu and code-mixed speech: a confirmation spine, a coercion check on the words, and a **behavioural check on the transfer**. No model: a lexicon, a grammar and an account history. | **140** hand-written cases. Amounts **48/48**, actions **30/30**, replies **21/21**, **0** wrongly read as consent. The lexical check still misses **4/4** scams phrased in ordinary language; judging the transfer escalates **4/4** of them, at a cost of **1 in 5** ordinary transfers also slowed. | 209 |
+| [**01**](projects/p01_switchboard/) | [**Switchboard**](projects/p01_switchboard/) | An ISO 8583 workbench. Reads both the ASCII form and the **binary framing a real switch sends** (packed bitmap, BCD fields, length header), tells them apart on its own, expands DE 55 chip data as BER-TLV, and checks a flow against 22 invariants. | **38 of 38** injected faults killed, every one by the rule written for it, with **0** false positives across 14 valid flows. Of 2,000 random character corruptions, **651/651** illegal ones rejected. | 128 |
+| [**02**](projects/p02_policy_bench/) | [**Policy Bench**](projects/p02_policy_bench/) | A lending-policy language a product owner can read, compiled to something executable, back-tested on a borrower cohort &mdash; or **on your own, loaded as CSV** &mdash; with a cutoff sweep, Gini and KS, segment impact, and decline notices in two languages. | The v1&rarr;v2 tightening declines **1,238** more applicants: **47** would have defaulted, **1,191** would have repaid, precision **3.8%**. The sweep says why &mdash; Gini **0.284** &mdash; and finds **40** rather than 45, worth **+25,184 PKR**. | 74 |
+| [**03**](projects/p03_guardian/) | [**Guardian**](projects/p03_guardian/) | A transaction assistant for Roman Urdu, Urdu and code-mixed speech: a confirmation spine, a coercion check on the words, and a **behavioural check on the transfer**. No model: a lexicon, a grammar and an account history. | **140** hand-written cases. Amounts **48/48**, actions **30/30**, replies **21/21**, **0** wrongly read as consent. The lexical check misses **4/4** scams phrased in ordinary language; judging the transfer escalates **4/4**, at a cost of **1 in 5** ordinary transfers also slowed. | 209 |
 
-Counts are the tests in each project's own files: 128 + 74 + 209 = 411. A further 49
-exercise the three dashboards, 31 the control panel and the published page, and 14 the
-shared web kit, for 505 in total.
+## The three model arms
 
-Each project ships a number that is deliberately *not* flattering. Switchboard's
-random-corruption rejection rate stops at 97.4% on the framing, because an ISO 8583
-bitmap has no redundancy and a single bit flip can produce a different valid message.
-Policy Bench's scorecard has a Gini of 0.284, which is weak, and the sweep says so in
-those words. Guardian's word-based check misses every scam that avoids its lexicon, and
-the layer that recovers those scams also slows down one ordinary transfer in five. All of
-it is measured and printed rather than left out.
+Each one asks a local model to do what its pair does with code, and is scored by that
+pair's own grader. Every grade is computed, never judged.
+
+| | Project | Asks | Graded by | Tests |
+|---|---|---|---|---|
+| [**04**](projects/p04_spec_to_wire/) | [**Spec to wire**](projects/p04_spec_to_wire/) | Produce ISO 8583 traffic: read a message, emit its data elements, emit the whole message, and write a test case that breaks one named invariant. | Project 01's parser and its 22 invariants. A message packs or it does not. | 33 |
+| [**05**](projects/p05_policy_from_prose/) | [**Policy from prose**](projects/p05_policy_from_prose/) | Turn a credit policy written by a product owner into project 02's language, and write the applicant's notice. | Project 02's cohort: does the compiled policy decide the **same 5,000 borrowers**, decision for decision and limit for limit. | &mdash; |
+| [**06**](projects/p06_model_vs_lexicon/) | [**Model against lexicon**](projects/p06_model_vs_lexicon/) | Answer project 03's own test set: the amounts, the actions, and the coercion verdicts. | Project 03's grader, on the same cases, with the rules in the next column of the table. | &mdash; |
+
+The model is local (Ollama, reached with `urllib`), sampling is pinned at temperature 0
+with a fixed seed, and **every reply is cached on disk and the cache is committed** &mdash;
+so the published numbers can be rechecked with no GPU:
+
+```bash
+uv run python -m projects.p04_spec_to_wire.benchmark      # no --live: cache only
+```
+
+A prompt with no cached reply is reported as **not run**, never scored. A benchmark that
+silently scores an empty string reports the model as very bad at the task instead of
+reporting that it was never asked.
+
+Counts are the tests in each project's own files, with the model arms' graders covered by
+a suite of their own. A further set exercises the six dashboards, the control panel, the
+published page, the shared web kit and the model client: **585 in total**, and a test
+asserts that the number on the badge is the one the suite actually collects.
+
+Each project ships a figure that does not favour it. Switchboard's random-corruption
+rejection stops at 97.4% on the framing, because an ISO 8583 bitmap carries no redundancy
+and one flipped bit can produce a different valid message. Policy Bench's Gini is 0.284 and
+the sweep calls that weak separation in those words. Guardian's word-based check misses
+every scam that avoids its lexicon, and the layer that recovers those slows one ordinary
+transfer in five. The model arms report what they could not do: replies cut off by the
+token cap, cases not run, and the two installed models excluded from the headline with the
+reason stated.
 
 ## Input / Output
 
@@ -197,7 +240,7 @@ One command runs all three and prints what they did. `uv run python demo.py`
   after 'confirm'                executed, action True
 ```
 
-## One panel for all three
+## One panel for all six
 
 ```bash
 uv run python -m observatory --start-all      # then open http://127.0.0.1:8100
@@ -205,17 +248,21 @@ uv run python -m observatory --start-all      # then open http://127.0.0.1:8100
 
 One page that starts and stops each project, shows whether it is actually up, reads each
 one's own request counters, and links straight through to everything &mdash; so there is a
-single place to open a project from instead of a shortcut per project.
+single place to open a project from instead of a shortcut per project. The six are shown
+in two groups, and the panel reports whether a local model is reachable, because a model
+arm will start without one and then have nothing to answer with.
 
 Per project it gives you five openers: the **dashboard**, the **input and output** proof,
-the **source**, the **README**, and the **published page**. Plus the project's own headline
-numbers, read from the `results.json` its benchmark wrote.
+the **source**, the **README**, and the **published page** &mdash; and a model arm adds a
+sixth, **its baseline**, the project whose grader scores it. Plus each project's own
+headline numbers, read from the `results.json` its benchmark wrote.
 
 | | |
 |---|---|
 | `make observatory` | the panel, projects left alone |
 | `make observatory-all` | the panel, all three started |
-| `run.bat` | the same on Windows (`run.bat panel`, or `run.bat 1\|2\|3` for one project) |
+| `run.bat` | the same on Windows (`run.bat panel`, or `run.bat 1`&hellip;`6` for one project) |
+| `make models` | what the model arms would use, and whether it is reachable |
 
 Two things it is careful about, because this is where a control panel usually lies:
 
@@ -231,9 +278,12 @@ Two things it is careful about, because this is where a control panel usually li
 ### Each project on its own
 
 ```bash
-make serve01        # Switchboard   http://127.0.0.1:8101
-make serve02        # Policy Bench  http://127.0.0.1:8102
-make serve03        # Guardian      http://127.0.0.1:8103
+make serve01        # Switchboard            http://127.0.0.1:8101
+make serve02        # Policy Bench           http://127.0.0.1:8102
+make serve03        # Guardian               http://127.0.0.1:8103
+make serve04        # Spec to wire           http://127.0.0.1:8104
+make serve05        # Policy from prose      http://127.0.0.1:8105
+make serve06        # Model against lexicon  http://127.0.0.1:8106
 ```
 
 Every project serves three things: its dashboard at `/`, its **input and output proof** at
@@ -249,6 +299,11 @@ engine when the page is requested, so it cannot disagree with the code serving i
 - **Guardian** &mdash; a phone-shaped assistant with all four layers shown live, the
   account's own habits beside them, an inspector, the scorecard, and the hash-chained
   audit trail.
+- **The model arms** &mdash; the comparison table with the deterministic baseline in it,
+  then **every case with the model's actual reply and the grader's verdict beside it**. A
+  mean score says how it went; the row where the model answered `60000` for `saat hazaar`
+  says why, and a dashboard that hides the replies behind an average is asking to be
+  believed rather than read.
 
 ### The published page
 
@@ -265,12 +320,13 @@ direct value labels and a table view, which is the relief that warning requires.
 
 ```bash
 make install        # uv sync --extra dev
-make test           # 505 tests
+make test           # 585 tests
 make lint           # ruff check + format --check
 make demo           # the output above
-make bench          # re-measure all three and rewrite results.json
+make bench          # re-measure 01-03 and rewrite their results.json
+make bench-models   # re-measure 04-06; needs a local model, one at a time
 make pages          # regenerate the published page from those results
-make observatory    # the control panel for all three
+make observatory    # the control panel for all six
 ```
 
 ## Scope

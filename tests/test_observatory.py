@@ -62,11 +62,35 @@ def _leave_nothing_running():
 # ------------------------------------------------------------------- registry
 
 
-def test_the_three_projects_are_registered_with_distinct_ports() -> None:
-    assert len(PROJECTS) == 3
+def test_all_six_projects_are_registered_with_distinct_ports() -> None:
+    assert len(PROJECTS) == 6
     ports = [project.port for project in PROJECTS]
-    assert len(set(ports)) == 3
-    assert sorted(BY_KEY) == ["guardian", "policy-bench", "switchboard"]
+    assert len(set(ports)) == 6
+    assert sorted(BY_KEY) == [
+        "guardian",
+        "model-vs-lexicon",
+        "policy-bench",
+        "policy-from-prose",
+        "spec-to-wire",
+        "switchboard",
+    ]
+
+
+def test_the_model_arms_are_marked_and_paired_with_a_real_project() -> None:
+    arms = [project for project in PROJECTS if project.needs_model]
+    assert len(arms) == 3
+    for project in arms:
+        assert project.pairs_with in BY_KEY, project.key
+        assert BY_KEY[project.pairs_with].needs_model is False
+        # Its first opener is the baseline that grades it.
+        assert project.links()[0]["label"] == "Its baseline"
+        assert str(BY_KEY[project.pairs_with].port) in project.links()[0]["href"]
+
+
+def test_the_projects_built_with_code_need_no_model() -> None:
+    plain = [project for project in PROJECTS if not project.needs_model]
+    assert len(plain) == 3
+    assert all(project.pairs_with == "" for project in plain)
 
 
 def test_every_project_points_at_files_that_exist() -> None:
@@ -82,10 +106,20 @@ def test_every_project_offers_the_same_set_of_openers() -> None:
     # project missing one of these would send the reader back to a shortcut.
     for project in PROJECTS:
         labels = [link["label"] for link in project.links()]
-        assert labels == ["Dashboard", "Input and output", "Source", "README", "Published page"]
+        expected = ["Dashboard", "Input and output", "Source", "README", "Published page"]
+        if project.needs_model:
+            expected = ["Its baseline", *expected]
+        assert labels == expected, project.key
+        own_ports = {project.port}
+        if project.pairs_with:
+            own_ports.add(BY_KEY[project.pairs_with].port)
         for link in project.links():
             if link["kind"] == "local":
-                assert link["href"].startswith(f"http://127.0.0.1:{project.port}")
+                # A local opener points at this project, or - for a model arm - at the
+                # project whose grader scores it.
+                assert any(
+                    link["href"].startswith(f"http://127.0.0.1:{port}") for port in own_ports
+                ), link
             else:
                 assert link["href"].startswith("https://")
 
@@ -162,13 +196,25 @@ def test_meta_lists_every_project_with_its_links() -> None:
     assert status == 200
     assert data["pages"] == PAGES
     assert [item["key"] for item in data["projects"]] == [p.key for p in PROJECTS]
-    assert all(len(item["links"]) == 5 for item in data["projects"])
+    assert all(len(item["links"]) >= 5 for item in data["projects"])
+
+
+def test_the_panel_reports_the_model_server_rather_than_assuming_it() -> None:
+    # A model project will start without a model and then have nothing to answer with,
+    # so a green "running" must not be the only thing the page says about it.
+    status, data = call("GET", "/api/model")
+    assert status == 200
+    assert "reachable" in data
+    assert isinstance(data["models"], list)
+    assert data["reachable"] is bool(data["models"])
+    assert data["cache"]["entries"] >= 0
+    assert "committed cache" in data["note"] or "committed" in data["note"]
 
 
 def test_status_reports_every_project_whether_running_or_not() -> None:
     status, data = call("GET", "/api/status")
     assert status == 200
-    assert len(data["projects"]) == 3
+    assert len(data["projects"]) == 6
     for item in data["projects"]:
         assert item["state"] in {
             "running",
@@ -460,3 +506,34 @@ def test_the_published_page_ships_the_theme_and_disables_jekyll() -> None:
     theme = (DOCS / "theme.css").read_text(encoding="utf-8")
     assert ':root[data-theme="dark"]' in theme
     assert "@media (prefers-color-scheme: dark)" in theme
+
+
+def test_the_published_page_quotes_the_real_test_count() -> None:
+    """The badge number must be the suite's own size.
+
+    A hand-written figure on a published page is the first thing to go stale. The count is
+    taken by collecting the whole suite in a separate process rather than from this run's
+    own session, which would report however many tests happened to be selected - 35 when
+    this file is run alone, and the check would then pass or fail on the invocation rather
+    than on the number.
+    """
+    import re
+    import subprocess
+    import sys
+
+    from scripts.build_pages import TESTS
+
+    out = subprocess.run(  # noqa: S603
+        [sys.executable, "-m", "pytest", "--collect-only", "-p", "no:cacheprovider"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    found = re.search(r"(\d+) tests? collected", out.stdout)
+    assert found, f"could not read the collected count: {out.stdout[-400:]}"
+    collected = int(found.group(1))
+    assert collected == TESTS, (
+        f"docs/index.html claims {TESTS} tests but the suite collects {collected}; "
+        f"set TESTS in scripts/build_pages.py and run: make pages"
+    )

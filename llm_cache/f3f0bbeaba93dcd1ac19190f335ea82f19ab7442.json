@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You turn written credit policy into a small policy language, exactly and without adding rules. You reply with only what is asked for.",
+  "prompt": "Here is a credit policy as it was written by the product owner:\n\nWe will not lend to anyone under 18, and we will not lend to anyone earning less than 25,000 rupees a month. Beyond that we score people: a year or more of wallet history is worth 40 points, and having repaid a loan on time before is worth 30. We approve at 40 points or above. The limit is a fifth of monthly income, capped at 15,000 rupees, and we charge a one-off 3% service fee on the limit.\n\nWrite it in the policy language. Reply with only the policy text, no code fence and no commentary. Keep every rule and do not add any. Give each gate a reason that states the actual threshold.\n\nThe language, in full:\n\n    policy      \"<name>\"\n    version     <number>\n    currency    <CODE>\n\n    decline if  <field> <op> <value> because \"<reason>\"\n    refer   if  <field> <op> <value> because \"<reason>\"\n    score  +<n> if <field> <op> <value> because \"<reason>\"\n    approve if  score >= <n>\n    limit       min(<expr>, <expr>)\n    fee         <n>% of limit\n\nOperators are < <= > >= == != . Conditions may be joined with 'and' and 'or'. A number is\nplain digits. A text value is in double quotes. 'limit' takes an arithmetic expression over\nthe fields, and min() and max() of two expressions. 'fee' may also be a flat number, and\nmay be followed by 'per <period>' - though a charge priced per unit of time is rejected by\nthe compliance lint, so do not use it.\n\nStatement order matters: gates are tested in the order written and the first one that\nmatches decides, so keep the order of the source document.\n\nThe applicant fields available are: age, monthly_income, wallet_months, txn_velocity,\nprior_defaults, on_time_repayments, dependants, avg_balance, employment, region,\nhas_smartphone. 'employment' is one of \"salaried\", \"self-employed\", \"daily-wage\".\n'region' must not be used in a decision.\n\nHere is an unrelated policy in the language, as an example of the shape:\n\npolicy \"Starter\"\nversion 1\ncurrency PKR\n\ndecline if age < 18 because \"below the legal age to contract\"\ndecline if monthly_income < 25000 because \"monthly income below the floor of 25,000\"\n\nscore +40 if wallet_months >= 12 because \"a year of wallet history\"\nscore +30 if on_time_repayments >= 1 because \"repaid on time before\"\n\napprove if score >= 40\nlimit min(0.2 * monthly_income, 15000)\nfee 3% of limit\n",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1100
+  },
+  "json_mode": false,
+  "response": "policy \"CreditPolicy\"\nversion 1\ncurrency INR\n\ndecline if age < 18 because \"under 18 years old\"\ndecline if monthly_income < 25000 because \"monthly income below the floor of 25,000\"\n\nscore +40 if wallet_months >= 12 because \"a year of wallet history\"\nscore +30 if on_time_repayments >= 1 because \"repaid a loan on time before\"\n\napprove if score >= 40\nlimit min(0.2 * monthly_income, 15000)\nfee 3% of limit",
+  "prompt_tokens": 662,
+  "response_tokens": 131,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:15:27"
+}

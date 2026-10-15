@@ -77,6 +77,15 @@ class Reply:
     prompt_tokens: int = 0
     response_tokens: int = 0
     truncated: bool = False
+    #: Set when the server refused to finish, with its own words. The commonest one here
+    #: is "prediction aborted, token repeat limit reached": the model degenerated into
+    #: repeating a token and Ollama killed it. That is an *answer about the model*, not an
+    #: infrastructure problem, so it is recorded as an outcome and graded as one.
+    aborted: str = ""
+
+    @property
+    def answered(self) -> bool:
+        return not self.aborted
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -86,6 +95,7 @@ class Reply:
             "prompt_tokens": self.prompt_tokens,
             "response_tokens": self.response_tokens,
             "truncated": self.truncated,
+            "aborted": self.aborted,
             "characters": len(self.text),
         }
 
@@ -98,6 +108,7 @@ class Usage:
     cached: int = 0
     generated: int = 0
     truncated: int = 0
+    aborted: int = 0
     total_ms: float = 0.0
     response_tokens: int = 0
     models: set[str] = field(default_factory=set)
@@ -107,6 +118,7 @@ class Usage:
         self.cached += int(reply.cached)
         self.generated += int(not reply.cached)
         self.truncated += int(reply.truncated)
+        self.aborted += int(bool(reply.aborted))
         self.total_ms += reply.duration_ms
         self.response_tokens += reply.response_tokens
         self.models.add(reply.model)
@@ -117,6 +129,7 @@ class Usage:
             "served_from_cache": self.cached,
             "generated": self.generated,
             "hit_the_token_cap": self.truncated,
+            "aborted_by_the_server": self.aborted,
             "wall_clock_seconds": round(self.total_ms / 1000, 1),
             "response_tokens": self.response_tokens,
             "models": sorted(self.models),
@@ -232,6 +245,7 @@ def generate(
                 prompt_tokens=int(cached.get("prompt_tokens", 0)),
                 response_tokens=int(cached.get("response_tokens", 0)),
                 truncated=bool(cached.get("truncated", False)),
+                aborted=str(cached.get("aborted", "")),
             )
             if usage is not None:
                 usage.record(reply)
@@ -268,6 +282,45 @@ def generate(
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
             data = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        # Reached and refused, which is a different thing from unreachable. The server's
+        # own message says which, and an early version of this reported every one of
+        # these as "could not be reached" - turning a finding about the model into an
+        # infrastructure excuse.
+        try:
+            detail = json.loads(exc.read()).get("error", "")
+        except (json.JSONDecodeError, OSError, ValueError):
+            detail = ""
+        reason = detail or f"HTTP {exc.code}"
+        if exc.code >= 500 and detail:
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            entry = {
+                "model": model,
+                "system": system,
+                "prompt": prompt,
+                "options": opts.payload(),
+                "json_mode": opts.json_mode,
+                "response": "",
+                "prompt_tokens": 0,
+                "response_tokens": 0,
+                "truncated": False,
+                "aborted": reason,
+                "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            }
+            write_cache(key, entry)
+            reply = Reply(
+                text="",
+                model=model,
+                cached=False,
+                duration_ms=elapsed_ms,
+                aborted=reason,
+            )
+            if usage is not None:
+                usage.record(reply)
+            return reply
+        raise ModelUnavailable(
+            f"{model} at {host} refused this prompt: {reason}. This prompt is not cached."
+        ) from exc
     except (urllib.error.URLError, OSError, json.JSONDecodeError, TimeoutError) as exc:
         raise ModelUnavailable(
             f"{model} could not be reached at {host} and this prompt is not cached "
@@ -289,6 +342,7 @@ def generate(
         "prompt_tokens": int(data.get("prompt_eval_count", 0)),
         "response_tokens": response_tokens,
         "truncated": truncated,
+        "aborted": "",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
     }
     write_cache(key, entry)

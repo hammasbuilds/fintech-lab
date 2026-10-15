@@ -39,7 +39,10 @@ BUDGET = {
 #: 13 seconds a token, and it spends its budget on hidden reasoning before emitting any
 #: content. Both are properties of the setup rather than of the model, and either way it
 #: cannot be measured here honestly.
-MODELS = ("qwen2.5:14b-instruct", "qwen2.5:7b-instruct")
+#: The default is the one the published numbers were measured with, so a plain
+#: re-run reproduces them. Pass --models to add another, e.g. qwen2.5:7b-instruct
+#: for a size comparison.
+MODELS = ("qwen2.5:14b-instruct",)
 ARMS = (tasks.BARE, tasks.SPEC)
 
 
@@ -78,7 +81,7 @@ def run(
                 except llm.ModelUnavailable as exc:
                     missing.append(f"{model} {arm} {case.label}: {exc}")
                     continue
-                result = grade.grade(case, reply.text, arm, model)
+                result = grade.grade(case, reply.text, arm, model, aborted=reply.aborted)
                 result.columns["hit_token_cap"] = reply.truncated
                 result.columns["seconds"] = round(reply.duration_ms / 1000, 1)
                 results.append(result)
@@ -92,7 +95,14 @@ def run(
             if rows:
                 by_arm[f"{model} / {arm}"] = grade.summarise(rows)
 
+    aborted_by_family: dict[str, int] = {}
+    for result in results:
+        reason = result.columns.get("aborted")
+        if reason:
+            aborted_by_family[result.case.family] = aborted_by_family.get(result.case.family, 0) + 1
+
     return {
+        "aborted": aborted_by_family,
         "setup": {
             "models": list(models),
             "arms": list(arms),
@@ -137,6 +147,8 @@ def report(results: dict[str, Any]) -> str:
         f"  (plus {results['usage']['served_from_cache']} from cache)",
         f"  wall clock                   {results['usage']['wall_clock_seconds']}s",
         f"  hit the token cap            {results['usage']['hit_the_token_cap']}",
+        f"  aborted by the server        {results['usage']['aborted_by_the_server']}"
+        "   (the model degenerated; counted as a score of zero, not as 'not run')",
     ]
     if results["incomplete"]:
         lines.append(
@@ -154,6 +166,12 @@ def report(results: dict[str, Any]) -> str:
             cell = summary.get(family, {})
             row += f"{cell.get('mean_score', 0):>12.2f}"
         lines.append(row)
+
+    aborts = results.get("aborted", {})
+    if aborts:
+        lines += ["", "  where the server aborted the prediction, by family", ""]
+        for family, count in sorted(aborts.items()):
+            lines.append(f"    {family:<28} {count}")
 
     lines += ["", "  how many answers the parser could use at all", ""]
     lines.append("    " + "arm".ljust(34) + f"{'parsed':>10}{'packs':>10}{'clean':>10}")

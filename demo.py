@@ -401,7 +401,153 @@ def guardian() -> None:
     )
 
 
-DEMOS = {"1": switchboard, "2": policy_bench, "3": guardian}
+# ---------------------------------------------------------------------- 4, 5, 6
+
+
+def _model_arm(number: str, module: str, title: str, subtitle: str, rows: callable) -> None:
+    """Print one model arm from its committed results, with its baseline beside it."""
+    import importlib
+    import json
+
+    benchmark = importlib.import_module(module)
+    heading(number, title, subtitle)
+    if not benchmark.RESULTS.is_file():
+        print("\n  not measured yet; run: make bench-models\n")
+        return
+    data = json.loads(benchmark.RESULTS.read_text(encoding="utf-8"))
+    setup, usage = data["setup"], data["usage"]
+    cases = setup.get("cases", setup.get("policy_cases", "?"))
+    print()
+    print(
+        f"  INPUT   {cases} cases, arms {', '.join(setup['arms'])}, "
+        f"model {', '.join(setup['models'])}"
+    )
+    print("  OUTPUT")
+    field("replies generated", f"{usage['generated']} (plus {usage['served_from_cache']} cached)")
+    field("aborted by the server", usage.get("aborted_by_the_server", 0))
+    field("hit the token cap", usage["hit_the_token_cap"])
+    field("cases not run", len(data.get("incomplete", [])))
+    print()
+    for line in rows(data):
+        print(f"    {line}")
+
+
+def spec_to_wire() -> None:
+    def rows(data):
+        families = data["setup"]["families"]
+        out = ["arm".ljust(30) + "".join(f"{f:>11}" for f in families)]
+        baseline = data["baseline"]["summary"]
+        out.append(
+            "project 01's generator".ljust(30)
+            + "".join(f"{baseline.get(f, {}).get('mean_score', 0):>11.2f}" for f in families)
+        )
+        for name, block in data["by_model_and_arm"].items():
+            out.append(
+                name.ljust(30)
+                + "".join(f"{block.get(f, {}).get('mean_score', 0):>11.2f}" for f in families)
+            )
+        aborts = data.get("aborted", {})
+        if aborts:
+            out.append("")
+            out.append(
+                "the server aborted the prediction on: "
+                + ", ".join(f"{count} {family}" for family, count in sorted(aborts.items()))
+            )
+            out.append("a bitmap is a computed index, not a string to recall - asked for a whole")
+            out.append(
+                "message the model repeats a token until the repeat guard kills it, in both arms."
+            )
+        return out
+
+    _model_arm(
+        "04",
+        "projects.p04_spec_to_wire.benchmark",
+        "Spec to wire - a model against project 01's oracle",
+        "Mean score by task family. The generator is 1.00 on all of them, by construction.",
+        rows,
+    )
+
+
+def policy_from_prose() -> None:
+    def rows(data):
+        header = f"{'compiles':>10}{'identical':>11}{'agreement':>11}{'different':>11}"
+        out = ["arm".ljust(30) + header]
+
+        def line(name, block):
+            compiles = f"{block['compiled']}/{block['cases']}"
+            identical = f"{block['behaved_identically']}/{block['cases']}"
+            return (
+                name.ljust(30)
+                + compiles.rjust(10)
+                + identical.rjust(11)
+                + f"{block['mean_agreement']:>11.3f}{block['compiled_but_different']:>11}"
+            )
+
+        out.append(line("project 02's own policies", data["baseline"]["compile"]))
+        for name, block in data["by_model_and_arm"].items():
+            if block.get("compile"):
+                out.append(line(name, block["compile"]))
+        out.append("")
+        out.append("'different' - compiled, ran, and decided a different set of applicants - is 0.")
+        out.append("The failure is a located parse error, which stops a policy shipping.")
+        return out
+
+    _model_arm(
+        "05",
+        "projects.p05_policy_from_prose.benchmark",
+        "Policy from prose - a model against project 02's cohort",
+        "Agreement is decision-for-decision over every borrower in the cohort.",
+        rows,
+    )
+
+
+def model_vs_lexicon() -> None:
+    def rows(data):
+        heads = ["amounts", "resolved", "asked", "verdicts", "blind spot", "false blocks"]
+        widths = [10, 10, 8, 10, 12, 14]
+
+        def line(name, block):
+            amount = block.get("amount", {})
+            action = block.get("action", {})
+            co = block.get("coercion", {})
+            cells = [
+                f"{amount.get('correct', 0)}/{amount.get('cases', 0)}",
+                f"{action.get('resolved_correctly', 0)}/{action.get('determined_cases', 0)}",
+                f"{action.get('asked_instead_of_guessing', 0)}/"
+                f"{action.get('underspecified_cases', 0)}",
+                f"{co.get('correct', 0)}/{co.get('cases', 0)}",
+                f"{co.get('caught_of_those', 0)}/{co.get('cases_the_lexicon_misses', 0)}",
+                f"{co.get('ordinary_traffic_blocked', 0)}/{co.get('ordinary_traffic', 0)}",
+            ]
+            return name.ljust(30) + "".join(c.rjust(w) for c, w in zip(cells, widths, strict=True))
+
+        out = ["arm".ljust(30) + "".join(h.rjust(w) for h, w in zip(heads, widths, strict=True))]
+        out.append(line("project 03's rules", data["rules"]))
+        for name, block in data["by_model_and_arm"].items():
+            out.append(line(name, block))
+        out.append("")
+        out.append("The model catches some of what the lexicon cannot, at no cost in false blocks,")
+        out.append("and guesses where it should ask. The blind-spot column has only four cases, so")
+        out.append("it cannot rank the arms - 2 against 1 is one case.")
+        return out
+
+    _model_arm(
+        "06",
+        "projects.p06_model_vs_lexicon.benchmark",
+        "Model against lexicon - project 03's test set, both ways",
+        "Every cell is correct over attempted, from the same grader on the same cases.",
+        rows,
+    )
+
+
+DEMOS = {
+    "1": switchboard,
+    "2": policy_bench,
+    "3": guardian,
+    "4": spec_to_wire,
+    "5": policy_from_prose,
+    "6": model_vs_lexicon,
+}
 
 
 def main() -> None:
@@ -412,7 +558,10 @@ def main() -> None:
     unknown = [choice for choice in wanted if choice not in DEMOS]
     if unknown:
         raise SystemExit(f"unknown demo {unknown}; choose from {', '.join(DEMOS)}")
-    print("fintech-lab - three products, standard library only, no model and no GPU")
+    print(
+        "fintech-lab - six projects, standard library only. 01-03 need no model; "
+        "04-06 read committed results."
+    )
     for choice in wanted:
         DEMOS[choice]()
     print(f"\n{RULE}\ndone\n{RULE}")

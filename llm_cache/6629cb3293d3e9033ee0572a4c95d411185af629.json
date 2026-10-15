@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You write the notice a loan applicant receives. You state only the reason you are given, you never invent a reason, and you never promise or imply a future approval.",
+  "prompt": "The application was declined on score. The applicant scored 0 and this product needs 45. The requirements they did not meet are: six months of wallet history; eighteen months of wallet history; income comfortably above the floor; repaid on time before; keeps a balance between salary days; a salary lands on a predictable date.\n\nWrite the notice this applicant receives, in English. Two or three sentences. State the reason above and nothing else. Do not invent any other reason, do not suggest what would have been approved, and do not promise or imply that a future application will succeed. Reply with only the notice.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 400
+  },
+  "json_mode": false,
+  "response": "Your loan application has been declined because your score of 0 does not meet the required score of 45. You did not meet the necessary requirements including six months and eighteen months of wallet history, income above the floor, timely repayments, maintaining a balance between salary days, and having a predictable salary date.",
+  "prompt_tokens": 172,
+  "response_tokens": 64,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:15:18"
+}

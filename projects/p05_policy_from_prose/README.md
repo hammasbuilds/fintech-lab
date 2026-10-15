@@ -52,15 +52,15 @@ for a *repaid* loan matched the keyword list for a *default*.
 
 ## The numbers
 
-From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 0 replies generated, 0 served from the committed cache, 0.0s of wall clock, 0 answers cut off by the token cap.
-
-> **10 case(s) have no cached reply and were not run**, so the tables below are not a full sweep. Re-run with `--live` and a local model. They are listed in `results.json` under `incomplete`.
+From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 20 replies generated, 0 served from the committed cache, 74.1s of wall clock, 0 answers cut off by the token cap.
 
 ### Turning prose into a policy that runs
 
 | Arm | Compiles | Identical behaviour | Mean agreement | Compiled but different |
 |---|---:|---:|---:|---:|
 | **project 02's own policies** | 5/5 | 5/5 | 1.000 | 0 |
+| qwen2.5:14b-instruct / bare | 0/5 | 0/5 | 0.000 | 0 |
+| qwen2.5:14b-instruct / spec | 4/5 | 4/5 | 0.800 | 0 |
 
 Agreement is over all the borrowers in the cohort. **Compiled but different** is the column that matters: it parsed, it ran, and it decided a different set of applicants than the document it came from.
 
@@ -69,8 +69,27 @@ Agreement is over all the borrowers in the cohort. **Compiled but different** is
 | Arm | Mean checks | All checks | Safe | Invented a reason | Promised something |
 |---|---:|---:|---:|---:|---:|
 | **project 02's templates** | 1.00 | 5/5 | 5/5 | 0 | 0 |
+| qwen2.5:14b-instruct / bare | 0.94 | 3/5 | 5/5 | 0 | 0 |
+| qwen2.5:14b-instruct / spec | 0.94 | 3/5 | 5/5 | 0 | 0 |
 
 <!-- numbers:end -->
+
+## The result contradicted the expectation
+
+This project was built around the fear that a model would produce a policy which compiles,
+reads sensibly, and quietly approves a different set of applicants. **That is not what
+happened.** Of the policies that compiled with the grammar in the prompt, every one decided
+all 5,000 borrowers *identically* to the hand-written reference &mdash; the
+"compiled but different" column is zero.
+
+The failure mode is the loud one instead: without the grammar nothing compiles at all, and
+with it one case still fails outright with a located parse error. That is a better
+situation than the one feared, because a compiler error stops the policy from shipping and
+silent drift does not &mdash; but it is worth saying plainly that the measurement went
+against the hypothesis rather than for it.
+
+Five policies is a small sample, and one of them failing to compile is one case. The column
+to keep watching on a larger set is still the silent one.
 
 ## Reproducing it without a GPU
 

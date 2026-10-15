@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You turn written credit policy into a small policy language, exactly and without adding rules. You reply with only what is asked for.",
+  "prompt": "Here is a credit policy as it was written by the product owner:\n\nVersion two tightens v1. Keep the age rule. Raise the income floor to 18,000. Decline anyone with any default on file, not just two. Decline anyone whose wallet turnover is above 120 transactions a month, because we cannot read income through that. Refer - do not decline - anyone with six or more dependants, so an officer can size the limit. Scoring is as v1, plus minus 15 points for turnover above 80, and plus 10 for being salaried. Approve from 45. Limit and fee unchanged from v1.\n\nWrite it in the policy language. Reply with only the policy text, no code fence and no commentary. Keep every rule and do not add any. Give each gate a reason that states the actual threshold.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1100
+  },
+  "json_mode": false,
+  "response": "Age: Must be 18 years or older (Age Rule)\n\nIncome: Must be at least 18,000 (Income Floor)\n\nDefault: No defaults on file (No Defaults)\n\nWallet Turnover: Must be 120 or fewer transactions per month (Low Turnover)\n\nDependants: If 6 or more dependants, refer for manual review (High Dependants)\n\nScoring: Score must be 45 or higher (Scoring Threshold)\n\nScoring Adjustments:\n- Plus 10 points if salaried (Salaried Bonus)\n- Plus 15 points if turnover is above 80 (High Turnover Bonus)\n- Minus 15 points if turnover is above 80 (High Turnover Penalty)",
+  "prompt_tokens": 224,
+  "response_tokens": 158,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:15:14"
+}

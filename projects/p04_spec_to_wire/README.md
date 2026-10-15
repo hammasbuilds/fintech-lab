@@ -39,17 +39,15 @@ is byte-identical, and a test asserts it.
 
 ## The numbers
 
-From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 34 replies generated, 4 served from the committed cache, 580.2s of wall clock, 0 answers cut off by the token cap.
-
-> **20 case(s) have no cached reply and were not run**, so the tables below are not a full sweep. Re-run with `--live` and a local model. They are listed in `results.json` under `incomplete`.
+From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 9 replies generated, 49 served from the committed cache, 40.1s of wall clock, 0 answers cut off by the token cap.
 
 ### Mean score by task family
 
 | Arm | decode | fields | negative | wire |
 |---|---:|---:|---:|---:|
 | **project 01's generator (code)** | 1.00 | 1.00 | 1.00 | 1.00 |
-| qwen2.5:14b-instruct / bare | 0.33 | 0.02 | 0.12 | 0.00 |
-| qwen2.5:14b-instruct / spec | 0.45 | 0.29 | 0.40 | 0.00 |
+| qwen2.5:14b-instruct / bare | 0.33 | 0.03 | 0.10 | 0.00 |
+| qwen2.5:14b-instruct / spec | 0.45 | 0.25 | 0.40 | 0.00 |
 
 0 to 1. The generator is 1.00 by construction and is shown because a model score with no baseline beside it invites the reader to supply their own idea of what good looks like.
 
@@ -57,12 +55,27 @@ From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 34 replie
 
 | Arm | Parsed | Packs | Invariants hold |
 |---|---:|---:|---:|
-| qwen2.5:14b-instruct / bare | 17/18 | 2/18 | 0/18 |
-| qwen2.5:14b-instruct / spec | 20/20 | 10/20 | 4/20 |
+| qwen2.5:14b-instruct / bare | 19/29 | 2/29 | 0/29 |
+| qwen2.5:14b-instruct / spec | 20/29 | 10/29 | 4/29 |
 
 These stay separate on purpose: an unparseable message is not 90% of a message.
 
 <!-- numbers:end -->
+
+## The one result worth the build
+
+Handing the model the specification helps everything **except the task that needs a
+computed bitmap**, where it does not help at all:
+
+- `fields`, `negative` and `decode` all improve substantially with the spec in the prompt.
+- `wire` is **0.00 in both arms**, and not because the messages were wrong. In 16 of 16
+  attempts the server **aborted the prediction**: asked for a complete message, the model
+  degenerates into repeating a token until Ollama's repeat guard kills it.
+
+A bitmap is a computed index over which elements are present, not a string to recall, and
+nothing in the prompt changes that. The abort is recorded as a score of zero with the
+server's own words beside it, rather than as a case that did not run &mdash; it is the most
+informative thing the model did.
 
 ## What is deliberately excluded, and why
 

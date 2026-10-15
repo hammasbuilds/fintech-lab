@@ -56,7 +56,7 @@ def run(
                 except llm.ModelUnavailable as exc:
                     missing.append(f"{model} {arm} {case.label}: {exc}")
                     continue
-                row = grade.grade(case, reply.text, arm, model)
+                row = grade.grade(case, reply.text, arm, model, aborted=reply.aborted)
                 row.columns["hit_token_cap"] = reply.truncated
                 row.columns["seconds"] = round(reply.duration_ms / 1000, 1)
                 rows.append(row)
@@ -133,6 +133,7 @@ def report(results: dict[str, Any]) -> str:
         f"  (plus {usage['served_from_cache']} from cache)",
         f"  wall clock                   {usage['wall_clock_seconds']}s",
         f"  hit the token cap            {usage['hit_the_token_cap']}",
+        f"  aborted by the server        {usage['aborted_by_the_server']}",
     ]
     if results["incomplete"]:
         lines.append(

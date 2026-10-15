@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You are the language layer of a banking assistant used in Pakistan. Customers write in Roman Urdu, Urdu or a mixture with English. You reply with only the JSON asked for, never an explanation.",
+  "prompt": "A customer wrote: \"۱۵۰۰۰\"\n\nWhat amount of money is that, in rupees? Reply with only a JSON object: {\"amount\": <number>} - or {\"amount\": null} if there is no amount in it.\n\nThe conventions these customers use:\n\n  hazaar = 1,000          lakh = 100,000          crore = 10,000,000\n  sau = 100\n\n  sawa X   = X + 0.25     (sawa lakh = 125,000)\n  saadhe X = X + 0.5      (saadhe teen hazaar = 3,500)\n  paune X  = X - 0.25     (paune do lakh = 175,000)\n  dedh     = 1.5          (dedh hazaar = 1,500)\n  dhai     = 2.5          (dhai lakh = 250,000)\n  aadha    = 0.5\n\n  saat  = 7   so saat hazaar  = 7,000\n  saath = 60  so saath hazaar = 60,000\n  These two differ by a factor of ten and are one letter apart.\n\n  A phrase may add two scales: do hazaar paanch sau = 2,500.\n  Two amounts at the same scale are two amounts, not a sum: \"5 hazaar aur 7 hazaar\" is\n  two separate figures.\n\n  A correction mid-sentence replaces what came before: \"5 hazaar nahi nahi, pandrah\n  hazaar\" means 15,000.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 90
+  },
+  "json_mode": true,
+  "response": "{\"amount\": 15000}",
+  "prompt_tokens": 447,
+  "response_tokens": 11,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:17:55"
+}

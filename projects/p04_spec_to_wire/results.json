@@ -1,4 +1,9 @@
 {
+  "aborted": {
+    "wire": 16,
+    "negative": 1,
+    "fields": 1
+  },
   "setup": {
     "models": [
       "qwen2.5:14b-instruct"
@@ -33,42 +38,22 @@
     }
   },
   "usage": {
-    "calls": 38,
-    "served_from_cache": 4,
-    "generated": 34,
+    "calls": 58,
+    "served_from_cache": 49,
+    "generated": 9,
     "hit_the_token_cap": 0,
-    "wall_clock_seconds": 580.2,
-    "response_tokens": 6055,
+    "aborted_by_the_server": 18,
+    "wall_clock_seconds": 40.1,
+    "response_tokens": 6389,
     "models": [
       "qwen2.5:14b-instruct"
     ]
   },
   "cache": {
-    "entries": 43,
-    "bytes": 140617
+    "entries": 62,
+    "bytes": 185880
   },
-  "incomplete": [
-    "qwen2.5:14b-instruct bare fields:atm_withdrawal_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:atm_withdrawal_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:atm_partial_approval: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare fields:atm_insufficient_funds: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:atm_insufficient_funds: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:balance_inquiry: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:cardholder_transfer: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:pos_purchase_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:pos_refund: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare wire:network_echo_test: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct bare negative:L04: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:atm_withdrawal_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:atm_partial_approval: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:atm_insufficient_funds: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:balance_inquiry: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:cardholder_transfer: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:pos_purchase_approved: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec fields:pos_refund: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:pos_refund: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only.",
-    "qwen2.5:14b-instruct spec wire:network_echo_test: qwen2.5:14b-instruct could not be reached at http://127.0.0.1:11434 and this prompt is not cached (HTTPError: HTTP Error 500: Internal Server Error). Start ollama, or run with the committed cache only."
-  ],
+  "incomplete": [],
   "baseline": {
     "what": "project 01's deterministic generator and fault injector, on the same cases",
     "summary": {
@@ -117,19 +102,27 @@
         "invariants_hold": 0
       },
       "fields": {
-        "cases": 6,
-        "mean_score": 0.0239,
+        "cases": 8,
+        "mean_score": 0.0296,
         "perfect": 0,
-        "parsed": 5,
+        "parsed": 7,
         "packs": 0,
         "invariants_hold": 0
       },
       "negative": {
-        "cases": 4,
-        "mean_score": 0.125,
+        "cases": 5,
+        "mean_score": 0.1,
         "perfect": 0,
         "parsed": 4,
         "packs": 2,
+        "invariants_hold": 0
+      },
+      "wire": {
+        "cases": 8,
+        "mean_score": 0.0,
+        "perfect": 0,
+        "parsed": 0,
+        "packs": 0,
         "invariants_hold": 0
       }
     },
@@ -143,8 +136,8 @@
         "invariants_hold": 0
       },
       "fields": {
-        "cases": 7,
-        "mean_score": 0.2882,
+        "cases": 8,
+        "mean_score": 0.2522,
         "perfect": 0,
         "parsed": 7,
         "packs": 5,
@@ -157,6 +150,14 @@
         "parsed": 5,
         "packs": 5,
         "invariants_hold": 1
+      },
+      "wire": {
+        "cases": 8,
+        "mean_score": 0.0,
+        "perfect": 0,
+        "parsed": 0,
+        "packs": 0,
+        "invariants_hold": 0
       }
     }
   },
@@ -195,6 +196,71 @@
         "trace": "",
         "transaction": "debit purchase"
       },
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "fields:atm_withdrawal_approved",
+      "family": "fields",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0476,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 3 (Processing code) is n6: expected exactly 6 characters, got 7; DE 4 (Amount, transaction) is class n: 'AMT' is not allowed in that class; DE 7 (Transmission date and time) is n10: expected exactly 10 characters, got 16; DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 10; DE 18 (Merchant category code) is n4: expected exactly 4 characters, got 6; DE 25 (Point of service condition code) is n2: expected exactly 2 characters, got 11; DE 37 (Retrieval reference number) is an12: expected exactly 12 characters, got 18",
+      "elements_expected": 21,
+      "elements_given": 10,
+      "elements_matching": 1,
+      "missing": [
+        13,
+        14,
+        32,
+        33,
+        41,
+        42,
+        43,
+        49,
+        52,
+        55,
+        102
+      ],
+      "extra": [],
+      "differing": [
+        2,
+        3,
+        4,
+        7,
+        12,
+        18,
+        22,
+        25,
+        37
+      ],
+      "value_problems": [
+        "DE 3 (Processing code) is n6: expected exactly 6 characters, got 7",
+        "DE 4 (Amount, transaction) is class n: 'AMT' is not allowed in that class",
+        "DE 7 (Transmission date and time) is n10: expected exactly 10 characters, got 16",
+        "DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 10"
+      ],
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:atm_withdrawal_approved",
+      "family": "wire",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
       "hit_token_cap": false,
       "seconds": 0.0
     },
@@ -283,7 +349,23 @@
         "DE 22 (Point of service entry mode) is n3: expected exactly 3 characters, got 5"
       ],
       "hit_token_cap": false,
-      "seconds": 11.1
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:atm_partial_approval",
+      "family": "wire",
+      "scenario": "atm_partial_approval",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "decode:atm_insufficient_funds",
@@ -323,6 +405,73 @@
       "seconds": 0.0
     },
     {
+      "case": "fields:atm_insufficient_funds",
+      "family": "fields",
+      "scenario": "atm_insufficient_funds",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0455,
+      "parsed": true,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "does not pack: DE 3 (Processing code) is n6: expected exactly 6 characters, got 7; DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 10; DE 13 (Local transaction date) is n4: expected exactly 4 characters, got 16; DE 18 (Merchant category code) is n4: expected exactly 4 characters, got 8; DE 18 (Merchant category code) is class n: 'AMT' is not allowed in that class; DE 19 (Acquiring institution country code) is n3: expected exactly 3 characters, got 6; DE 37 (Retrieval reference number) is an12: expected exactly 12 characters, got 18",
+      "elements_expected": 21,
+      "elements_given": 10,
+      "elements_matching": 1,
+      "missing": [
+        4,
+        7,
+        14,
+        32,
+        33,
+        41,
+        42,
+        43,
+        49,
+        52,
+        55,
+        102
+      ],
+      "extra": [
+        19
+      ],
+      "differing": [
+        2,
+        3,
+        12,
+        13,
+        18,
+        22,
+        25,
+        37
+      ],
+      "value_problems": [
+        "DE 3 (Processing code) is n6: expected exactly 6 characters, got 7",
+        "DE 12 (Local transaction time) is n6: expected exactly 6 characters, got 10",
+        "DE 13 (Local transaction date) is n4: expected exactly 4 characters, got 16",
+        "DE 18 (Merchant category code) is n4: expected exactly 4 characters, got 8"
+      ],
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:atm_insufficient_funds",
+      "family": "wire",
+      "scenario": "atm_insufficient_funds",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
+    },
+    {
       "case": "decode:balance_inquiry",
       "family": "decode",
       "scenario": "balance_inquiry",
@@ -357,7 +506,7 @@
         "transaction": "debit purchase"
       },
       "hit_token_cap": false,
-      "seconds": 5.0
+      "seconds": 0.0
     },
     {
       "case": "fields:balance_inquiry",
@@ -409,7 +558,23 @@
         "DE 13 (Local transaction date) is n4: expected exactly 4 characters, got 16"
       ],
       "hit_token_cap": false,
-      "seconds": 13.8
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:balance_inquiry",
+      "family": "wire",
+      "scenario": "balance_inquiry",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "decode:cardholder_transfer",
@@ -446,7 +611,7 @@
         "transaction": "debit purchase"
       },
       "hit_token_cap": false,
-      "seconds": 4.9
+      "seconds": 0.0
     },
     {
       "case": "fields:cardholder_transfer",
@@ -502,7 +667,23 @@
         "DE 19 (Acquiring institution country code) is class n: 'AMT' is not allowed in that class"
       ],
       "hit_token_cap": false,
-      "seconds": 13.0
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:cardholder_transfer",
+      "family": "wire",
+      "scenario": "cardholder_transfer",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "decode:pos_purchase_approved",
@@ -537,7 +718,7 @@
         "transaction": "authorization request"
       },
       "hit_token_cap": false,
-      "seconds": 5.1
+      "seconds": 0.0
     },
     {
       "case": "fields:pos_purchase_approved",
@@ -552,7 +733,23 @@
       "invariants_hold": false,
       "detail": "unusable answer: field key '11D' is not a data element number",
       "hit_token_cap": false,
-      "seconds": 11.7
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:pos_purchase_approved",
+      "family": "wire",
+      "scenario": "pos_purchase_approved",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "decode:pos_refund",
@@ -587,7 +784,7 @@
         "transaction": "authorization request"
       },
       "hit_token_cap": false,
-      "seconds": 5.0
+      "seconds": 0.0
     },
     {
       "case": "fields:pos_refund",
@@ -634,7 +831,23 @@
         "DE 25 (Point of service condition code) is n2: expected exactly 2 characters, got 8"
       ],
       "hit_token_cap": false,
-      "seconds": 11.6
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:pos_refund",
+      "family": "wire",
+      "scenario": "pos_refund",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "decode:network_echo_test",
@@ -670,7 +883,7 @@
         "transaction": "debit purchase"
       },
       "hit_token_cap": false,
-      "seconds": 4.6
+      "seconds": 0.0
     },
     {
       "case": "fields:network_echo_test",
@@ -702,7 +915,23 @@
         "DE 11 (System trace audit number) is n6: expected exactly 6 characters, got 10"
       ],
       "hit_token_cap": false,
-      "seconds": 5.0
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:network_echo_test",
+      "family": "wire",
+      "scenario": "network_echo_test",
+      "rule": "",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "negative:L03",
@@ -717,7 +946,23 @@
       "invariants_hold": false,
       "detail": "does not pack: DE 2 (Primary account number) is n..19: at most 19 characters, got 32",
       "hit_token_cap": false,
-      "seconds": 8.6
+      "seconds": 0.0
+    },
+    {
+      "case": "negative:L04",
+      "family": "negative",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "L04",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 0.0
     },
     {
       "case": "negative:L06",
@@ -732,7 +977,7 @@
       "invariants_hold": false,
       "detail": "does not pack: DE 2 (Primary account number) is n..19: at most 19 characters, got 32",
       "hit_token_cap": false,
-      "seconds": 8.7
+      "seconds": 0.0
     },
     {
       "case": "negative:L09",
@@ -757,7 +1002,7 @@
         "L19"
       ],
       "hit_token_cap": false,
-      "seconds": 6.1
+      "seconds": 0.0
     },
     {
       "case": "negative:L13",
@@ -783,7 +1028,7 @@
         "L19"
       ],
       "hit_token_cap": false,
-      "seconds": 4.1
+      "seconds": 0.0
     },
     {
       "case": "decode:atm_withdrawal_approved",
@@ -819,7 +1064,7 @@
         "transaction": "debit"
       },
       "hit_token_cap": false,
-      "seconds": 5.8
+      "seconds": 0.0
     },
     {
       "case": "fields:atm_withdrawal_approved",
@@ -860,7 +1105,23 @@
       ],
       "value_problems": [],
       "hit_token_cap": false,
-      "seconds": 14.1
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:atm_withdrawal_approved",
+      "family": "wire",
+      "scenario": "atm_withdrawal_approved",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.7
     },
     {
       "case": "decode:atm_partial_approval",
@@ -896,7 +1157,7 @@
         "transaction": "debit"
       },
       "hit_token_cap": false,
-      "seconds": 5.7
+      "seconds": 0.0
     },
     {
       "case": "fields:atm_partial_approval",
@@ -935,7 +1196,23 @@
       ],
       "value_problems": [],
       "hit_token_cap": false,
-      "seconds": 14.9
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:atm_partial_approval",
+      "family": "wire",
+      "scenario": "atm_partial_approval",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.6
     },
     {
       "case": "decode:atm_insufficient_funds",
@@ -1011,7 +1288,23 @@
       ],
       "value_problems": [],
       "hit_token_cap": false,
-      "seconds": 15.9
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:atm_insufficient_funds",
+      "family": "wire",
+      "scenario": "atm_insufficient_funds",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.4
     },
     {
       "case": "decode:balance_inquiry",
@@ -1047,7 +1340,7 @@
         "transaction": "debit"
       },
       "hit_token_cap": false,
-      "seconds": 5.8
+      "seconds": 0.0
     },
     {
       "case": "fields:balance_inquiry",
@@ -1085,7 +1378,23 @@
       ],
       "value_problems": [],
       "hit_token_cap": false,
-      "seconds": 14.7
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:balance_inquiry",
+      "family": "wire",
+      "scenario": "balance_inquiry",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.5
     },
     {
       "case": "decode:cardholder_transfer",
@@ -1120,7 +1429,7 @@
         "transaction": "debit"
       },
       "hit_token_cap": false,
-      "seconds": 5.7
+      "seconds": 0.0
     },
     {
       "case": "fields:cardholder_transfer",
@@ -1161,7 +1470,23 @@
         "DE 42 (Card acceptor identification code) is ans15: expected exactly 15 characters, got 16"
       ],
       "hit_token_cap": false,
-      "seconds": 17.8
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:cardholder_transfer",
+      "family": "wire",
+      "scenario": "cardholder_transfer",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 4.1
     },
     {
       "case": "decode:pos_purchase_approved",
@@ -1196,7 +1521,7 @@
         "transaction": "debit"
       },
       "hit_token_cap": false,
-      "seconds": 17.2
+      "seconds": 0.0
     },
     {
       "case": "fields:pos_purchase_approved",
@@ -1235,7 +1560,23 @@
       ],
       "value_problems": [],
       "hit_token_cap": false,
-      "seconds": 26.9
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:pos_purchase_approved",
+      "family": "wire",
+      "scenario": "pos_purchase_approved",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.5
     },
     {
       "case": "decode:pos_refund",
@@ -1270,7 +1611,39 @@
         "transaction": "debit purchase"
       },
       "hit_token_cap": false,
-      "seconds": 13.2
+      "seconds": 0.0
+    },
+    {
+      "case": "fields:pos_refund",
+      "family": "fields",
+      "scenario": "pos_refund",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 11.0
+    },
+    {
+      "case": "wire:pos_refund",
+      "family": "wire",
+      "scenario": "pos_refund",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.7
     },
     {
       "case": "decode:network_echo_test",
@@ -1307,7 +1680,7 @@
         "transaction": "credit adjustment"
       },
       "hit_token_cap": false,
-      "seconds": 11.0
+      "seconds": 0.0
     },
     {
       "case": "fields:network_echo_test",
@@ -1339,7 +1712,23 @@
         "DE 41 (Card acceptor terminal identification) is ans8: expected exactly 8 characters, got 26"
       ],
       "hit_token_cap": false,
-      "seconds": 20.3
+      "seconds": 0.0
+    },
+    {
+      "case": "wire:network_echo_test",
+      "family": "wire",
+      "scenario": "network_echo_test",
+      "rule": "",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.0,
+      "parsed": false,
+      "packs": false,
+      "invariants_hold": false,
+      "detail": "no answer: prediction aborted, token repeat limit reached",
+      "aborted": "prediction aborted, token repeat limit reached",
+      "hit_token_cap": false,
+      "seconds": 3.6
     },
     {
       "case": "negative:L03",
@@ -1362,7 +1751,7 @@
         "L19"
       ],
       "hit_token_cap": false,
-      "seconds": 64.1
+      "seconds": 0.0
     },
     {
       "case": "negative:L04",
@@ -1385,7 +1774,7 @@
         "L19"
       ],
       "hit_token_cap": false,
-      "seconds": 65.6
+      "seconds": 0.0
     },
     {
       "case": "negative:L06",
@@ -1403,7 +1792,7 @@
       "rules_fired": [],
       "collateral": [],
       "hit_token_cap": false,
-      "seconds": 65.3
+      "seconds": 0.0
     },
     {
       "case": "negative:L09",
@@ -1428,7 +1817,7 @@
         "L19"
       ],
       "hit_token_cap": false,
-      "seconds": 57.8
+      "seconds": 0.0
     },
     {
       "case": "negative:L13",
@@ -1451,7 +1840,7 @@
         "L03"
       ],
       "hit_token_cap": false,
-      "seconds": 20.5
+      "seconds": 0.0
     }
   ]
 }

@@ -4,7 +4,8 @@
       "qwen2.5:14b-instruct"
     ],
     "arms": [
-      "bare"
+      "bare",
+      "spec"
     ],
     "policy_cases": 5,
     "notice_cases": 5,
@@ -16,30 +17,22 @@
     "what_the_arms_differ_by": "bare gives the prose and the task; spec adds the grammar, an example policy and the field list. Nothing else differs."
   },
   "usage": {
-    "calls": 0,
+    "calls": 20,
     "served_from_cache": 0,
-    "generated": 0,
+    "generated": 20,
     "hit_the_token_cap": 0,
-    "wall_clock_seconds": 0.0,
-    "response_tokens": 0,
-    "models": []
+    "aborted_by_the_server": 0,
+    "wall_clock_seconds": 74.1,
+    "response_tokens": 1998,
+    "models": [
+      "qwen2.5:14b-instruct"
+    ]
   },
   "cache": {
-    "entries": 7,
-    "bytes": 3326
+    "entries": 82,
+    "bytes": 224734
   },
-  "incomplete": [
-    "qwen2.5:14b-instruct bare compile:starter",
-    "qwen2.5:14b-instruct bare compile:thresholds",
-    "qwen2.5:14b-instruct bare compile:contradiction",
-    "qwen2.5:14b-instruct bare compile:nano_v1",
-    "qwen2.5:14b-instruct bare compile:nano_v2",
-    "qwen2.5:14b-instruct bare notice:gate-income-en",
-    "qwen2.5:14b-instruct bare notice:gate-default-ur",
-    "qwen2.5:14b-instruct bare notice:short-score-en",
-    "qwen2.5:14b-instruct bare notice:short-score-ur",
-    "qwen2.5:14b-instruct bare notice:approved-en"
-  ],
+  "incomplete": [],
   "baseline": {
     "what": "project 02's hand-written policies and template notices",
     "compile": {
@@ -59,7 +52,442 @@
       "promised_something": 0
     }
   },
-  "by_model_and_arm": {},
-  "compile_rows": [],
-  "notice_rows": []
+  "by_model_and_arm": {
+    "qwen2.5:14b-instruct / bare": {
+      "compile": {
+        "cases": 5,
+        "compiled": 0,
+        "behaved_identically": 0,
+        "mean_agreement": 0.0,
+        "worst_agreement": 0.0,
+        "compiled_but_different": 0
+      },
+      "notice": {
+        "cases": 5,
+        "mean_score": 0.9429,
+        "all_checks_passed": 3,
+        "safe": 5,
+        "invented_a_reason": 0,
+        "promised_something": 0
+      }
+    },
+    "qwen2.5:14b-instruct / spec": {
+      "compile": {
+        "cases": 5,
+        "compiled": 4,
+        "behaved_identically": 4,
+        "mean_agreement": 0.8,
+        "worst_agreement": 0.0,
+        "compiled_but_different": 0
+      },
+      "notice": {
+        "cases": 5,
+        "mean_score": 0.9429,
+        "all_checks_passed": 3,
+        "safe": 5,
+        "invented_a_reason": 0,
+        "promised_something": 0
+      }
+    }
+  },
+  "compile_rows": [
+    {
+      "case": "starter",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": false,
+      "error": "line 1: cannot read ':'",
+      "agreement": 0.0,
+      "identical": false,
+      "score": 0.0,
+      "reference_gates": 2,
+      "reference_rules": 2,
+      "characters": 668,
+      "hit_token_cap": false,
+      "seconds": 6.2
+    },
+    {
+      "case": "thresholds",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": false,
+      "error": "line 1: cannot read ';'",
+      "agreement": 0.0,
+      "identical": false,
+      "score": 0.0,
+      "reference_gates": 3,
+      "reference_rules": 2,
+      "characters": 417,
+      "hit_token_cap": false,
+      "seconds": 3.1
+    },
+    {
+      "case": "contradiction",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": false,
+      "error": "line 1: cannot read '.'",
+      "agreement": 0.0,
+      "identical": false,
+      "score": 0.0,
+      "reference_gates": 2,
+      "reference_rules": 1,
+      "characters": 270,
+      "hit_token_cap": false,
+      "seconds": 3.1
+    },
+    {
+      "case": "nano_v1",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": false,
+      "error": "line 1: cannot read ':'",
+      "agreement": 0.0,
+      "identical": false,
+      "score": 0.0,
+      "reference_gates": 3,
+      "reference_rules": 5,
+      "characters": 625,
+      "hit_token_cap": false,
+      "seconds": 6.4
+    },
+    {
+      "case": "nano_v2",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": false,
+      "error": "line 1: cannot read ':'",
+      "agreement": 0.0,
+      "identical": false,
+      "score": 0.0,
+      "reference_gates": 5,
+      "reference_rules": 7,
+      "characters": 544,
+      "hit_token_cap": false,
+      "seconds": 5.5
+    },
+    {
+      "case": "starter",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": true,
+      "error": "",
+      "agreement": 1.0,
+      "identical": true,
+      "score": 1.0,
+      "borrowers": 5000,
+      "decisions_differing": 0,
+      "limits_differing": 0,
+      "approvals_reference": 1560,
+      "approvals_model": 1560,
+      "approval_gap_points": 0.0,
+      "gates": 2,
+      "reference_gates": 2,
+      "score_rules": 2,
+      "reference_rules": 2,
+      "approve_at": 40.0,
+      "reference_approve_at": 40.0,
+      "limit": "min((0.2 * monthly_income), 15000)",
+      "reference_limit": "min((0.2 * monthly_income), 15000)",
+      "lint": [],
+      "reference_lint": [],
+      "round_trips": true,
+      "hit_token_cap": false,
+      "seconds": 5.1
+    },
+    {
+      "case": "thresholds",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": true,
+      "error": "",
+      "agreement": 1.0,
+      "identical": true,
+      "score": 1.0,
+      "borrowers": 5000,
+      "decisions_differing": 0,
+      "limits_differing": 0,
+      "approvals_reference": 2479,
+      "approvals_model": 2479,
+      "approval_gap_points": 0.0,
+      "gates": 3,
+      "reference_gates": 3,
+      "score_rules": 2,
+      "reference_rules": 2,
+      "approve_at": 25.0,
+      "reference_approve_at": 25.0,
+      "limit": "min((0.25 * monthly_income), 20000)",
+      "reference_limit": "min((0.25 * monthly_income), 20000)",
+      "lint": [],
+      "reference_lint": [],
+      "round_trips": true,
+      "hit_token_cap": false,
+      "seconds": 6.2
+    },
+    {
+      "case": "contradiction",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": true,
+      "error": "",
+      "agreement": 1.0,
+      "identical": true,
+      "score": 1.0,
+      "borrowers": 5000,
+      "decisions_differing": 0,
+      "limits_differing": 0,
+      "approvals_reference": 1963,
+      "approvals_model": 1963,
+      "approval_gap_points": 0.0,
+      "gates": 2,
+      "reference_gates": 2,
+      "score_rules": 1,
+      "reference_rules": 1,
+      "approve_at": 50.0,
+      "reference_approve_at": 50.0,
+      "limit": "min((0.25 * monthly_income), 25000)",
+      "reference_limit": "min((0.25 * monthly_income), 25000)",
+      "lint": [
+        "C8",
+        "C7"
+      ],
+      "reference_lint": [
+        "C8",
+        "C7"
+      ],
+      "round_trips": true,
+      "hit_token_cap": false,
+      "seconds": 4.9
+    },
+    {
+      "case": "nano_v1",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": true,
+      "error": "",
+      "agreement": 1.0,
+      "identical": true,
+      "score": 1.0,
+      "borrowers": 5000,
+      "decisions_differing": 0,
+      "limits_differing": 0,
+      "approvals_reference": 2835,
+      "approvals_model": 2835,
+      "approval_gap_points": 0.0,
+      "gates": 3,
+      "reference_gates": 3,
+      "score_rules": 5,
+      "reference_rules": 5,
+      "approve_at": 35.0,
+      "reference_approve_at": 35.0,
+      "limit": "min((0.25 * monthly_income), 20000)",
+      "reference_limit": "min((0.25 * monthly_income), 20000)",
+      "lint": [],
+      "reference_lint": [],
+      "round_trips": true,
+      "hit_token_cap": false,
+      "seconds": 8.6
+    },
+    {
+      "case": "nano_v2",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "compiles": false,
+      "error": "line 17: approve requires 45 points but at most 25 can be awarded, so nothing can ever be approved",
+      "agreement": 0.0,
+      "identical": false,
+      "score": 0.0,
+      "reference_gates": 5,
+      "reference_rules": 7,
+      "characters": 661,
+      "hit_token_cap": false,
+      "seconds": 7.1
+    }
+  ],
+  "notice_rows": [
+    {
+      "case": "gate-income-en",
+      "language": "en",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 1.0,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_reason": true,
+        "says_declined": true
+      },
+      "detail": "every check passed",
+      "words": 17
+    },
+    {
+      "case": "gate-default-ur",
+      "language": "ur",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.8571,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_reason": true,
+        "says_declined": true,
+        "in_roman_urdu": false
+      },
+      "detail": "failed: in_roman_urdu",
+      "words": 13
+    },
+    {
+      "case": "short-score-en",
+      "language": "en",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 1.0,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_shortfall": true,
+        "says_declined": true
+      },
+      "detail": "every check passed",
+      "words": 53
+    },
+    {
+      "case": "short-score-ur",
+      "language": "ur",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.8571,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_shortfall": true,
+        "says_declined": true,
+        "in_roman_urdu": false
+      },
+      "detail": "failed: in_roman_urdu",
+      "words": 47
+    },
+    {
+      "case": "approved-en",
+      "language": "en",
+      "arm": "bare",
+      "model": "qwen2.5:14b-instruct",
+      "score": 1.0,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_limit": true,
+        "says_approved": true
+      },
+      "detail": "every check passed",
+      "words": 20
+    },
+    {
+      "case": "gate-income-en",
+      "language": "en",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 1.0,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_reason": true,
+        "says_declined": true
+      },
+      "detail": "every check passed",
+      "words": 42
+    },
+    {
+      "case": "gate-default-ur",
+      "language": "ur",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.8571,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_reason": true,
+        "says_declined": true,
+        "in_roman_urdu": false
+      },
+      "detail": "failed: in_roman_urdu",
+      "words": 32
+    },
+    {
+      "case": "short-score-en",
+      "language": "en",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 1.0,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_shortfall": true,
+        "says_declined": true
+      },
+      "detail": "every check passed",
+      "words": 40
+    },
+    {
+      "case": "short-score-ur",
+      "language": "ur",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 0.8571,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_shortfall": true,
+        "says_declined": true,
+        "in_roman_urdu": false
+      },
+      "detail": "failed: in_roman_urdu",
+      "words": 68
+    },
+    {
+      "case": "approved-en",
+      "language": "en",
+      "arm": "spec",
+      "model": "qwen2.5:14b-instruct",
+      "score": 1.0,
+      "safe": true,
+      "checks": {
+        "non_empty": true,
+        "two_or_three_sentences": true,
+        "no_promise": true,
+        "no_invented_reason": true,
+        "states_the_limit": true,
+        "says_approved": true
+      },
+      "detail": "every check passed",
+      "words": 41
+    }
+  ]
 }

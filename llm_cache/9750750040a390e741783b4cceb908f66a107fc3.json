@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You are the language layer of a banking assistant used in Pakistan. Customers write in Roman Urdu, Urdu or a mixture with English. You reply with only the JSON asked for, never an explanation.",
+  "prompt": "A customer wrote: \"Imran ko bhejna hai\"\n\nTheir contacts are:\n  Rashid Ali  (Meezan, account ending 4417)\n  Rashida Bibi  (HBL, account ending 9082)\n  Imran Shah  (UBL, account ending 3310)\n  Ayesha Noor  (Alfalah, account ending 7725)\n  Bilal Traders  (Meezan, account ending 1194)\n  Zubair Khan  (Askari, account ending 6628)\n  Nasreen Akhtar  (HBL, account ending 2051)\n\nDecide what single action this asks for. Reply with only a JSON object:\n  {\"intent\": \"...\", \"amount\": <number or null>, \"beneficiary\": \"<full contact name or null>\", \"target_number\": \"<mobile number or null>\", \"biller\": \"<biller or null>\", \"ask\": \"<what must be asked, or null>\"}\nThe intent is one of: send_money, balance, bill_payment, mobile_topup, cash_withdrawal, mini_statement, block_card, unknown.\nSet \"ask\" when the message does not determine the action, and leave the other fields null in that case.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 260
+  },
+  "json_mode": true,
+  "response": "{\"intent\": \"send_money\", \"amount\": null, \"beneficiary\": \"Imran Shah\", \"target_number\": null, \"biller\": null, \"ask\": \"amount\"}",
+  "prompt_tokens": 324,
+  "response_tokens": 40,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:17:03"
+}

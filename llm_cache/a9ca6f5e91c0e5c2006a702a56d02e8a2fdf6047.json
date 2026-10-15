@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You turn written credit policy into a small policy language, exactly and without adding rules. You reply with only what is asked for.",
+  "prompt": "Here is a credit policy as it was written by the product owner:\n\nWe decline anyone earning under 20,000 rupees a month. Separately, and this was added later by the risk committee without removing the first rule, we decline anyone earning under 30,000. Three months of wallet history is worth 50 points and 50 points is enough to approve. The limit is a quarter of income capped at 25,000, with a 2.5% fee.\n\nWrite it in the policy language. Reply with only the policy text, no code fence and no commentary. Keep every rule and do not add any. Give each gate a reason that states the actual threshold.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1100
+  },
+  "json_mode": false,
+  "response": "Decline if income is less than 20,000 rupees a month. Decline if income is less than 30,000 rupees a month. Grant 50 points for three months of wallet history. Approve if 50 points are reached. Set limit to a quarter of income, capped at 25,000 rupees. Apply a 2.5% fee.",
+  "prompt_tokens": 189,
+  "response_tokens": 90,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:15:02"
+}

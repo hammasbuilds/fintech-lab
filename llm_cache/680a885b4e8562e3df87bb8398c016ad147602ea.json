@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You are the language layer of a banking assistant used in Pakistan. Customers write in Roman Urdu, Urdu or a mixture with English. You reply with only the JSON asked for, never an explanation.",
+  "prompt": "A customer received this message: \"FIR ho jayegi, jaldi karo\"\n\nIs someone trying to pressure or trick them into moving money? Reply with only a JSON object: {\"verdict\": \"block\" | \"warn\" | \"allow\", \"why\": \"<a few words>\"}\n  \"block\" - the message shows a scam or coercion pattern; nothing should be sent.\n  \"warn\"  - one pressure signal, often innocent; show it but proceed.\n  \"allow\" - ordinary traffic.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 140
+  },
+  "json_mode": true,
+  "response": "{\"verdict\": \"block\", \"why\": \"threatening tone\"}",
+  "prompt_tokens": 160,
+  "response_tokens": 16,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:17:24"
+}

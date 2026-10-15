@@ -307,7 +307,18 @@ GRADERS = {
 }
 
 
-def grade(case: Case, reply: str, arm: str, model: str) -> Result:
+def grade(case: Case, reply: str, arm: str, model: str, aborted: str = "") -> Result:
+    """Grade one answer. An abort is an outcome, not a missing data point.
+
+    When the server kills a prediction - here, always because the model degenerated into
+    repeating a token - there is no answer to grade and the score is zero. Recording that
+    as "not run" instead would hide the most informative thing the model did.
+    """
+    if aborted:
+        result = Result(case=case, arm=arm, model=model, raw_reply="")
+        result.detail = f"no answer: {aborted}"
+        result.columns["aborted"] = aborted
+        return result
     return GRADERS[case.family](case, reply, arm, model)
 
 

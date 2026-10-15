@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "Cardholder transfer. Savings to current, with both account identifications present. It is a cardholder transfer from the cardholder's current account. The amount is 7,500.00 PKR. The card number is 4111111111111111, the terminal is ATM00417, the acquirer is 0037101, the currency code is 586, and the trace number is 004712. The transmission date and time is 1015093012 (MMDDhhmmss). The account identification is PK12ABCD0000001234. The destination account identification is PK12ABCD0000009876.\n\nGive the complete request message in ASCII framing, as one line, with no explanation and no code fence.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 420
+  },
+  "json_mode": false,
+  "response": "",
+  "prompt_tokens": 0,
+  "response_tokens": 0,
+  "truncated": false,
+  "aborted": "prediction aborted, token repeat limit reached",
+  "generated_at": "2026-10-15T22:13:33"
+}

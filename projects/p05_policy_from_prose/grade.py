@@ -113,8 +113,15 @@ def _decisions(policy: dsl.Policy) -> list[tuple[str, float]]:
     return out
 
 
-def grade_compile(case: PolicyCase, reply: str, arm: str, model: str) -> CompileResult:
+def grade_compile(
+    case: PolicyCase, reply: str, arm: str, model: str, aborted: str = ""
+) -> CompileResult:
     result = CompileResult(case=case, arm=arm, model=model)
+    if aborted:
+        # No policy to run, so no behaviour to agree with: zero, with the reason kept.
+        result.error = f"no answer: {aborted}"
+        result.columns["aborted"] = aborted
+        return result
     text = first_block(reply).strip()
     result.policy_text = text
 
@@ -227,10 +234,16 @@ DECLINED_WORDS = (
 )
 
 
-def grade_notice(case: NoticeCase, reply: str, arm: str, model: str) -> NoticeResult:
+def grade_notice(
+    case: NoticeCase, reply: str, arm: str, model: str, aborted: str = ""
+) -> NoticeResult:
     from projects.p02_policy_bench.app import borrowers as pool
 
     result = NoticeResult(case=case, arm=arm, model=model)
+    if aborted:
+        result.checks = {"non_empty": False}
+        result.detail = f"no answer: {aborted}"
+        return result
     text = first_block(reply).strip()
     result.text = text
     lowered = text.lower()

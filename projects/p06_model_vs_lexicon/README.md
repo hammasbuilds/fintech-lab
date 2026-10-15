@@ -48,19 +48,34 @@ question is whether a model *told* the conventions can then apply them.
 
 ## The numbers
 
-From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 0 replies generated, 0 served from the committed cache, 0.0s of wall clock, 0 answers cut off by the token cap.
-
-> **146 case(s) have no cached reply and were not run**, so the tables below are not a full sweep. Re-run with `--live` and a local model. They are listed in `results.json` under `incomplete`.
+From [`results.json`](results.json). Models: **qwen2.5:14b-instruct**. 65 replies generated, 65 served from the committed cache, 93.7s of wall clock, 0 answers cut off by the token cap.
 
 ### The same cases, both ways
 
 | Arm | Amounts | Resolved | Asked | Verdicts | Blind spot | False blocks |
 |---|---:|---:|---:|---:|---:|---:|
-| **project 03's rules** | 20/20 | 20/20 | 10/10 | 23/23 | 0/4 | 0/5 |
+| **project 03's rules** | 12/12 | 20/20 | 10/10 | 23/23 | 0/4 | 0/5 |
+| qwen2.5:14b-instruct / bare | 12/12 | 16/20 | 6/10 | 13/23 | 2/4 | 0/5 |
+| qwen2.5:14b-instruct / taught | 12/12 | 17/20 | 7/10 | 13/23 | 1/4 | 0/5 |
 
 Every cell is correct over attempted. The rules row is the shipped product on the same cases through the same grader.
 
 <!-- numbers:end -->
+
+## What these numbers will and will not carry
+
+**The blind-spot column has four cases in it.** A model catching two of them where the
+rules catch none says a non-lexical reading finds *something* a lexicon cannot; it does not
+rank the two arms, and a 2-against-1 difference between them is one case. With n=4 that is
+noise, and treating it as a result would be exactly the mistake this project is built to
+avoid. The honest summary is: a model recovers some of what the lexicon misses, here at no
+cost in false blocks, and the sample is far too small to say how much.
+
+The columns that *are* large enough to read go the other way. The rules resolve every
+determined utterance and ask on every under-specified one; the model resolves fewer and
+**guesses where it should ask**, which is the failure that moves money to the wrong person.
+On the coercion verdicts overall the rules are exact and the model is not, because most of
+those cases are ones the lexicon was written for.
 
 ## Reproducing it without a GPU
 

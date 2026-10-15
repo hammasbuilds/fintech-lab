@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You answer about ISO 8583, the card payment message format. You are precise and you do not explain unless asked. When a format is requested, reply with only that.",
+  "prompt": "Balance inquiry. A zero-amount financial request answered with DE 54. It is a balance inquiry from the cardholder's savings account. The requested amount is zero. The card number is 4111111111111111, the terminal is ATM00417, the acquirer is 0037101, the currency code is 586, and the trace number is 004712. The transmission date and time is 1015093012 (MMDDhhmmss). The account identification is PK12ABCD0000001234.\n\nGive the complete request message in ASCII framing, as one line, with no explanation and no code fence.\n\nThe ASCII framing is: a 4-character message type indicator, then a\n16-hex-character primary bitmap (and a further 16 when bit 1 is set, which it must be if\nany data element above 64 is present), then every present data element in ascending order.\nFixed-length numeric elements are right-justified and zero-filled; fixed-length text\nelements are left-justified and space-filled. A variable-length element is preceded by its\nlength as 2 or 3 digits.\n\nThe data elements you may need:\n  DE 2   Primary account number                     n..19    2-digit length prefix\n  DE 3   Processing code                            n6       fixed\n  DE 4   Amount, transaction                        n12      fixed\n  DE 7   Transmission date and time                 n10      fixed\n  DE 11  System trace audit number                  n6       fixed\n  DE 12  Local transaction time                     n6       fixed\n  DE 13  Local transaction date                     n4       fixed\n  DE 14  Expiration date                            n4       fixed\n  DE 18  Merchant category code                     n4       fixed\n  DE 22  Point of service entry mode                n3       fixed\n  DE 25  Point of service condition code            n2       fixed\n  DE 32  Acquiring institution identification code  n..11    2-digit length prefix\n  DE 33  Forwarding institution identification code n..11    2-digit length prefix\n  DE 37  Retrieval reference number                 an12     fixed\n  DE 38  Authorization identification response      an6      fixed\n  DE 39  Response code                              an2      fixed\n  DE 41  Card acceptor terminal identification      ans8     fixed\n  DE 42  Card acceptor identification code          ans15    fixed\n  DE 43  Card acceptor name and location            ans40    fixed\n  DE 49  Currency code, transaction                 n3       fixed\n  DE 52  Personal identification number data        b16      fixed\n  DE 54  Additional amounts                         an..120  3-digit length prefix\n  DE 55  Integrated circuit card data               b..999   3-digit length prefix\n  DE 70  Network management information code        n3       fixed\n  DE 90  Original data elements                     n42      fixed\n  DE 102 Account identification 1                   ans..28  2-digit length prefix\n  DE 103 Account identification 2                   ans..28  2-digit length prefix",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 420
+  },
+  "json_mode": false,
+  "response": "",
+  "prompt_tokens": 0,
+  "response_tokens": 0,
+  "truncated": false,
+  "aborted": "prediction aborted, token repeat limit reached",
+  "generated_at": "2026-10-15T22:14:13"
+}

@@ -107,7 +107,7 @@
         <span class="num">04</span>
         <h2>Spec to wire</h2>
         <p class="tag">A local model asked to produce ISO 8583 traffic, graded by project 01&#x27;s own parser and its 22 invariants.</p>
-        <dl class="figs"><dt>Cases</dt><dd>29</dd><dt>Replies generated</dt><dd>34</dd><dt>Served from cache</dt><dd>4</dd><dt>Hit the token cap</dt><dd>0</dd></dl>
+        <dl class="figs"><dt>Cases</dt><dd>29</dd><dt>Replies generated</dt><dd>9</dd><dt>Served from cache</dt><dd>49</dd><dt>Hit the token cap</dt><dd>0</dd></dl>
         <p class="hint small">From the project's own results.json, written by its benchmark.</p>
         <p class="claim">Every grade is computed, not judged: a message either packs or it does not, and the invariants either hold or name what broke. The deterministic generator sits in the comparison table at 1.00 on every family.</p>
         <div class="opener">
@@ -119,7 +119,7 @@
         <span class="num">05</span>
         <h2>Policy from prose</h2>
         <p class="tag">A local model asked to turn a written credit policy into project 02&#x27;s language, and then judged on what it decides.</p>
-        <dl class="figs"><dt>Policies in prose</dt><dd>5</dd><dt>Notice cases</dt><dd>5</dd><dt>Replies generated</dt><dd>0</dd><dt>Borrowers each decides</dt><dd>5,000</dd></dl>
+        <dl class="figs"><dt>Policies in prose</dt><dd>5</dd><dt>Notice cases</dt><dd>5</dd><dt>Replies generated</dt><dd>20</dd><dt>Borrowers each decides</dt><dd>5,000</dd></dl>
         <p class="hint small">From the project's own results.json, written by its benchmark.</p>
         <p class="claim">A compiled policy can be run, so the grader runs it over all 5,000 borrowers. The column that matters is the one no text check can see: policies that compile, read sensibly, and approve a different set of applicants.</p>
         <div class="opener">
@@ -131,7 +131,7 @@
         <span class="num">06</span>
         <h2>Model against lexicon</h2>
         <p class="tag">Project 03&#x27;s test set answered by a local model and by the rules, through the same grader.</p>
-        <dl class="figs"><dt>Cases</dt><dd>73</dd><dt>Rules: amounts</dt><dd>20/20</dd><dt>Rules on the blind spot</dt><dd>0/4</dd><dt>Replies generated</dt><dd>0</dd></dl>
+        <dl class="figs"><dt>Cases</dt><dd>65</dd><dt>Rules: amounts</dt><dd>12/12</dd><dt>Rules on the blind spot</dt><dd>0/4</dd><dt>Replies generated</dt><dd>65</dd></dl>
         <p class="hint small">From the project's own results.json, written by its benchmark.</p>
         <p class="claim">Both columns come from the same cases. The rules score 0 of 4 on the scams they publicly miss - the one place a model has room to win - and the cost of winning there is counted in false alarms on ordinary traffic.</p>
         <div class="opener">

@@ -76,11 +76,32 @@ Built with code. No model, no GPU, no API key.
 Each one asks a local model to do what its pair does with code, and is scored by that
 pair's own grader. Every grade is computed, never judged.
 
-| | Project | Asks | Graded by | Tests |
-|---|---|---|---|---|
-| [**04**](projects/p04_spec_to_wire/) | [**Spec to wire**](projects/p04_spec_to_wire/) | Produce ISO 8583 traffic: read a message, emit its data elements, emit the whole message, and write a test case that breaks one named invariant. | Project 01's parser and its 22 invariants. A message packs or it does not. | 33 |
-| [**05**](projects/p05_policy_from_prose/) | [**Policy from prose**](projects/p05_policy_from_prose/) | Turn a credit policy written by a product owner into project 02's language, and write the applicant's notice. | Project 02's cohort: does the compiled policy decide the **same 5,000 borrowers**, decision for decision and limit for limit. | &mdash; |
-| [**06**](projects/p06_model_vs_lexicon/) | [**Model against lexicon**](projects/p06_model_vs_lexicon/) | Answer project 03's own test set: the amounts, the actions, and the coercion verdicts. | Project 03's grader, on the same cases, with the rules in the next column of the table. | &mdash; |
+| | Project | Asks | Graded by |
+|---|---|---|---|
+| [**04**](projects/p04_spec_to_wire/) | [**Spec to wire**](projects/p04_spec_to_wire/) | Produce ISO 8583 traffic: read a message, emit its data elements, emit the whole message, and write a test case that breaks one named invariant. | Project 01's parser and its 22 invariants. A message packs or it does not. |
+| [**05**](projects/p05_policy_from_prose/) | [**Policy from prose**](projects/p05_policy_from_prose/) | Turn a credit policy written by a product owner into project 02's language, and write the applicant's notice. | Project 02's cohort: does the compiled policy decide the **same 5,000 borrowers**, decision for decision and limit for limit. |
+| [**06**](projects/p06_model_vs_lexicon/) | [**Model against lexicon**](projects/p06_model_vs_lexicon/) | Answer project 03's own test set: the amounts, the actions, and the coercion verdicts. | Project 03's grader, on the same cases, with the rules in the next column of the table. |
+
+### What they found
+
+Measured with `qwen2.5:14b-instruct`, every case accounted for:
+
+- **04** &mdash; the specification in the prompt helps everything *except* the one task
+  that needs a computed bitmap. `fields` 0.03&rarr;0.25, `negative` 0.10&rarr;0.40,
+  `decode` 0.33&rarr;0.45 &mdash; and `wire` **0.00 in both arms**, because in **16 of 16**
+  attempts the server aborted the prediction: the model degenerates into repeating a token
+  until Ollama's repeat guard kills it. The generator scores 1.00 on all four.
+- **05** &mdash; this one went **against** the hypothesis. Without the grammar, **0 of 5**
+  policies compile; with it, **4 of 5** compile and all four decide all 5,000 borrowers
+  *identically* to the hand-written reference. The feared "compiles but approves a
+  different set" column is **zero**. The failure is a located parse error, which stops a
+  policy shipping; silent drift would not have.
+- **06** &mdash; the trade, in both directions. The model catches **2 of the 4** scams the
+  lexicon provably misses, with **0** false blocks on ordinary traffic. It is worse
+  everywhere the lexicon was written for (verdicts 13/23 against 23/23) and, worse,
+  **guesses where it should ask** on 4 of 10 under-specified utterances. That blind-spot
+  column has four cases in it, so it says a non-lexical reading finds *something*, and it
+  cannot rank the arms &mdash; 2 against 1 is one case.
 
 The model is local (Ollama, reached with `urllib`), sampling is pinned at temperature 0
 with a fixed seed, and **every reply is cached on disk and the cache is committed** &mdash;

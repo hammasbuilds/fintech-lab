@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You turn written credit policy into a small policy language, exactly and without adding rules. You reply with only what is asked for.",
+  "prompt": "Here is a credit policy as it was written by the product owner:\n\nApplicants must be twenty-one or older and must earn at least eighteen thousand rupees a month; anyone with a default already on file is turned away. Six months of wallet history earns twenty-five points, and so does keeping an average balance of five thousand or more. Twenty-five points is enough to approve. Lend a quarter of monthly income up to twenty thousand rupees, with a two percent fee on the limit.\n\nWrite it in the policy language. Reply with only the policy text, no code fence and no commentary. Keep every rule and do not add any. Give each gate a reason that states the actual threshold.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1100
+  },
+  "json_mode": false,
+  "response": "Applicants must be twenty-one or older and must earn at least eighteen thousand rupees a month; anyone with a default already on file is turned away. Six months of wallet history earns twenty-five points, and so does keeping an average balance of five thousand rupees or more. Twenty-five points is enough to approve. Lend a quarter of monthly income up to twenty thousand rupees, with a two percent fee on the limit.",
+  "prompt_tokens": 179,
+  "response_tokens": 88,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:14:59"
+}

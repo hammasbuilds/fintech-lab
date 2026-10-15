@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You write the notice a loan applicant receives. You state only the reason you are given, you never invent a reason, and you never promise or imply a future approval.",
+  "prompt": "The application was declined by a rule. The rule is: monthly_income < 18000. The reason recorded for the applicant is: \"monthly income below the floor of 18,000\".\n\nWrite the notice this applicant receives, in English. Two or three sentences. State the reason above and nothing else. Do not invent any other reason, do not suggest what would have been approved, and do not promise or imply that a future application will succeed. Reply with only the notice.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 400
+  },
+  "json_mode": false,
+  "response": "Your loan application has been declined because your monthly income is below the required floor of 18,000.",
+  "prompt_tokens": 150,
+  "response_tokens": 25,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:15:15"
+}

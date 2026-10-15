@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You turn written credit policy into a small policy language, exactly and without adding rules. You reply with only what is asked for.",
+  "prompt": "Here is a credit policy as it was written by the product owner:\n\nThis is our launch product. Nobody under 18. Nobody earning less than 12,000 a month. Nobody with two or more defaults on file. For scoring: 20 points for six months of wallet history, another 15 for eighteen months, 20 points for earning 30,000 or more, 15 for having repaid on time at least twice, and 10 for keeping an average balance of 4,000 or more. We approve from 35 points. The limit is a quarter of monthly income capped at 20,000 rupees and the fee is 2.5% of the limit.\n\nWrite it in the policy language. Reply with only the policy text, no code fence and no commentary. Keep every rule and do not add any. Give each gate a reason that states the actual threshold.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1100
+  },
+  "json_mode": false,
+  "response": "Age must be 18 or older: Reason - Age threshold is 18.\nMonthly income must be 12,000 or more: Reason - Income threshold is 12,000.\nNumber of defaults must be less than 2: Reason - Default threshold is 2.\nWallet history of six months grants 20 points.\nWallet history of eighteen months grants 15 points.\nMonthly income of 30,000 or more grants 20 points.\nOn-time repayments of at least twice grants 15 points.\nAverage balance of 4,000 or more grants 10 points.\nTotal score must be 35 or more: Reason - Score threshold is 35.\nCredit limit is a quarter of monthly income capped at 20,000 rupees.\nCredit fee is 2.5% of the limit.",
+  "prompt_tokens": 239,
+  "response_tokens": 186,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:15:08"
+}

@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You are the language layer of a banking assistant used in Pakistan. Customers write in Roman Urdu, Urdu or a mixture with English. You reply with only the JSON asked for, never an explanation.",
+  "prompt": "A customer wrote: \"PKR 1200\"\n\nWhat amount of money is that, in rupees? Reply with only a JSON object: {\"amount\": <number>} - or {\"amount\": null} if there is no amount in it.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 90
+  },
+  "json_mode": true,
+  "response": "{\"amount\": 1200}",
+  "prompt_tokens": 104,
+  "response_tokens": 10,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:16:19"
+}

@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5:14b-instruct",
+  "system": "You turn written credit policy into a small policy language, exactly and without adding rules. You reply with only what is asked for.",
+  "prompt": "Here is a credit policy as it was written by the product owner:\n\nWe will not lend to anyone under 18, and we will not lend to anyone earning less than 25,000 rupees a month. Beyond that we score people: a year or more of wallet history is worth 40 points, and having repaid a loan on time before is worth 30. We approve at 40 points or above. The limit is a fifth of monthly income, capped at 15,000 rupees, and we charge a one-off 3% service fee on the limit.\n\nWrite it in the policy language. Reply with only the policy text, no code fence and no commentary. Keep every rule and do not add any. Give each gate a reason that states the actual threshold.",
+  "options": {
+    "temperature": 0.0,
+    "seed": 7,
+    "num_predict": 1100
+  },
+  "json_mode": false,
+  "response": "Age must be 18 or older: Age under 18 is not eligible.\nMonthly income must be 25,000 rupees or more: Income below 25,000 rupees is not eligible.\nWallet history of one year or more grants 40 points: One year of wallet history is required for this score.\nPrevious on-time loan repayment grants 30 points: On-time loan repayment history is required for this score.\nCredit score must be 40 points or above: Score below 40 points is not eligible.\nLoan limit is one fifth of monthly income, capped at 15,000 rupees: Monthly income determines the loan limit, capped at 15,000 rupees.\nService fee is 3% of the loan limit: A one-off service fee of 3% applies to the loan limit.",
+  "prompt_tokens": 208,
+  "response_tokens": 183,
+  "truncated": false,
+  "aborted": "",
+  "generated_at": "2026-10-15T22:14:56"
+}

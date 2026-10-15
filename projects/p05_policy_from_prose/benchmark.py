@@ -25,7 +25,10 @@ RESULTS = Path(__file__).with_name("results.json")
 #: below that truncates mid-rule - which compiles as a different policy or not at all.
 BUDGET = {tasks.COMPILE: 1100, tasks.NOTICE: 400}
 
-MODELS = ("qwen2.5:14b-instruct", "qwen2.5:7b-instruct")
+#: The default is the one the published numbers were measured with, so a plain
+#: re-run reproduces them. Pass --models to add another, e.g. qwen2.5:7b-instruct
+#: for a size comparison.
+MODELS = ("qwen2.5:14b-instruct",)
 ARMS = (tasks.BARE, tasks.SPEC)
 
 
@@ -58,7 +61,7 @@ def run(
                 except llm.ModelUnavailable as exc:
                     missing.append(f"{model} {arm} compile:{case.key}: {exc}")
                     continue
-                result = grade.grade_compile(case, reply.text, arm, model)
+                result = grade.grade_compile(case, reply.text, arm, model, aborted=reply.aborted)
                 result.columns["hit_token_cap"] = reply.truncated
                 result.columns["seconds"] = round(reply.duration_ms / 1000, 1)
                 compiles.append(result)
@@ -84,7 +87,9 @@ def run(
                 except llm.ModelUnavailable as exc:
                     missing.append(f"{model} {arm} notice:{notice_case.key}: {exc}")
                     continue
-                notices.append(grade.grade_notice(notice_case, reply.text, arm, model))
+                notices.append(
+                    grade.grade_notice(notice_case, reply.text, arm, model, aborted=reply.aborted)
+                )
 
     baseline_compiles = [
         grade.grade_compile(case, case.reference, "reference", "none (code)")
@@ -170,6 +175,7 @@ def report(results: dict[str, Any]) -> str:
         f"  (plus {usage['served_from_cache']} from cache)",
         f"  wall clock                    {usage['wall_clock_seconds']}s",
         f"  hit the token cap             {usage['hit_the_token_cap']}",
+        f"  aborted by the server         {usage['aborted_by_the_server']}",
     ]
     if results["incomplete"]:
         lines.append(

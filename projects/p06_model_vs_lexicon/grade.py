@@ -238,7 +238,13 @@ GRADERS = {AMOUNT: grade_amount, ACTION: grade_action, COERCION: grade_coercion}
 RULES = {AMOUNT: rules_amount, ACTION: rules_action, COERCION: rules_coercion}
 
 
-def grade(case: Case, reply: str, arm: str, model: str) -> Row:
+def grade(case: Case, reply: str, arm: str, model: str, aborted: str = "") -> Row:
+    """Grade one answer. An abort scores wrong, the same as an unusable one."""
+    if aborted:
+        row = Row(case=case, arm=arm, model=model)
+        row.detail = f"no answer: {aborted}"
+        row.columns["aborted"] = aborted
+        return row
     return GRADERS[case.family](case, reply, arm, model)
 
 

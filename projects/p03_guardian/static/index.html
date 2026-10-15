@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .phone { max-width: 430px; margin: 0 auto; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+  .phone .bar { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .phone .bar strong { font-size: 13.5px; }
+  .thread { padding: 14px; min-height: 340px; max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; background: var(--plane); }
+  .msg { max-width: 84%; padding: 8px 11px; border-radius: 13px; font-size: 13.8px; line-height: 1.45; white-space: pre-wrap; }
+  .msg.user { align-self: flex-end; background: var(--series-1); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.bot.block { border-color: var(--critical); border-left: 3px solid var(--critical); }
+  .msg.bot.warn { border-left: 3px solid var(--warning); }
+  .composer { display: flex; gap: 8px; padding: 11px; border-top: 1px solid var(--border); background: var(--surface); }
+  .composer input { flex: 1 1 auto; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 14px 0; }
+  .chips button { font: inherit; font-size: 12px; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; color: var(--ink-2); cursor: pointer; text-align: left; }
+  .chips button:hover { color: var(--ink); }
+  .statebar { display: flex; gap: 8px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--border); background: var(--surface-sunken); font-size: 12.5px; color: var(--ink-2); }
+  mark.hit { background: transparent; color: inherit; border-bottom: 2px solid var(--critical); }
+  mark.amt { background: transparent; color: inherit; border-bottom: 2px solid var(--series-1); }
+  .chain { font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Guardian</h1>
+    <p class="sub">A transaction assistant that speaks Roman Urdu and will not move money without a clear yes</p>
+  </div>
+  <div class="spacer"></div>
+  <label class="field" style="min-width:150px">Language
+    <select id="language"><option value="en">English read-back</option><option value="ur">Roman Urdu read-back</option></select>
+  </label>
+  <button class="btn ghost" id="theme" type="button" aria-label="Switch between light and dark">Dark</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="t-chat" aria-selected="true" aria-controls="p-chat">Assistant</button>
+  <button role="tab" id="t-inspect" aria-selected="false" aria-controls="p-inspect">Inspector</button>
+  <button role="tab" id="t-score" aria-selected="false" aria-controls="p-score">Scorecard</button>
+  <button role="tab" id="t-ledger" aria-selected="false" aria-controls="p-ledger">Audit trail</button>
+  <button role="tab" id="t-ref" aria-selected="false" aria-controls="p-ref">Reference</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ---------------------------------------------------------------- chat -->
+  <section class="panel active" id="p-chat" role="tabpanel" aria-labelledby="t-chat">
+    <div class="grid cols-2">
+      <div>
+        <div class="phone">
+          <div class="bar">
+            <span class="pill good"><span class="dot"></span><span>sandbox</span></span>
+            <strong>Guardian</strong>
+            <span class="spacer" style="flex:1"></span>
+            <button class="btn ghost" id="reset" type="button" style="padding:4px 10px; font-size:12px">New</button>
+          </div>
+          <div class="thread" id="thread"></div>
+          <div class="statebar"><span>state</span><span id="state-pill"></span></div>
+          <div class="composer">
+            <input type="text" id="say" placeholder="Rashid ko pandrah hazaar bhejo" autocomplete="off" spellcheck="false">
+            <button class="btn" id="go-say" type="button">Send</button>
+          </div>
+          <div class="chips" id="chips" style="padding-bottom:12px"></div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="card">
+          <h2>What it is doing</h2>
+          <p class="hint">
+            Three layers run on every message: the amount parser, the intent and slot
+            parser, and the coercion check. This panel shows what each one made of the
+            last thing you said.
+          </p>
+          <div id="live"></div>
+        </div>
+        <div class="card">
+          <h2>The three rules it will not break</h2>
+          <div class="note">Nothing executes without a reply that is exactly a yes. "hmm", "acha" or a new sentence are not consent, and the question is asked again.</div>
+          <div class="note">Every amount is read back in words before it moves. <strong>pandrah hazaar</strong> and <strong>dedh hazaar</strong> do not sound alike; 15,000 and 1,500 look alike.</div>
+          <div class="note bad">When two pressure patterns appear together, there is no confirmation to press. No "proceed anyway" exists, because the user under pressure is the one who would press it.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- inspect -->
+  <section class="panel" id="p-inspect" role="tabpanel" aria-labelledby="t-inspect">
+    <div class="card">
+      <h2>Inspect one utterance</h2>
+      <p class="hint">No session, no state: just what the three layers extract.</p>
+      <div class="row">
+        <input type="text" id="inspect-in" style="flex:1 1 420px" placeholder="5 hazaar nahi nahi, sawa lakh Imran ko bhejo" spellcheck="false">
+        <button class="btn" id="go-inspect" type="button">Inspect</button>
+      </div>
+    </div>
+    <div id="inspect-out"></div>
+  </section>
+
+  <!-- --------------------------------------------------------------- score -->
+  <section class="panel" id="p-score" role="tabpanel" aria-labelledby="t-score">
+    <div class="card">
+      <h2>Scored against a hand-written test set</h2>
+      <p class="hint" id="score-caveat"></p>
+      <div class="tiles" id="score-tiles"></div>
+    </div>
+    <div class="card">
+      <h2>Accuracy by group</h2>
+      <p class="hint">Graded on the resulting action, never on the wording. Direct values are on every bar and the table below repeats them.</p>
+      <div class="bars" id="score-bars"></div>
+      <details style="margin-top:12px"><summary>Table view</summary><div id="score-table"></div></details>
+    </div>
+    <div class="card">
+      <h2>The blind spot, measured</h2>
+      <p class="hint" id="blind-line"></p>
+      <div id="blind-table"></div>
+    </div>
+    <div class="card">
+      <h2>End-to-end properties</h2>
+      <div id="props"></div>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------------- ledger -->
+  <section class="panel" id="p-ledger" role="tabpanel" aria-labelledby="t-ledger">
+    <div class="card">
+      <h2>Hash-chained audit trail</h2>
+      <p class="hint">
+        Every action and every refusal, each entry carrying the hash of the one before it.
+        Refusals are logged as deliberately as transfers: a log that holds only what happened
+        cannot answer whether the user was warned.
+      </p>
+      <div id="ledger-state"></div>
+      <div id="ledger-table"></div>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- reference -->
+  <section class="panel" id="p-ref" role="tabpanel" aria-labelledby="t-ref">
+    <div class="card">
+      <h2>Contacts in the sandbox</h2>
+      <p class="hint">Two of these share a name prefix on purpose: "Rashid" is genuinely ambiguous, and the assistant has to say so rather than pick.</p>
+      <div id="contacts"></div>
+    </div>
+    <div class="card">
+      <h2>Coercion families</h2>
+      <p class="hint">The score is the number of distinct families present, not the number of matched phrases. One family warns; two block.</p>
+      <div id="families"></div>
+    </div>
+    <div class="card">
+      <h2>Replies that count as yes and no</h2>
+      <p class="hint">Closed sets. Everything outside them is unclear, and unclear is never consent.</p>
+      <div class="grid cols-2" id="replies"></div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">
+  Standard library only &mdash; no model, no GPU, no API key. Nothing here moves real money.
+</footer>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, attrs = {}, kids = []) => {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (value !== null && value !== undefined) node.setAttribute(key, value);
+  }
+  for (const kid of [].concat(kids)) if (kid) node.append(kid);
+  return node;
+};
+const mount = (selector, node) => { const host = $(selector); host.innerHTML = ""; host.append(node); return host; };
+const rate = (value) => (value === null || value === undefined) ? "n/a" : (100 * value).toFixed(1) + "%";
+
+let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+function paintTheme() {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  $("#theme").textContent = dark ? "Light" : "Dark";
+}
+$("#theme").addEventListener("click", () => { dark = !dark; paintTheme(); });
+paintTheme();
+
+for (const tab of document.querySelectorAll('[role="tab"]')) {
+  tab.addEventListener("click", () => {
+    for (const other of document.querySelectorAll('[role="tab"]')) other.setAttribute("aria-selected", String(other === tab));
+    for (const panel of document.querySelectorAll(".panel")) panel.classList.toggle("active", panel.id === tab.getAttribute("aria-controls"));
+  });
+}
+
+const tip = $("#tip");
+function showTip(event, html) {
+  tip.innerHTML = html; tip.classList.add("on");
+  const box = tip.getBoundingClientRect();
+  let x = event.clientX + 14, y = event.clientY + 14;
+  if (x + box.width > window.innerWidth - 8) x = event.clientX - box.width - 14;
+  if (y + box.height > window.innerHeight - 8) y = event.clientY - box.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => tip.classList.remove("on");
+
+async function api(path, body) {
+  const options = body === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  };
+  const response = await fetch(path, options);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+  return data;
+}
+function pill(level, label) {
+  return el("span", { class: "pill " + (level || "neutral") }, [el("span", { class: "dot" }), el("span", { text: label })]);
+}
+function table(headers, rows) {
+  const node = el("table");
+  node.append(el("thead", {}, el("tr", {}, headers.map((h) => el("th", { class: h.num ? "num" : null, text: h.label || h })))));
+  const body = el("tbody");
+  for (const row of rows) {
+    body.append(el("tr", {}, row.map((cell) =>
+      cell && cell.node ? el("td", { class: cell.cls || null }, cell.node)
+        : el("td", { class: (cell && cell.cls) || null, text: cell && cell.text !== undefined ? cell.text : String(cell) }))));
+  }
+  node.append(body);
+  return el("div", { class: "scroll" }, node);
+}
+function barList(host, items) {
+  host.innerHTML = "";
+  const max = Math.max(...items.map((i) => i.value), 0.0001);
+  for (const item of items) {
+    const fill = el("div", { class: "fill", style: "width:" + (100 * item.value / max).toFixed(1) + "%; background:" + (item.color || "var(--series-1)") });
+    const track = el("div", { class: "track" }, fill);
+    if (item.tip) {
+      track.addEventListener("mousemove", (event) => showTip(event, item.tip));
+      track.addEventListener("mouseleave", hideTip);
+    }
+    host.append(el("div", { class: "bar-row" }, [
+      el("span", { class: "lbl", text: item.label }), track, el("span", { class: "val", text: item.display }),
+    ]));
+  }
+}
+
+/* ---- chat -------------------------------------------------------------- */
+let META = null;
+let SESSION = null;
+
+const STATE_LEVEL = {
+  idle: "neutral", needs_information: "warning", awaiting_confirmation: "warning",
+  executed: "good", refused: "neutral", blocked: "critical",
+};
+
+function paintThread(transcript, flavour) {
+  const thread = $("#thread");
+  thread.innerHTML = "";
+  transcript.forEach((turn, index) => {
+    const last = index === transcript.length - 1;
+    const classes = ["msg", turn.speaker === "user" ? "user" : "bot"];
+    if (turn.speaker === "assistant" && last && flavour) classes.push(flavour);
+    thread.append(el("div", { class: classes.join(" "), text: turn.text }));
+  });
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function paintState(state) {
+  mount("#state-pill", pill(STATE_LEVEL[state] || "neutral", state.replace(/_/g, " ")));
+}
+
+function paintLive(outcome) {
+  const host = $("#live");
+  host.innerHTML = "";
+  const assessment = outcome.assessment;
+  const utterance = outcome.utterance;
+
+  if (assessment) {
+    const level = assessment.verdict === "block" ? "critical" : assessment.verdict === "warn" ? "warning" : "good";
+    const card = el("div", {}, [
+      el("div", { class: "row", style: "margin-bottom:6px" }, [
+        pill(level, "coercion: " + assessment.verdict),
+        el("span", { class: "hint", style: "margin:0", text: assessment.score + " of 7 families" }),
+      ]),
+      el("p", { class: "hint", text: assessment.reason }),
+    ]);
+    if (assessment.hits.length) {
+      card.append(table(["Family", "Phrase matched"],
+        assessment.hits.map((hit) => [hit.description, { text: hit.phrase, cls: "mono" }])));
+    }
+    host.append(card);
+  }
+
+  if (utterance) {
+    const rows = [
+      ["intent", utterance.intent],
+      ["amount", utterance.amount ? utterance.amount.value.toLocaleString("en-US") + "  (" + utterance.amount.source + ")" : "-"],
+      ["beneficiary", utterance.beneficiary || "-"],
+      ["near misses", utterance.near_misses.map((c) => c.name).join(", ") || "-"],
+      ["corrected", utterance.corrected ? "yes" : "no"],
+      ["issues", utterance.issues.join(", ") || "none"],
+    ];
+    const list = el("dl", { class: "kv", style: "margin-top:10px" });
+    for (const [key, value] of rows) {
+      list.append(el("dt", { text: key }));
+      list.append(el("dd", { text: String(value) }));
+    }
+    host.append(list);
+    if (utterance.all_amounts.length > 1) {
+      host.append(el("div", { class: "note warn", text:
+        "Heard " + utterance.all_amounts.length + " amounts: "
+        + utterance.all_amounts.map((a) => a.value.toLocaleString("en-US")).join(", ")
+        + ". It will ask rather than pick one, unless a correction marker makes the choice unambiguous." }));
+    }
+  }
+  if (!assessment && !utterance) {
+    host.append(el("p", { class: "hint", text: "Say something to see the layers run." }));
+  }
+}
+
+async function startSession() {
+  const data = await api("/api/session", { language: $("#language").value });
+  SESSION = data.session;
+  paintThread([], null);
+  paintState("idle");
+  paintLive({});
+  mount("#ledger-state", el("p", { class: "hint", text: "No entries yet in this conversation." }));
+  mount("#ledger-table", el("div"));
+}
+
+async function send(text) {
+  if (!text.trim()) return;
+  try {
+    const outcome = await api("/api/say", { session: SESSION, text });
+    const flavour = outcome.state === "blocked" ? "block"
+      : (outcome.assessment && outcome.assessment.verdict === "warn") ? "warn" : null;
+    paintThread(outcome.transcript, flavour);
+    paintState(outcome.state);
+    paintLive(outcome);
+    paintLedger(outcome.ledger);
+    $("#say").value = "";
+  } catch (error) {
+    if (String(error.message).includes("expired")) {
+      await startSession();
+      return send(text);
+    }
+    const thread = $("#thread");
+    thread.append(el("div", { class: "msg bot block", text: error.message }));
+  }
+}
+
+$("#go-say").addEventListener("click", () => send($("#say").value));
+$("#say").addEventListener("keydown", (event) => { if (event.key === "Enter") send($("#say").value); });
+$("#reset").addEventListener("click", startSession);
+$("#language").addEventListener("change", startSession);
+
+/* ---- ledger ------------------------------------------------------------ */
+function paintLedger(ledger) {
+  if (!ledger || !ledger.entries.length) return;
+  const verification = ledger.verification;
+  mount("#ledger-state", el("div", { class: "row" }, [
+    pill(verification.intact ? "good" : "critical", verification.intact ? "chain intact" : "chain broken at " + verification.broken_at),
+    el("span", { class: "hint", style: "margin:0", text: ledger.entries.length + " entries" }),
+    el("span", { class: "chain", text: "head " + ledger.head.slice(0, 16) + "..." }),
+  ]));
+  mount("#ledger-table", table(
+    [{ label: "#", num: true }, "At", "Kind", "Payload", "Digest"],
+    ledger.entries.map((entry) => [
+      { text: String(entry.index), cls: "num" },
+      entry.at.replace("T", " ").replace("+00:00", "Z"),
+      { node: pill(entry.kind.startsWith("coercion") ? "critical"
+        : entry.kind === "executed" ? "good"
+        : entry.kind === "refused_by_user" ? "warning" : "neutral", entry.kind.replace(/_/g, " ")) },
+      { text: JSON.stringify(entry.payload), cls: "mono" },
+      { text: entry.digest.slice(0, 14) + "...", cls: "mono" },
+    ])
+  ));
+}
+
+/* ---- inspector --------------------------------------------------------- */
+function highlight(text, spans, cls) {
+  const node = el("pre", { class: "out" });
+  let cursor = 0;
+  for (const [start, end] of spans.slice().sort((a, b) => a[0] - b[0])) {
+    if (start < cursor) continue;
+    node.append(document.createTextNode(text.slice(cursor, start)));
+    node.append(el("mark", { class: cls, text: text.slice(start, end) }));
+    cursor = end;
+  }
+  node.append(document.createTextNode(text.slice(cursor)));
+  return node;
+}
+
+$("#go-inspect").addEventListener("click", async () => {
+  const out = $("#inspect-out");
+  out.innerHTML = "";
+  try {
+    const data = await api("/api/inspect", { text: $("#inspect-in").value });
+
+    const amounts = el("div", { class: "card" }, [
+      el("h2", { text: "Amounts" }),
+      el("p", { class: "hint", text: data.amounts.length + " found. Mobile numbers, long digit runs and IBAN-shaped strings are excluded before the scan." }),
+      highlight(data.text, data.amounts.map((a) => [a.start, a.end]), "amt"),
+    ]);
+    if (data.amounts.length) {
+      amounts.append(table(
+        ["Text", { label: "Value", num: true }, "Read as", "Spoken back (English)", "Spoken back (Roman Urdu)"],
+        data.amounts.map((a) => [
+          { text: a.text, cls: "mono" }, { text: a.value.toLocaleString("en-US"), cls: "num" },
+          a.source, a.spoken_en, a.spoken_ur,
+        ])
+      ));
+    }
+    out.append(amounts);
+
+    const u = data.utterance;
+    const parse = el("div", { class: "card" }, [
+      el("h2", { text: "Intent and slots" }),
+      el("dl", { class: "kv" }, [
+        el("dt", { text: "intent" }), el("dd", { text: u.intent }),
+        el("dt", { text: "keywords matched" }), el("dd", { class: "mono", text: u.matched.join(", ") || "-" }),
+        el("dt", { text: "beneficiary" }), el("dd", { text: u.beneficiary || "-" }),
+        el("dt", { text: "mention" }), el("dd", { text: u.beneficiary_mention || "-" }),
+        el("dt", { text: "target number" }), el("dd", { text: u.target_number || "-" }),
+        el("dt", { text: "biller" }), el("dd", { text: u.biller || "-" }),
+        el("dt", { text: "moves money" }), el("dd", { text: u.moves_money ? "yes" : "no" }),
+        el("dt", { text: "resolved action" }), el("dd", { class: "mono", text: u.action ? JSON.stringify(u.action) : "none - it would ask" }),
+      ]),
+    ]);
+    if (data.questions.length) {
+      parse.append(el("p", { class: "hint", style: "margin-top:10px", text: "What it would ask:" }));
+      parse.append(table(["Issue", "English", "Roman Urdu"],
+        data.questions.map((q) => [{ text: q.issue, cls: "mono" }, q.en, q.ur])));
+    }
+    if (u.candidates.length > 1) {
+      parse.append(el("div", { class: "note warn", text: "Ambiguous between: " + u.candidates.map((c) => c.name + " (..." + c.account_tail + ")").join(", ") }));
+    }
+    if (u.near_misses.length) {
+      parse.append(el("div", { class: "note", text: "Near miss named in the read-back: " + u.near_misses.map((c) => c.name + " (..." + c.account_tail + ")").join(", ") }));
+    }
+    out.append(parse);
+
+    const c = data.coercion;
+    const level = c.verdict === "block" ? "critical" : c.verdict === "warn" ? "warning" : "good";
+    const risk = el("div", { class: "card" }, [
+      el("h2", { text: "Coercion check" }),
+      el("div", { class: "row" }, [pill(level, c.verdict), el("span", { class: "hint", style: "margin:0", text: c.score + " of 7 families" })]),
+      el("p", { class: "hint", text: c.reason }),
+      highlight(data.text, c.hits.map((h) => [h.start, h.end]), "hit"),
+    ]);
+    if (c.hits.length) {
+      risk.append(table(["Family", "Description", "Phrase"],
+        c.hits.map((h) => [{ text: h.family, cls: "mono" }, h.description, { text: h.phrase, cls: "mono" }])));
+    }
+    out.append(risk);
+
+    out.append(el("div", { class: "card" }, [
+      el("h2", { text: "If this arrived as a confirmation reply" }),
+      el("div", { class: "row" }, [
+        pill(data.reply_class === "affirmative" ? "good" : data.reply_class === "negative" ? "warning" : "neutral", data.reply_class),
+        el("span", { class: "hint", style: "margin:0", text: data.reply_class === "unclear" ? "unclear is never consent: the question would be asked again" : "" }),
+      ]),
+    ]));
+  } catch (error) {
+    out.append(el("div", { class: "card" }, el("div", { class: "note bad", text: error.message })));
+  }
+});
+
+/* ---- scorecard --------------------------------------------------------- */
+function renderScorecard(data) {
+  const n = data.numerals, a = data.actions, c = data.coercion, r = data.replies, p = data.properties;
+
+  $("#score-caveat").textContent =
+    data.testset.all + " cases, hand-written, with the expected answer stated for each. The "
+    + "set deliberately includes " + c.out_of_vocabulary_cases + " scam approaches that use none "
+    + "of the detector's vocabulary; they are counted separately so the headline cannot be "
+    + "inflated by testing only what the lexicon already knows.";
+
+  const tiles = [
+    ["Amounts parsed", n.exact + "/" + n.cases, rate(n.accuracy)],
+    ["Actions correct", a.overall_exact + "/" + a.cases, rate(a.overall_accuracy)],
+    ["Asked instead of guessing", a.asked_instead_of_guessed + "/" + a.underspecified_cases, rate(a.ask_accuracy)],
+    ["Wrongly read as consent", r.read_as_consent_wrongly, "must be zero"],
+    ["Ordinary traffic blocked", c.benign_blocked + "/" + c.benign_cases, "false blocks"],
+    ["Out-of-vocabulary scams missed", c.out_of_vocabulary_missed + "/" + c.out_of_vocabulary_cases, rate(c.miss_rate_out_of_vocabulary)],
+    ["Properties holding", p.holding + "/" + p.checks, "end to end"],
+  ];
+  const host = $("#score-tiles");
+  host.innerHTML = "";
+  for (const [key, value, unit] of tiles) {
+    host.append(el("div", { class: "tile" }, [
+      el("span", { class: "k", text: key }), el("span", { class: "v", text: String(value) }), el("span", { class: "u", text: unit }),
+    ]));
+  }
+
+  const groups = [
+    ["Amounts", n.accuracy, n.exact + "/" + n.cases],
+    ["Actions resolved", a.resolved_accuracy, a.resolved_exact + "/" + a.resolved_cases],
+    ["Asked instead of guessing", a.ask_accuracy, a.asked_instead_of_guessed + "/" + a.underspecified_cases],
+    ["Coercion verdict (in vocabulary)", c.verdict_accuracy, c.verdict_exact + "/" + c.in_vocabulary_cases],
+    ["Confirmation replies", r.accuracy, r.exact + "/" + r.cases],
+  ];
+  barList($("#score-bars"), groups.map(([label, value, detail]) => ({
+    label, value: value || 0, display: rate(value),
+    tip: "<strong>" + label + "</strong><br>" + detail + " cases exact",
+  })));
+  mount("#score-table", table(["Group", { label: "Cases", num: true }, { label: "Exact", num: true }, { label: "Accuracy", num: true }],
+    groups.map(([label, value, detail]) => {
+      const [exact, total] = detail.split("/");
+      return [label, { text: total, cls: "num" }, { text: exact, cls: "num" }, { text: rate(value), cls: "num" }];
+    })));
+
+  $("#blind-line").textContent =
+    "The detector reads the words in front of it. These four messages are real approach "
+    + "patterns that use none of its phrases, and it lets all of them through. That is the "
+    + "honest bound on this layer: it raises the floor, and the confirmation spine - not the "
+    + "detector - is what stands between a pressured user and a transfer.";
+  mount("#blind-table", table(
+    ["Measure", { label: "Value", num: true }, "Reading"],
+    [
+      ["Messages its lexicon covers", { text: String(c.in_vocabulary_cases), cls: "num" }, "verdict correct on " + rate(c.verdict_accuracy)],
+      ["Scripts in the set", { text: String(c.scripts_in_set), cls: "num" }, "two or more families, all blocked"],
+      ["Ordinary traffic", { text: String(c.benign_cases), cls: "num" }, c.benign_blocked + " wrongly blocked"],
+      ["Out-of-vocabulary scams", { text: String(c.out_of_vocabulary_cases), cls: "num" }, c.out_of_vocabulary_missed + " missed (" + rate(c.miss_rate_out_of_vocabulary) + ")"],
+    ]
+  ));
+
+  mount("#props", table(["Property", "Holds"],
+    p.detail.map((check) => [check.property, { node: pill(check.holds ? "good" : "critical", check.holds ? "yes" : "no") }])));
+}
+
+/* ---- reference --------------------------------------------------------- */
+function renderReference() {
+  mount("#contacts", table(["Name", "Bank", "Account ending"],
+    META.contacts.map((c) => [c.name, c.bank, { text: c.account_tail, cls: "mono" }])));
+  mount("#families", table(["Family", "What it is", { label: "Phrases", num: true }],
+    Object.entries(META.coercion_families).map(([key, value]) => [
+      { text: key, cls: "mono" }, value.description, { text: String(value.phrases), cls: "num" },
+    ])));
+  const replies = $("#replies");
+  replies.innerHTML = "";
+  for (const [title, words] of [["Counted as yes", META.affirmative], ["Counted as no", META.negative]]) {
+    replies.append(el("div", {}, [
+      el("h2", { style: "font-size:13px; margin:0 0 6px", text: title }),
+      el("p", { class: "mono", style: "font-size:12.5px; color:var(--ink-2)", text: words.join("  ·  ") }),
+    ]));
+  }
+}
+
+/* ---- boot -------------------------------------------------------------- */
+(async function boot() {
+  try {
+    META = await api("/api/meta");
+    const chips = $("#chips");
+    for (const example of META.examples) {
+      const button = el("button", { type: "button", text: example });
+      button.addEventListener("click", () => send(example));
+      chips.append(button);
+    }
+    renderReference();
+    renderScorecard(await api("/api/scorecard"));
+    await startSession();
+    $("#inspect-in").value = "5 hazaar nahi nahi, sawa lakh Imran ko bhejo";
+    $("#go-inspect").click();
+  } catch (error) {
+    $("#thread").append(el("div", { class: "msg bot block", text: "Could not load: " + error.message }));
+  }
+})();
+</script>
+</body>
+</html>

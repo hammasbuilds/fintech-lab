@@ -1,0 +1,2333 @@
+{
+  "cohort": {
+    "size": 5000,
+    "median_income": 26698,
+    "income_p10": 10854,
+    "income_p90": 55437,
+    "base_default_rate": 0.0586,
+    "loss_given_default": 0.75,
+    "by_region": {
+      "central-urban": {
+        "count": 1906,
+        "share": 0.3812,
+        "median_income": 34408,
+        "median_wallet_months": 14,
+        "base_default_rate": 0.0409
+      },
+      "north-urban": {
+        "count": 1138,
+        "share": 0.2276,
+        "median_income": 34343,
+        "median_wallet_months": 14,
+        "base_default_rate": 0.0589
+      },
+      "south-rural": {
+        "count": 1247,
+        "share": 0.2494,
+        "median_income": 16509,
+        "median_wallet_months": 7,
+        "base_default_rate": 0.0842
+      },
+      "east-rural": {
+        "count": 709,
+        "share": 0.1418,
+        "median_income": 16116,
+        "median_wallet_months": 8,
+        "base_default_rate": 0.0606
+      }
+    },
+    "by_employment": {
+      "salaried": 0.0426,
+      "self-employed": 0.0522,
+      "daily-wage": 0.085
+    }
+  },
+  "policies": {
+    "nano_v1": {
+      "name": "Nano loan v1",
+      "version": "1",
+      "gates": 3,
+      "score_rules": 5,
+      "approve_at": 35.0,
+      "fields_used": [
+        "age",
+        "avg_balance",
+        "monthly_income",
+        "on_time_repayments",
+        "prior_defaults",
+        "wallet_months"
+      ],
+      "round_trips": true
+    },
+    "nano_v2": {
+      "name": "Nano loan v2",
+      "version": "2",
+      "gates": 5,
+      "score_rules": 7,
+      "approve_at": 45.0,
+      "fields_used": [
+        "age",
+        "avg_balance",
+        "dependants",
+        "employment",
+        "monthly_income",
+        "on_time_repayments",
+        "prior_defaults",
+        "txn_velocity",
+        "wallet_months"
+      ],
+      "round_trips": true
+    },
+    "nano_v3_timepriced": {
+      "name": "Nano loan v3",
+      "version": "3",
+      "gates": 5,
+      "score_rules": 7,
+      "approve_at": 45.0,
+      "fields_used": [
+        "age",
+        "avg_balance",
+        "dependants",
+        "employment",
+        "monthly_income",
+        "on_time_repayments",
+        "prior_defaults",
+        "txn_velocity",
+        "wallet_months"
+      ],
+      "round_trips": true
+    }
+  },
+  "backtests": {
+    "nano_v1": {
+      "policy": {
+        "name": "Nano loan v1",
+        "version": "1",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 2835,
+      "refers": 0,
+      "declines": 2165,
+      "approval_rate": 0.567,
+      "refer_rate": 0.0,
+      "bad_rate": 0.0261,
+      "loss_rate": 0.0168,
+      "disbursed": 26984871.25,
+      "average_limit": 9518.47,
+      "fee_revenue": 674623.01,
+      "time_priced_revenue": 0.0,
+      "expected_loss": 453091.88,
+      "net": 221531.13,
+      "defaults_among_approved": 74,
+      "declined_who_would_repay": 1946,
+      "declined_who_would_default": 219,
+      "decline_reasons": {
+        "score below the threshold": 1305,
+        "monthly income below the floor of 12,000": 665,
+        "two or more defaults already on file": 195
+      },
+      "score_histogram": [
+        {
+          "from": 0,
+          "to": 9,
+          "count": 246,
+          "defaults": 19,
+          "approved": 0,
+          "default_rate": 0.0772,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 272,
+          "defaults": 14,
+          "approved": 0,
+          "default_rate": 0.0515,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 583,
+          "defaults": 41,
+          "approved": 0,
+          "default_rate": 0.0703,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 875,
+          "defaults": 38,
+          "approved": 671,
+          "default_rate": 0.0434,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 510,
+          "defaults": 11,
+          "approved": 510,
+          "default_rate": 0.0216,
+          "standing": "all approved"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 842,
+          "defaults": 21,
+          "approved": 842,
+          "default_rate": 0.0249,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 537,
+          "defaults": 13,
+          "approved": 537,
+          "default_rate": 0.0242,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 97,
+          "defaults": 1,
+          "approved": 97,
+          "default_rate": 0.0103,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 178,
+          "defaults": 1,
+          "approved": 178,
+          "default_rate": 0.0056,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 1435,
+            "approval_rate": 0.7529,
+            "bad_rate": 0.023,
+            "median_income": 34408,
+            "average_limit": 10295.96
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 216,
+            "approval_rate": 0.3047,
+            "bad_rate": 0.0324,
+            "median_income": 16116,
+            "average_limit": 6356.5
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 848,
+            "approval_rate": 0.7452,
+            "bad_rate": 0.0271,
+            "median_income": 34343,
+            "average_limit": 10063.55
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 336,
+            "approval_rate": 0.2694,
+            "bad_rate": 0.0327,
+            "median_income": 16509,
+            "average_limit": 6854.98
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 415,
+            "approval_rate": 0.2821,
+            "bad_rate": 0.0506,
+            "median_income": 13985,
+            "average_limit": 5738.58
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 1287,
+            "approval_rate": 0.7611,
+            "bad_rate": 0.021,
+            "median_income": 38538,
+            "average_limit": 11192.48
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 1133,
+            "approval_rate": 0.6164,
+            "bad_rate": 0.0229,
+            "median_income": 28690,
+            "average_limit": 9001.45
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.126,
+          "bad_rate": 0.0397
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.419,
+          "bad_rate": 0.043
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.526,
+          "bad_rate": 0.0304
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.872,
+          "bad_rate": 0.0218
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.892,
+          "bad_rate": 0.0179
+        }
+      ]
+    },
+    "nano_v2": {
+      "policy": {
+        "name": "Nano loan v2",
+        "version": "2",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 1597,
+      "refers": 265,
+      "declines": 3138,
+      "approval_rate": 0.3194,
+      "refer_rate": 0.053,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
+      "disbursed": 17167845.75,
+      "average_limit": 10750.06,
+      "fee_revenue": 429196.82,
+      "time_priced_revenue": 0.0,
+      "expected_loss": 199272.19,
+      "net": 229924.63,
+      "defaults_among_approved": 27,
+      "declined_who_would_repay": 3137,
+      "declined_who_would_default": 266,
+      "decline_reasons": {
+        "monthly income below the floor of 18,000": 1417,
+        "score below the threshold": 934,
+        "a default already on file": 530,
+        "a large household needs an officer to size the limit": 265,
+        "wallet turnover too high to read as income": 257
+      },
+      "score_histogram": [
+        {
+          "from": -20,
+          "to": -11,
+          "count": 3,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": 0,
+          "to": 9,
+          "count": 69,
+          "defaults": 5,
+          "approved": 0,
+          "default_rate": 0.0725,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 107,
+          "defaults": 8,
+          "approved": 0,
+          "default_rate": 0.0748,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 228,
+          "defaults": 9,
+          "approved": 0,
+          "default_rate": 0.0395,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 391,
+          "defaults": 16,
+          "approved": 0,
+          "default_rate": 0.0409,
+          "standing": "all declined"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 364,
+          "defaults": 5,
+          "approved": 228,
+          "default_rate": 0.0137,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 457,
+          "defaults": 7,
+          "approved": 457,
+          "default_rate": 0.0153,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 461,
+          "defaults": 11,
+          "approved": 461,
+          "default_rate": 0.0239,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 286,
+          "defaults": 6,
+          "approved": 286,
+          "default_rate": 0.021,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 83,
+          "defaults": 0,
+          "approved": 83,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        },
+        {
+          "from": 90,
+          "to": 99,
+          "count": 82,
+          "defaults": 0,
+          "approved": 82,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 909,
+            "approval_rate": 0.4769,
+            "bad_rate": 0.0176,
+            "median_income": 34408,
+            "average_limit": 11072.77
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 62,
+            "approval_rate": 0.0874,
+            "bad_rate": 0.0323,
+            "median_income": 16116,
+            "average_limit": 8015.63
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 512,
+            "approval_rate": 0.4499,
+            "bad_rate": 0.0098,
+            "median_income": 34343,
+            "average_limit": 11035.66
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 114,
+            "approval_rate": 0.0914,
+            "bad_rate": 0.0351,
+            "median_income": 16509,
+            "average_limit": 8381.3
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 98,
+            "approval_rate": 0.0666,
+            "bad_rate": 0.0306,
+            "median_income": 13985,
+            "average_limit": 7645.73
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 952,
+            "approval_rate": 0.563,
+            "bad_rate": 0.0168,
+            "median_income": 38538,
+            "average_limit": 11455.3
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 547,
+            "approval_rate": 0.2976,
+            "bad_rate": 0.0146,
+            "median_income": 28690,
+            "average_limit": 10078.82
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.0,
+          "bad_rate": null
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.105,
+          "bad_rate": 0.0381
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.276,
+          "bad_rate": 0.0217
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.574,
+          "bad_rate": 0.0122
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.642,
+          "bad_rate": 0.0156
+        }
+      ]
+    },
+    "nano_v3_timepriced": {
+      "policy": {
+        "name": "Nano loan v3",
+        "version": "3",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 1597,
+      "refers": 265,
+      "declines": 3138,
+      "approval_rate": 0.3194,
+      "refer_rate": 0.053,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
+      "disbursed": 17167845.75,
+      "average_limit": 10750.06,
+      "fee_revenue": 429196.82,
+      "time_priced_revenue": 171679.08,
+      "expected_loss": 199272.19,
+      "net": 229924.63,
+      "defaults_among_approved": 27,
+      "declined_who_would_repay": 3137,
+      "declined_who_would_default": 266,
+      "decline_reasons": {
+        "monthly income below the floor of 18,000": 1417,
+        "score below the threshold": 934,
+        "a default already on file": 530,
+        "a large household needs an officer to size the limit": 265,
+        "wallet turnover too high to read as income": 257
+      },
+      "score_histogram": [
+        {
+          "from": -20,
+          "to": -11,
+          "count": 3,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": 0,
+          "to": 9,
+          "count": 69,
+          "defaults": 5,
+          "approved": 0,
+          "default_rate": 0.0725,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 107,
+          "defaults": 8,
+          "approved": 0,
+          "default_rate": 0.0748,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 228,
+          "defaults": 9,
+          "approved": 0,
+          "default_rate": 0.0395,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 391,
+          "defaults": 16,
+          "approved": 0,
+          "default_rate": 0.0409,
+          "standing": "all declined"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 364,
+          "defaults": 5,
+          "approved": 228,
+          "default_rate": 0.0137,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 457,
+          "defaults": 7,
+          "approved": 457,
+          "default_rate": 0.0153,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 461,
+          "defaults": 11,
+          "approved": 461,
+          "default_rate": 0.0239,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 286,
+          "defaults": 6,
+          "approved": 286,
+          "default_rate": 0.021,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 83,
+          "defaults": 0,
+          "approved": 83,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        },
+        {
+          "from": 90,
+          "to": 99,
+          "count": 82,
+          "defaults": 0,
+          "approved": 82,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 909,
+            "approval_rate": 0.4769,
+            "bad_rate": 0.0176,
+            "median_income": 34408,
+            "average_limit": 11072.77
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 62,
+            "approval_rate": 0.0874,
+            "bad_rate": 0.0323,
+            "median_income": 16116,
+            "average_limit": 8015.63
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 512,
+            "approval_rate": 0.4499,
+            "bad_rate": 0.0098,
+            "median_income": 34343,
+            "average_limit": 11035.66
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 114,
+            "approval_rate": 0.0914,
+            "bad_rate": 0.0351,
+            "median_income": 16509,
+            "average_limit": 8381.3
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 98,
+            "approval_rate": 0.0666,
+            "bad_rate": 0.0306,
+            "median_income": 13985,
+            "average_limit": 7645.73
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 952,
+            "approval_rate": 0.563,
+            "bad_rate": 0.0168,
+            "median_income": 38538,
+            "average_limit": 11455.3
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 547,
+            "approval_rate": 0.2976,
+            "bad_rate": 0.0146,
+            "median_income": 28690,
+            "average_limit": 10078.82
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.0,
+          "bad_rate": null
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.105,
+          "bad_rate": 0.0381
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.276,
+          "bad_rate": 0.0217
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.574,
+          "bad_rate": 0.0122
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.642,
+          "bad_rate": 0.0156
+        }
+      ]
+    }
+  },
+  "lint": {
+    "nano_v1": {
+      "checks_run": 8,
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "warning": 0
+      },
+      "blocking": false,
+      "notes": [],
+      "scope": "Structural checks on the policy text only. Passing means these eight problems are absent, not that the policy is compliant."
+    },
+    "nano_v2": {
+      "checks_run": 8,
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "warning": 0
+      },
+      "blocking": false,
+      "notes": [],
+      "scope": "Structural checks on the policy text only. Passing means these eight problems are absent, not that the policy is compliant."
+    },
+    "nano_v3_timepriced": {
+      "checks_run": 8,
+      "counts": {
+        "critical": 1,
+        "serious": 0,
+        "warning": 0
+      },
+      "blocking": true,
+      "notes": [
+        {
+          "check": "C1",
+          "severity": "critical",
+          "title": "A charge is priced per unit of time",
+          "detail": "'late_fee 1% of limit per day' grows with how long the money is outstanding, which prices time rather than a service. For a Shariah-compliant product this has to become a one-off service charge, or a fee tied to a real cost that does not accrue.",
+          "line": 25
+        }
+      ],
+      "scope": "Structural checks on the policy text only. Passing means these eight problems are absent, not that the policy is compliant."
+    }
+  },
+  "comparison_v1_to_v2": {
+    "base": {
+      "policy": {
+        "name": "Nano loan v1",
+        "version": "1",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 2835,
+      "refers": 0,
+      "declines": 2165,
+      "approval_rate": 0.567,
+      "refer_rate": 0.0,
+      "bad_rate": 0.0261,
+      "loss_rate": 0.0168,
+      "disbursed": 26984871.25,
+      "average_limit": 9518.47,
+      "fee_revenue": 674623.01,
+      "time_priced_revenue": 0.0,
+      "expected_loss": 453091.88,
+      "net": 221531.13,
+      "defaults_among_approved": 74,
+      "declined_who_would_repay": 1946,
+      "declined_who_would_default": 219,
+      "decline_reasons": {
+        "score below the threshold": 1305,
+        "monthly income below the floor of 12,000": 665,
+        "two or more defaults already on file": 195
+      },
+      "score_histogram": [
+        {
+          "from": 0,
+          "to": 9,
+          "count": 246,
+          "defaults": 19,
+          "approved": 0,
+          "default_rate": 0.0772,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 272,
+          "defaults": 14,
+          "approved": 0,
+          "default_rate": 0.0515,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 583,
+          "defaults": 41,
+          "approved": 0,
+          "default_rate": 0.0703,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 875,
+          "defaults": 38,
+          "approved": 671,
+          "default_rate": 0.0434,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 510,
+          "defaults": 11,
+          "approved": 510,
+          "default_rate": 0.0216,
+          "standing": "all approved"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 842,
+          "defaults": 21,
+          "approved": 842,
+          "default_rate": 0.0249,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 537,
+          "defaults": 13,
+          "approved": 537,
+          "default_rate": 0.0242,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 97,
+          "defaults": 1,
+          "approved": 97,
+          "default_rate": 0.0103,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 178,
+          "defaults": 1,
+          "approved": 178,
+          "default_rate": 0.0056,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 1435,
+            "approval_rate": 0.7529,
+            "bad_rate": 0.023,
+            "median_income": 34408,
+            "average_limit": 10295.96
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 216,
+            "approval_rate": 0.3047,
+            "bad_rate": 0.0324,
+            "median_income": 16116,
+            "average_limit": 6356.5
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 848,
+            "approval_rate": 0.7452,
+            "bad_rate": 0.0271,
+            "median_income": 34343,
+            "average_limit": 10063.55
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 336,
+            "approval_rate": 0.2694,
+            "bad_rate": 0.0327,
+            "median_income": 16509,
+            "average_limit": 6854.98
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 415,
+            "approval_rate": 0.2821,
+            "bad_rate": 0.0506,
+            "median_income": 13985,
+            "average_limit": 5738.58
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 1287,
+            "approval_rate": 0.7611,
+            "bad_rate": 0.021,
+            "median_income": 38538,
+            "average_limit": 11192.48
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 1133,
+            "approval_rate": 0.6164,
+            "bad_rate": 0.0229,
+            "median_income": 28690,
+            "average_limit": 9001.45
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.126,
+          "bad_rate": 0.0397
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.419,
+          "bad_rate": 0.043
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.526,
+          "bad_rate": 0.0304
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.872,
+          "bad_rate": 0.0218
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.892,
+          "bad_rate": 0.0179
+        }
+      ]
+    },
+    "candidate": {
+      "policy": {
+        "name": "Nano loan v2",
+        "version": "2",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 1597,
+      "refers": 265,
+      "declines": 3138,
+      "approval_rate": 0.3194,
+      "refer_rate": 0.053,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
+      "disbursed": 17167845.75,
+      "average_limit": 10750.06,
+      "fee_revenue": 429196.82,
+      "time_priced_revenue": 0.0,
+      "expected_loss": 199272.19,
+      "net": 229924.63,
+      "defaults_among_approved": 27,
+      "declined_who_would_repay": 3137,
+      "declined_who_would_default": 266,
+      "decline_reasons": {
+        "monthly income below the floor of 18,000": 1417,
+        "score below the threshold": 934,
+        "a default already on file": 530,
+        "a large household needs an officer to size the limit": 265,
+        "wallet turnover too high to read as income": 257
+      },
+      "score_histogram": [
+        {
+          "from": -20,
+          "to": -11,
+          "count": 3,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": 0,
+          "to": 9,
+          "count": 69,
+          "defaults": 5,
+          "approved": 0,
+          "default_rate": 0.0725,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 107,
+          "defaults": 8,
+          "approved": 0,
+          "default_rate": 0.0748,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 228,
+          "defaults": 9,
+          "approved": 0,
+          "default_rate": 0.0395,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 391,
+          "defaults": 16,
+          "approved": 0,
+          "default_rate": 0.0409,
+          "standing": "all declined"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 364,
+          "defaults": 5,
+          "approved": 228,
+          "default_rate": 0.0137,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 457,
+          "defaults": 7,
+          "approved": 457,
+          "default_rate": 0.0153,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 461,
+          "defaults": 11,
+          "approved": 461,
+          "default_rate": 0.0239,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 286,
+          "defaults": 6,
+          "approved": 286,
+          "default_rate": 0.021,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 83,
+          "defaults": 0,
+          "approved": 83,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        },
+        {
+          "from": 90,
+          "to": 99,
+          "count": 82,
+          "defaults": 0,
+          "approved": 82,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 909,
+            "approval_rate": 0.4769,
+            "bad_rate": 0.0176,
+            "median_income": 34408,
+            "average_limit": 11072.77
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 62,
+            "approval_rate": 0.0874,
+            "bad_rate": 0.0323,
+            "median_income": 16116,
+            "average_limit": 8015.63
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 512,
+            "approval_rate": 0.4499,
+            "bad_rate": 0.0098,
+            "median_income": 34343,
+            "average_limit": 11035.66
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 114,
+            "approval_rate": 0.0914,
+            "bad_rate": 0.0351,
+            "median_income": 16509,
+            "average_limit": 8381.3
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 98,
+            "approval_rate": 0.0666,
+            "bad_rate": 0.0306,
+            "median_income": 13985,
+            "average_limit": 7645.73
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 952,
+            "approval_rate": 0.563,
+            "bad_rate": 0.0168,
+            "median_income": 38538,
+            "average_limit": 11455.3
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 547,
+            "approval_rate": 0.2976,
+            "bad_rate": 0.0146,
+            "median_income": 28690,
+            "average_limit": 10078.82
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.0,
+          "bad_rate": null
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.105,
+          "bad_rate": 0.0381
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.276,
+          "bad_rate": 0.0217
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.574,
+          "bad_rate": 0.0122
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.642,
+          "bad_rate": 0.0156
+        }
+      ]
+    },
+    "newly_approved": 0,
+    "newly_declined": 1238,
+    "unchanged": 3762,
+    "newly_declined_who_would_repay": 1191,
+    "newly_declined_who_would_default": 47,
+    "newly_declined_by_segment": {
+      "region": {
+        "central-urban": 526,
+        "east-rural": 154,
+        "north-urban": 336,
+        "south-rural": 222
+      },
+      "employment": {
+        "daily-wage": 317,
+        "salaried": 335,
+        "self-employed": 586
+      }
+    },
+    "examples": [
+      {
+        "id": "B00002",
+        "monthly_income": 31997,
+        "wallet_months": 14,
+        "txn_velocity": 34,
+        "region": "central-urban",
+        "employment": "salaried",
+        "was": "approve",
+        "now": "decline",
+        "why": "a default already on file",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00003",
+        "monthly_income": 29443,
+        "wallet_months": 14,
+        "txn_velocity": 17,
+        "region": "central-urban",
+        "employment": "salaried",
+        "was": "approve",
+        "now": "decline",
+        "why": "a default already on file",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00004",
+        "monthly_income": 48727,
+        "wallet_months": 15,
+        "txn_velocity": 212,
+        "region": "central-urban",
+        "employment": "salaried",
+        "was": "approve",
+        "now": "decline",
+        "why": "wallet turnover too high to read as income",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00005",
+        "monthly_income": 19391,
+        "wallet_months": 19,
+        "txn_velocity": 17,
+        "region": "east-rural",
+        "employment": "daily-wage",
+        "was": "approve",
+        "now": "decline",
+        "why": "scored 35 against the 45 this policy requires, 10 short",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00013",
+        "monthly_income": 14981,
+        "wallet_months": 13,
+        "txn_velocity": 14,
+        "region": "south-rural",
+        "employment": "salaried",
+        "was": "approve",
+        "now": "decline",
+        "why": "monthly income below the floor of 18,000",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00014",
+        "monthly_income": 36855,
+        "wallet_months": 16,
+        "txn_velocity": 123,
+        "region": "central-urban",
+        "employment": "self-employed",
+        "was": "approve",
+        "now": "decline",
+        "why": "a default already on file",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00015",
+        "monthly_income": 21526,
+        "wallet_months": 12,
+        "txn_velocity": 17,
+        "region": "central-urban",
+        "employment": "daily-wage",
+        "was": "approve",
+        "now": "decline",
+        "why": "scored 35 against the 45 this policy requires, 10 short",
+        "would_have_repaid": true
+      },
+      {
+        "id": "B00024",
+        "monthly_income": 14712,
+        "wallet_months": 20,
+        "txn_velocity": 14,
+        "region": "east-rural",
+        "employment": "self-employed",
+        "was": "approve",
+        "now": "decline",
+        "why": "monthly income below the floor of 18,000",
+        "would_have_repaid": true
+      }
+    ],
+    "delta": {
+      "approval_rate_points": -24.76,
+      "bad_rate_points": -0.92,
+      "net": 8393.5,
+      "disbursed": -9817025.5
+    },
+    "precision_of_the_tightening": 0.038
+  },
+  "comparison_v2_to_v3": {
+    "base": {
+      "policy": {
+        "name": "Nano loan v2",
+        "version": "2",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 1597,
+      "refers": 265,
+      "declines": 3138,
+      "approval_rate": 0.3194,
+      "refer_rate": 0.053,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
+      "disbursed": 17167845.75,
+      "average_limit": 10750.06,
+      "fee_revenue": 429196.82,
+      "time_priced_revenue": 0.0,
+      "expected_loss": 199272.19,
+      "net": 229924.63,
+      "defaults_among_approved": 27,
+      "declined_who_would_repay": 3137,
+      "declined_who_would_default": 266,
+      "decline_reasons": {
+        "monthly income below the floor of 18,000": 1417,
+        "score below the threshold": 934,
+        "a default already on file": 530,
+        "a large household needs an officer to size the limit": 265,
+        "wallet turnover too high to read as income": 257
+      },
+      "score_histogram": [
+        {
+          "from": -20,
+          "to": -11,
+          "count": 3,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": 0,
+          "to": 9,
+          "count": 69,
+          "defaults": 5,
+          "approved": 0,
+          "default_rate": 0.0725,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 107,
+          "defaults": 8,
+          "approved": 0,
+          "default_rate": 0.0748,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 228,
+          "defaults": 9,
+          "approved": 0,
+          "default_rate": 0.0395,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 391,
+          "defaults": 16,
+          "approved": 0,
+          "default_rate": 0.0409,
+          "standing": "all declined"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 364,
+          "defaults": 5,
+          "approved": 228,
+          "default_rate": 0.0137,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 457,
+          "defaults": 7,
+          "approved": 457,
+          "default_rate": 0.0153,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 461,
+          "defaults": 11,
+          "approved": 461,
+          "default_rate": 0.0239,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 286,
+          "defaults": 6,
+          "approved": 286,
+          "default_rate": 0.021,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 83,
+          "defaults": 0,
+          "approved": 83,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        },
+        {
+          "from": 90,
+          "to": 99,
+          "count": 82,
+          "defaults": 0,
+          "approved": 82,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 909,
+            "approval_rate": 0.4769,
+            "bad_rate": 0.0176,
+            "median_income": 34408,
+            "average_limit": 11072.77
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 62,
+            "approval_rate": 0.0874,
+            "bad_rate": 0.0323,
+            "median_income": 16116,
+            "average_limit": 8015.63
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 512,
+            "approval_rate": 0.4499,
+            "bad_rate": 0.0098,
+            "median_income": 34343,
+            "average_limit": 11035.66
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 114,
+            "approval_rate": 0.0914,
+            "bad_rate": 0.0351,
+            "median_income": 16509,
+            "average_limit": 8381.3
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 98,
+            "approval_rate": 0.0666,
+            "bad_rate": 0.0306,
+            "median_income": 13985,
+            "average_limit": 7645.73
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 952,
+            "approval_rate": 0.563,
+            "bad_rate": 0.0168,
+            "median_income": 38538,
+            "average_limit": 11455.3
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 547,
+            "approval_rate": 0.2976,
+            "bad_rate": 0.0146,
+            "median_income": 28690,
+            "average_limit": 10078.82
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.0,
+          "bad_rate": null
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.105,
+          "bad_rate": 0.0381
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.276,
+          "bad_rate": 0.0217
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.574,
+          "bad_rate": 0.0122
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.642,
+          "bad_rate": 0.0156
+        }
+      ]
+    },
+    "candidate": {
+      "policy": {
+        "name": "Nano loan v3",
+        "version": "3",
+        "currency": "PKR"
+      },
+      "applications": 5000,
+      "approvals": 1597,
+      "refers": 265,
+      "declines": 3138,
+      "approval_rate": 0.3194,
+      "refer_rate": 0.053,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
+      "disbursed": 17167845.75,
+      "average_limit": 10750.06,
+      "fee_revenue": 429196.82,
+      "time_priced_revenue": 171679.08,
+      "expected_loss": 199272.19,
+      "net": 229924.63,
+      "defaults_among_approved": 27,
+      "declined_who_would_repay": 3137,
+      "declined_who_would_default": 266,
+      "decline_reasons": {
+        "monthly income below the floor of 18,000": 1417,
+        "score below the threshold": 934,
+        "a default already on file": 530,
+        "a large household needs an officer to size the limit": 265,
+        "wallet turnover too high to read as income": 257
+      },
+      "score_histogram": [
+        {
+          "from": -20,
+          "to": -11,
+          "count": 3,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": 0,
+          "to": 9,
+          "count": 69,
+          "defaults": 5,
+          "approved": 0,
+          "default_rate": 0.0725,
+          "standing": "all declined"
+        },
+        {
+          "from": 10,
+          "to": 19,
+          "count": 107,
+          "defaults": 8,
+          "approved": 0,
+          "default_rate": 0.0748,
+          "standing": "all declined"
+        },
+        {
+          "from": 20,
+          "to": 29,
+          "count": 228,
+          "defaults": 9,
+          "approved": 0,
+          "default_rate": 0.0395,
+          "standing": "all declined"
+        },
+        {
+          "from": 30,
+          "to": 39,
+          "count": 391,
+          "defaults": 16,
+          "approved": 0,
+          "default_rate": 0.0409,
+          "standing": "all declined"
+        },
+        {
+          "from": 40,
+          "to": 49,
+          "count": 364,
+          "defaults": 5,
+          "approved": 228,
+          "default_rate": 0.0137,
+          "standing": "split by the threshold"
+        },
+        {
+          "from": 50,
+          "to": 59,
+          "count": 457,
+          "defaults": 7,
+          "approved": 457,
+          "default_rate": 0.0153,
+          "standing": "all approved"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "count": 461,
+          "defaults": 11,
+          "approved": 461,
+          "default_rate": 0.0239,
+          "standing": "all approved"
+        },
+        {
+          "from": 70,
+          "to": 79,
+          "count": 286,
+          "defaults": 6,
+          "approved": 286,
+          "default_rate": 0.021,
+          "standing": "all approved"
+        },
+        {
+          "from": 80,
+          "to": 89,
+          "count": 83,
+          "defaults": 0,
+          "approved": 83,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        },
+        {
+          "from": 90,
+          "to": 99,
+          "count": 82,
+          "defaults": 0,
+          "approved": 82,
+          "default_rate": 0.0,
+          "standing": "all approved"
+        }
+      ],
+      "segments": {
+        "region": [
+          {
+            "key": "central-urban",
+            "applications": 1906,
+            "approvals": 909,
+            "approval_rate": 0.4769,
+            "bad_rate": 0.0176,
+            "median_income": 34408,
+            "average_limit": 11072.77
+          },
+          {
+            "key": "east-rural",
+            "applications": 709,
+            "approvals": 62,
+            "approval_rate": 0.0874,
+            "bad_rate": 0.0323,
+            "median_income": 16116,
+            "average_limit": 8015.63
+          },
+          {
+            "key": "north-urban",
+            "applications": 1138,
+            "approvals": 512,
+            "approval_rate": 0.4499,
+            "bad_rate": 0.0098,
+            "median_income": 34343,
+            "average_limit": 11035.66
+          },
+          {
+            "key": "south-rural",
+            "applications": 1247,
+            "approvals": 114,
+            "approval_rate": 0.0914,
+            "bad_rate": 0.0351,
+            "median_income": 16509,
+            "average_limit": 8381.3
+          }
+        ],
+        "employment": [
+          {
+            "key": "daily-wage",
+            "applications": 1471,
+            "approvals": 98,
+            "approval_rate": 0.0666,
+            "bad_rate": 0.0306,
+            "median_income": 13985,
+            "average_limit": 7645.73
+          },
+          {
+            "key": "salaried",
+            "applications": 1691,
+            "approvals": 952,
+            "approval_rate": 0.563,
+            "bad_rate": 0.0168,
+            "median_income": 38538,
+            "average_limit": 11455.3
+          },
+          {
+            "key": "self-employed",
+            "applications": 1838,
+            "approvals": 547,
+            "approval_rate": 0.2976,
+            "bad_rate": 0.0146,
+            "median_income": 28690,
+            "average_limit": 10078.82
+          }
+        ]
+      },
+      "income_bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 14678,
+          "applications": 1000,
+          "approval_rate": 0.0,
+          "bad_rate": null
+        },
+        {
+          "band": 2,
+          "income_from": 14679,
+          "income_to": 22655,
+          "applications": 1000,
+          "approval_rate": 0.105,
+          "bad_rate": 0.0381
+        },
+        {
+          "band": 3,
+          "income_from": 22664,
+          "income_to": 31174,
+          "applications": 1000,
+          "approval_rate": 0.276,
+          "bad_rate": 0.0217
+        },
+        {
+          "band": 4,
+          "income_from": 31180,
+          "income_to": 43817,
+          "applications": 1000,
+          "approval_rate": 0.574,
+          "bad_rate": 0.0122
+        },
+        {
+          "band": 5,
+          "income_from": 43835,
+          "income_to": 155223,
+          "applications": 1000,
+          "approval_rate": 0.642,
+          "bad_rate": 0.0156
+        }
+      ]
+    },
+    "newly_approved": 0,
+    "newly_declined": 0,
+    "unchanged": 5000,
+    "newly_declined_who_would_repay": 0,
+    "newly_declined_who_would_default": 0,
+    "newly_declined_by_segment": {
+      "region": {},
+      "employment": {}
+    },
+    "examples": [],
+    "delta": {
+      "approval_rate_points": 0.0,
+      "bad_rate_points": 0.0,
+      "net": 0.0,
+      "disbursed": 0.0
+    },
+    "precision_of_the_tightening": null
+  },
+  "fairness": {
+    "region": {
+      "attribute": "region",
+      "segments": [
+        {
+          "key": "central-urban",
+          "applications": 1906,
+          "approvals": 909,
+          "approval_rate": 0.4769,
+          "median_income": 34408
+        },
+        {
+          "key": "east-rural",
+          "applications": 709,
+          "approvals": 62,
+          "approval_rate": 0.0874,
+          "median_income": 16116
+        },
+        {
+          "key": "north-urban",
+          "applications": 1138,
+          "approvals": 512,
+          "approval_rate": 0.4499,
+          "median_income": 34343
+        },
+        {
+          "key": "south-rural",
+          "applications": 1247,
+          "approvals": 114,
+          "approval_rate": 0.0914,
+          "median_income": 16509
+        }
+      ],
+      "best": {
+        "key": "central-urban",
+        "applications": 1906,
+        "approvals": 909,
+        "approval_rate": 0.4769,
+        "median_income": 34408
+      },
+      "worst": {
+        "key": "east-rural",
+        "applications": 709,
+        "approvals": 62,
+        "approval_rate": 0.0874,
+        "median_income": 16116
+      },
+      "raw_gap": 0.3895,
+      "ratio": 0.1834,
+      "within_band_gap_mean": 0.1695,
+      "bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 16604,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "central-urban",
+              "applications": 150,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 13169
+            },
+            {
+              "key": "east-rural",
+              "applications": 369,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 11300
+            },
+            {
+              "key": "north-urban",
+              "applications": 102,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 13653
+            },
+            {
+              "key": "south-rural",
+              "applications": 629,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 11251
+            }
+          ],
+          "gap": 0.0,
+          "best": "central-urban",
+          "worst": "central-urban"
+        },
+        {
+          "band": 2,
+          "income_from": 16632,
+          "income_to": 26697,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "central-urban",
+              "applications": 425,
+              "approvals": 98,
+              "approval_rate": 0.2306,
+              "median_income": 21918
+            },
+            {
+              "key": "east-rural",
+              "applications": 224,
+              "approvals": 18,
+              "approval_rate": 0.0804,
+              "median_income": 20605
+            },
+            {
+              "key": "north-urban",
+              "applications": 240,
+              "approvals": 56,
+              "approval_rate": 0.2333,
+              "median_income": 22869
+            },
+            {
+              "key": "south-rural",
+              "applications": 361,
+              "approvals": 34,
+              "approval_rate": 0.0942,
+              "median_income": 21207
+            }
+          ],
+          "gap": 0.153,
+          "best": "north-urban",
+          "worst": "east-rural"
+        },
+        {
+          "band": 3,
+          "income_from": 26698,
+          "income_to": 39930,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "central-urban",
+              "applications": 588,
+              "approvals": 321,
+              "approval_rate": 0.5459,
+              "median_income": 32644
+            },
+            {
+              "key": "east-rural",
+              "applications": 89,
+              "approvals": 30,
+              "approval_rate": 0.3371,
+              "median_income": 30379
+            },
+            {
+              "key": "north-urban",
+              "applications": 379,
+              "approvals": 181,
+              "approval_rate": 0.4776,
+              "median_income": 33183
+            },
+            {
+              "key": "south-rural",
+              "applications": 194,
+              "approvals": 55,
+              "approval_rate": 0.2835,
+              "median_income": 31421
+            }
+          ],
+          "gap": 0.2624,
+          "best": "central-urban",
+          "worst": "south-rural"
+        },
+        {
+          "band": 4,
+          "income_from": 39931,
+          "income_to": 155223,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "central-urban",
+              "applications": 743,
+              "approvals": 490,
+              "approval_rate": 0.6595,
+              "median_income": 52230
+            },
+            {
+              "key": "north-urban",
+              "applications": 417,
+              "approvals": 275,
+              "approval_rate": 0.6595,
+              "median_income": 52036
+            },
+            {
+              "key": "south-rural",
+              "applications": 63,
+              "approvals": 25,
+              "approval_rate": 0.3968,
+              "median_income": 48262
+            }
+          ],
+          "gap": 0.2627,
+          "best": "central-urban",
+          "worst": "south-rural"
+        }
+      ],
+      "thin_cells_skipped": 1,
+      "reading": "The gap falls from 38.9% to 17.0% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than region itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
+      "not_a_verdict": "This is a measurement, not a compliance opinion. Whether a variable is a legitimate business necessity is a legal question about the product, and nothing here can answer it."
+    },
+    "employment": {
+      "attribute": "employment",
+      "segments": [
+        {
+          "key": "daily-wage",
+          "applications": 1471,
+          "approvals": 98,
+          "approval_rate": 0.0666,
+          "median_income": 13985
+        },
+        {
+          "key": "salaried",
+          "applications": 1691,
+          "approvals": 952,
+          "approval_rate": 0.563,
+          "median_income": 38538
+        },
+        {
+          "key": "self-employed",
+          "applications": 1838,
+          "approvals": 547,
+          "approval_rate": 0.2976,
+          "median_income": 28690
+        }
+      ],
+      "best": {
+        "key": "salaried",
+        "applications": 1691,
+        "approvals": 952,
+        "approval_rate": 0.563,
+        "median_income": 38538
+      },
+      "worst": {
+        "key": "daily-wage",
+        "applications": 1471,
+        "approvals": 98,
+        "approval_rate": 0.0666,
+        "median_income": 13985
+      },
+      "raw_gap": 0.4964,
+      "ratio": 0.1183,
+      "within_band_gap_mean": 0.137,
+      "bands": [
+        {
+          "band": 1,
+          "income_from": 6000,
+          "income_to": 16604,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "daily-wage",
+              "applications": 947,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 11140
+            },
+            {
+              "key": "salaried",
+              "applications": 71,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 13960
+            },
+            {
+              "key": "self-employed",
+              "applications": 232,
+              "approvals": 0,
+              "approval_rate": 0.0,
+              "median_income": 13599
+            }
+          ],
+          "gap": 0.0,
+          "best": "daily-wage",
+          "worst": "daily-wage"
+        },
+        {
+          "band": 2,
+          "income_from": 16632,
+          "income_to": 26697,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "daily-wage",
+              "applications": 371,
+              "approvals": 38,
+              "approval_rate": 0.1024,
+              "median_income": 20445
+            },
+            {
+              "key": "salaried",
+              "applications": 302,
+              "approvals": 97,
+              "approval_rate": 0.3212,
+              "median_income": 22309
+            },
+            {
+              "key": "self-employed",
+              "applications": 577,
+              "approvals": 71,
+              "approval_rate": 0.1231,
+              "median_income": 22033
+            }
+          ],
+          "gap": 0.2188,
+          "best": "salaried",
+          "worst": "daily-wage"
+        },
+        {
+          "band": 3,
+          "income_from": 26698,
+          "income_to": 39930,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "daily-wage",
+              "applications": 126,
+              "approvals": 48,
+              "approval_rate": 0.381,
+              "median_income": 30719
+            },
+            {
+              "key": "salaried",
+              "applications": 525,
+              "approvals": 306,
+              "approval_rate": 0.5829,
+              "median_income": 33163
+            },
+            {
+              "key": "self-employed",
+              "applications": 599,
+              "approvals": 233,
+              "approval_rate": 0.389,
+              "median_income": 32119
+            }
+          ],
+          "gap": 0.2019,
+          "best": "salaried",
+          "worst": "daily-wage"
+        },
+        {
+          "band": 4,
+          "income_from": 39931,
+          "income_to": 155223,
+          "applications": 1250,
+          "segments": [
+            {
+              "key": "salaried",
+              "applications": 793,
+              "approvals": 549,
+              "approval_rate": 0.6923,
+              "median_income": 54061
+            },
+            {
+              "key": "self-employed",
+              "applications": 430,
+              "approvals": 243,
+              "approval_rate": 0.5651,
+              "median_income": 48875
+            }
+          ],
+          "gap": 0.1272,
+          "best": "salaried",
+          "worst": "self-employed"
+        }
+      ],
+      "thin_cells_skipped": 1,
+      "reading": "The gap falls from 49.6% to 13.7% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than employment itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
+      "not_a_verdict": "This is a measurement, not a compliance opinion. Whether a variable is a legitimate business necessity is a legal question about the product, and nothing here can answer it."
+    }
+  },
+  "explanations": {
+    "untranslated_fields": [],
+    "languages": [
+      "en",
+      "ur"
+    ]
+  }
+}

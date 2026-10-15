@@ -1,0 +1,49 @@
+[project]
+name = "fintech-lab"
+version = "0.1.0"
+description = "Three fintech products that run on the standard library: a payment-message workbench, a lending-policy sandbox, and a vernacular transaction assistant."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Muhammad Hammas" }]
+
+# No runtime dependencies, deliberately. Every engine, server and UI here is
+# standard library only: no model, no GPU, no API key, no network call.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared", "projects"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+# Two files are data tables, not code. The number lexicon groups every spelling of a
+# value on one line, and the test corpus keeps each case on one line with the answer it
+# must produce. Exploding either one entry per line is what the formatter would do, and
+# it destroys the only property that makes them checkable by eye.
+exclude = ["projects/p03_guardian/numerals.py", "projects/p03_guardian/testset.py"]
+
+[tool.ruff.lint.per-file-ignores]
+# Same two files, same reason: wrapping a case to 100 columns splits an utterance from
+# the action it must produce.
+"projects/p03_guardian/testset.py" = ["E501"]
+"projects/p03_guardian/numerals.py" = ["E501"]
+# theme.py is a stylesheet held in a string. Its long lines are CSS rules, and breaking
+# a selector across lines to satisfy a Python line limit helps nobody.
+"shared/theme.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

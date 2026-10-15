@@ -1,0 +1,23 @@
+# v2: the income floor was raised and two risk signals were added after the first
+# cohort came back worse than expected.
+policy "Nano loan v2"
+version 2
+currency PKR
+
+decline if age < 18 because "below the legal age to contract"
+decline if monthly_income < 18000 because "monthly income below the floor of 18,000"
+decline if prior_defaults >= 1 because "a default already on file"
+decline if txn_velocity > 120 because "wallet turnover too high to read as income"
+refer if dependants >= 6 because "a large household needs an officer to size the limit"
+
+score +20 if wallet_months >= 6 because "six months of wallet history"
+score +15 if wallet_months >= 18 because "eighteen months of wallet history"
+score +20 if monthly_income >= 30000 because "income comfortably above the floor"
+score +15 if on_time_repayments >= 2 because "repaid on time before"
+score +10 if avg_balance >= 4000 because "keeps a balance between salary days"
+score -15 if txn_velocity > 80 because "turnover high enough to blur the income signal"
+score +10 if employment == "salaried" because "a salary lands on a predictable date"
+
+approve if score >= 45
+limit min(0.25 * monthly_income, 20000)
+fee 2.5% of limit

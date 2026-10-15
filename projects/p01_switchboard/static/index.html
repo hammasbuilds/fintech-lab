@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switchboard</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .raw { word-break: break-all; white-space: pre-wrap; }
+  .raw .hit { background: var(--seq-100); outline: 1px solid var(--series-1); border-radius: 2px; }
+  .step { border-left: 3px solid var(--series-1); padding-left: 12px; margin-bottom: 18px; }
+  .step.inbound { border-left-color: var(--series-2); }
+  .step h3 { font-size: 13.5px; margin: 0 0 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  tbody tr.row-sel { background: var(--surface-sunken); }
+  tbody tr.clickable { cursor: pointer; }
+  details > summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; padding: 3px 0; }
+  .samples button { font: inherit; font-size: 12.5px; background: none; border: 1px solid var(--axis); border-radius: 999px; padding: 3px 10px; color: var(--ink-2); cursor: pointer; }
+  .samples button:hover { color: var(--ink); border-color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Switchboard</h1>
+    <p class="sub">ISO 8583 workbench &mdash; decode traffic, generate lifecycles, check the invariants</p>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="theme" type="button" aria-label="Switch between light and dark">Dark</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="t-overview" aria-selected="true" aria-controls="p-overview">Overview</button>
+  <button role="tab" id="t-decode" aria-selected="false" aria-controls="p-decode">Decode</button>
+  <button role="tab" id="t-build" aria-selected="false" aria-controls="p-build">Build a flow</button>
+  <button role="tab" id="t-validate" aria-selected="false" aria-controls="p-validate">Validate</button>
+  <button role="tab" id="t-rules" aria-selected="false" aria-controls="p-rules">Rules</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ------------------------------------------------------------ overview -->
+  <section class="panel active" id="p-overview" role="tabpanel" aria-labelledby="t-overview">
+    <div class="card">
+      <h2>What this measures</h2>
+      <p class="hint">
+        A decoder and a rule list both look convincing while they are only ever shown correct
+        traffic. These numbers come from breaking valid traffic on purpose and counting what the
+        project rejects.
+      </p>
+      <div class="tiles" id="tiles"></div>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>Random corruption, rejection rate by group</h2>
+        <p class="hint">
+          One character of a valid message replaced at random, 2,000 times. The three groups have
+          three different correct answers, which is why the overall rate is not the headline.
+        </p>
+        <div class="bars" id="fuzz-bars"></div>
+        <details style="margin-top:12px">
+          <summary>Table view</summary>
+          <div class="scroll"><table id="fuzz-table"></table></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Fault catalogue</h2>
+        <p class="hint">
+          Each fault is modelled on a production defect and labelled with the rule meant to catch
+          it. A fault caught only by a <em>different</em> rule is reported as such, because the
+          rule it was written for is then still unproven.
+        </p>
+        <div class="scroll" style="max-height:340px; overflow-y:auto">
+          <table id="catalogue"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Where the parser cannot help</h2>
+      <p class="hint" id="fuzz-note"></p>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------------- decode -->
+  <section class="panel" id="p-decode" role="tabpanel" aria-labelledby="t-decode">
+    <div class="card">
+      <h2>Decode a raw message</h2>
+      <p class="hint">Paste an ASCII-framed message: 4-character MTI, 16-character hex bitmap, then the data elements.</p>
+      <div class="row samples" id="samples"></div>
+      <textarea id="raw-in" rows="4" spellcheck="false" placeholder="0200F238..."></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="go-decode" type="button">Decode</button>
+        <button class="btn ghost" id="clear-decode" type="button">Clear</button>
+      </div>
+    </div>
+    <div id="decode-out"></div>
+  </section>
+
+  <!-- --------------------------------------------------------------- build -->
+  <section class="panel" id="p-build" role="tabpanel" aria-labelledby="t-build">
+    <div class="card">
+      <h2>Generate a transaction lifecycle</h2>
+      <p class="hint">
+        Every step is packed and re-parsed before it is shown, so anything the codec would reject
+        never reaches this page.
+      </p>
+      <div class="row">
+        <label class="field" style="min-width:260px">Scenario
+          <select id="scenario"></select>
+        </label>
+        <label class="field">Card number
+          <input type="text" id="pan" value="4111111111111111" size="20" spellcheck="false">
+        </label>
+        <label class="field">Amount <span style="color:var(--ink-muted)">(minor units)</span>
+          <input type="number" id="amount" value="500000" min="0" step="1">
+        </label>
+        <label class="field">Currency
+          <select id="currency"></select>
+        </label>
+        <label class="field">Terminal
+          <input type="text" id="terminal" value="ATM00417" size="10" spellcheck="false">
+        </label>
+        <button class="btn" id="go-build" type="button">Build</button>
+      </div>
+      <p class="hint" id="scenario-desc"></p>
+    </div>
+    <div id="build-out"></div>
+  </section>
+
+  <!-- ------------------------------------------------------------ validate -->
+  <section class="panel" id="p-validate" role="tabpanel" aria-labelledby="t-validate">
+    <div class="card">
+      <h2>Check a flow against the invariants</h2>
+      <p class="hint">
+        One raw message per line, in the order they crossed the wire. Requests and responses are
+        told apart by their MTI, not by the order you paste them in.
+      </p>
+      <textarea id="raws-in" rows="7" spellcheck="false" placeholder="0200...&#10;0210..."></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="go-validate" type="button">Validate</button>
+        <button class="btn ghost" id="load-sample-flow" type="button">Load a built flow</button>
+      </div>
+    </div>
+    <div id="validate-out"></div>
+  </section>
+
+  <!-- --------------------------------------------------------------- rules -->
+  <section class="panel" id="p-rules" role="tabpanel" aria-labelledby="t-rules">
+    <div class="card">
+      <h2>The invariants</h2>
+      <p class="hint">
+        Each one is a thing that, when it breaks in production, produces either a cardholder
+        debited for cash they never received or a reconciliation break someone unpicks by hand.
+      </p>
+      <div class="scroll"><table id="rules"></table></div>
+    </div>
+    <div class="card">
+      <h2>Data element dictionary</h2>
+      <p class="hint">The 50 elements a card switch actually populates, with the length discipline the codec enforces.</p>
+      <div class="scroll" style="max-height:420px; overflow-y:auto"><table id="dict"></table></div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">
+  Standard library only &mdash; no model, no GPU, no API key, no network call.
+</footer>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, attrs = {}, kids = []) => {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key === "html") node.innerHTML = value;
+    else if (value !== null && value !== undefined) node.setAttribute(key, value);
+  }
+  for (const kid of [].concat(kids)) if (kid) node.append(kid);
+  return node;
+};
+const pct = (part, whole) => (whole ? (100 * part / whole).toFixed(1) + "%" : "n/a");
+
+/* ---- theme ------------------------------------------------------------- */
+const prefersDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+let dark = prefersDark();
+function paintTheme() {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  $("#theme").textContent = dark ? "Light" : "Dark";
+}
+$("#theme").addEventListener("click", () => { dark = !dark; paintTheme(); });
+paintTheme();
+
+/* ---- tabs -------------------------------------------------------------- */
+for (const tab of document.querySelectorAll('[role="tab"]')) {
+  tab.addEventListener("click", () => {
+    for (const other of document.querySelectorAll('[role="tab"]')) {
+      other.setAttribute("aria-selected", String(other === tab));
+    }
+    for (const panel of document.querySelectorAll(".panel")) {
+      panel.classList.toggle("active", panel.id === tab.getAttribute("aria-controls"));
+    }
+  });
+}
+
+/* ---- tooltip ----------------------------------------------------------- */
+const tip = $("#tip");
+function showTip(event, html) {
+  tip.innerHTML = html;
+  tip.classList.add("on");
+  const pad = 14;
+  const box = tip.getBoundingClientRect();
+  let x = event.clientX + pad;
+  let y = event.clientY + pad;
+  if (x + box.width > window.innerWidth - 8) x = event.clientX - box.width - pad;
+  if (y + box.height > window.innerHeight - 8) y = event.clientY - box.height - pad;
+  tip.style.left = x + "px";
+  tip.style.top = y + "px";
+}
+const hideTip = () => tip.classList.remove("on");
+
+/* ---- api --------------------------------------------------------------- */
+async function api(path, body) {
+  const options = body === undefined
+    ? {}
+    : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  const response = await fetch(path, options);
+  const data = await response.json();
+  if (!response.ok && data.error) throw new Error(data.error);
+  return data;
+}
+function errorCard(message) {
+  return el("div", { class: "card" }, el("div", { class: "note bad", text: message }));
+}
+
+/* ---- severity pill ----------------------------------------------------- */
+const LEVELS = { good: "Approved", warning: "Warning", serious: "Serious", critical: "Critical", neutral: "Informational" };
+function pill(level, label) {
+  return el("span", { class: "pill " + (level || "neutral") }, [
+    el("span", { class: "dot" }),
+    el("span", { text: label || LEVELS[level] || level }),
+  ]);
+}
+
+/* ---- overview ---------------------------------------------------------- */
+let META = null;
+
+function renderTiles(results, faults) {
+  const host = $("#tiles");
+  host.innerHTML = "";
+  const mutation = faults.mutation;
+  const tiles = [
+    ["Data elements defined", results ? results.dictionary.elements_defined : "-", "of 128"],
+    ["Scenarios", results ? results.scenarios.count : "-", (results ? results.scenarios.messages : "-") + " messages"],
+    ["Invariants", results ? results.invariants.rules : META.rules.length, "checked per flow"],
+    ["False positives", results ? results.invariants.valid_flows_with_findings : "-", "on valid flows"],
+    ["Faults killed", mutation.killed + "/" + mutation.total, "by the intended rule: " + mutation.killed_by_intended_rule],
+    ["Illegal characters let through", faults.fuzz.illegal_characters_accepted.length, "of " + faults.fuzz.groups.class_violating.trials + " tried"],
+  ];
+  for (const [key, value, unit] of tiles) {
+    host.append(el("div", { class: "tile" }, [
+      el("span", { class: "k", text: key }),
+      el("span", { class: "v", text: String(value) }),
+      el("span", { class: "u", text: unit }),
+    ]));
+  }
+}
+
+const FUZZ_GROUPS = [
+  ["class_violating", "Illegal for the field", "must be 100% - anything less is a hole in the parser"],
+  ["class_legal", "Legal for the field", "should be near 0% - these are valid messages"],
+  ["framing", "In the MTI, bitmap or a length prefix", "cannot reach 100% - see the note below"],
+];
+
+function renderFuzz(fuzz) {
+  const bars = $("#fuzz-bars");
+  bars.innerHTML = "";
+  for (const [key, label, expectation] of FUZZ_GROUPS) {
+    const group = fuzz.groups[key];
+    const rate = group.trials ? group.rejected / group.trials : 0;
+    const fill = el("div", { class: "fill", style: "width:" + (rate * 100).toFixed(1) + "%; background: var(--series-1)" });
+    const track = el("div", { class: "track" }, fill);
+    const row = el("div", { class: "bar-row" }, [
+      el("span", { class: "lbl", text: label }),
+      track,
+      el("span", { class: "val", text: pct(group.rejected, group.trials) }),
+    ]);
+    track.addEventListener("mousemove", (event) => showTip(event,
+      "<strong>" + label + "</strong><br><span class='tk'>rejected</span> " + group.rejected + " of " + group.trials +
+      "<br><span class='tk'>expected</span> " + expectation));
+    track.addEventListener("mouseleave", hideTip);
+    bars.append(row);
+  }
+
+  const table = $("#fuzz-table");
+  table.innerHTML = "";
+  table.append(el("thead", {}, el("tr", {}, [
+    el("th", { text: "Group" }),
+    el("th", { class: "num", text: "Trials" }),
+    el("th", { class: "num", text: "Rejected" }),
+    el("th", { class: "num", text: "Rate" }),
+    el("th", { text: "What the right answer is" }),
+  ])));
+  const body = el("tbody");
+  for (const [key, label, expectation] of FUZZ_GROUPS) {
+    const group = fuzz.groups[key];
+    body.append(el("tr", {}, [
+      el("td", { text: label }),
+      el("td", { class: "num", text: String(group.trials) }),
+      el("td", { class: "num", text: String(group.rejected) }),
+      el("td", { class: "num", text: pct(group.rejected, group.trials) }),
+      el("td", { text: expectation }),
+    ]));
+  }
+  table.append(body);
+}
+
+function renderCatalogue(faults) {
+  const rows = new Map();
+  for (const row of faults.mutation.rows) rows.set(row.mutator + "|" + row.scenario, row);
+  const table = $("#catalogue");
+  table.innerHTML = "";
+  table.append(el("thead", {}, el("tr", {}, [
+    el("th", { text: "Fault" }),
+    el("th", { text: "Scenario" }),
+    el("th", { text: "Intended" }),
+    el("th", { text: "Caught by" }),
+    el("th", { text: "Result" }),
+  ])));
+  const body = el("tbody");
+  for (const row of faults.mutation.rows) {
+    const verdict = !row.killed
+      ? pill("critical", "survived")
+      : row.by_intended ? pill("good", "killed") : pill("warning", "other rule");
+    const tr = el("tr", {}, [
+      el("td", { class: "mono", text: row.mutator }),
+      el("td", { text: row.scenario.replace(/_/g, " ") }),
+      el("td", { class: "mono", text: row.expected }),
+      el("td", { class: "mono", text: row.caught_by.join(", ") || "-" }),
+      el("td", {}, verdict),
+    ]);
+    tr.addEventListener("mousemove", (event) => showTip(event, "<span class='tk'>detail</span><br>" + row.detail));
+    tr.addEventListener("mouseleave", hideTip);
+    body.append(tr);
+  }
+  table.append(body);
+}
+
+function renderRules() {
+  const table = $("#rules");
+  table.innerHTML = "";
+  table.append(el("thead", {}, el("tr", {}, [
+    el("th", { text: "" }),
+    el("th", { text: "Invariant" }),
+    el("th", { text: "Severity" }),
+    el("th", { text: "Why it matters" }),
+  ])));
+  const body = el("tbody");
+  for (const rule of META.rules) {
+    body.append(el("tr", {}, [
+      el("td", { class: "mono", text: rule.rule }),
+      el("td", { text: rule.title }),
+      el("td", {}, pill(rule.severity)),
+      el("td", { text: rule.why }),
+    ]));
+  }
+  table.append(body);
+
+  const dict = $("#dict");
+  dict.innerHTML = "";
+  dict.append(el("thead", {}, el("tr", {}, [
+    el("th", { class: "num", text: "DE" }),
+    el("th", { text: "Name" }),
+    el("th", { text: "Spec" }),
+    el("th", { text: "Length" }),
+  ])));
+  const dbody = el("tbody");
+  for (const field of META.dictionary) {
+    dbody.append(el("tr", {}, [
+      el("td", { class: "num", text: String(field.de) }),
+      el("td", { text: field.name }),
+      el("td", { class: "mono", text: field.spec }),
+      el("td", { text: field.var === "FIXED" ? "fixed" : field.var.toLowerCase() }),
+    ]));
+  }
+  dict.append(dbody);
+}
+
+/* ---- decode ------------------------------------------------------------ */
+function rawWithSpan(raw, span) {
+  if (!span) return el("pre", { class: "out raw", text: raw });
+  const [offset, length] = span;
+  return el("pre", { class: "out raw" }, [
+    document.createTextNode(raw.slice(0, offset)),
+    el("span", { class: "hit", text: raw.slice(offset, offset + length) }),
+    document.createTextNode(raw.slice(offset + length)),
+  ]);
+}
+
+function messageCard(data, title, compact) {
+  const card = el("div", { class: compact ? "" : "card" });
+  if (title) card.append(el("h2", { text: title }));
+  if (!compact) {
+    card.append(el("p", { class: "hint", text: data.narration }));
+    const parts = data.mti_parts;
+    card.append(el("dl", { class: "kv" }, [
+      el("dt", { text: "MTI" }), el("dd", { text: data.mti }),
+      el("dt", { text: "Version" }), el("dd", { text: parts.version }),
+      el("dt", { text: "Class" }), el("dd", { text: parts.class }),
+      el("dt", { text: "Function" }), el("dd", { text: parts.function }),
+      el("dt", { text: "Originated at" }), el("dd", { text: parts.origin }),
+    ]));
+  }
+
+  const rawBox = el("div", { style: "margin:12px 0" }, rawWithSpan(data.raw, null));
+  card.append(rawBox);
+
+  const table = el("table");
+  table.append(el("thead", {}, el("tr", {}, [
+    el("th", { class: "num", text: "DE" }),
+    el("th", { text: "Name" }),
+    el("th", { text: "Spec" }),
+    el("th", { text: "Value" }),
+    el("th", { text: "What it means" }),
+  ])));
+  const body = el("tbody");
+  for (const row of data.rows) {
+    const tr = el("tr", { class: "clickable" }, [
+      el("td", { class: "num", text: row.de }),
+      el("td", { text: row.name }),
+      el("td", { class: "mono", text: row.spec }),
+      el("td", { class: "mono", text: row.value }),
+      el("td", { text: row.meaning }),
+    ]);
+    tr.addEventListener("click", () => {
+      for (const other of body.children) other.classList.remove("row-sel");
+      tr.classList.add("row-sel");
+      rawBox.innerHTML = "";
+      rawBox.append(rawWithSpan(data.raw, row.span));
+    });
+    body.append(tr);
+  }
+  table.append(body);
+  card.append(el("p", { class: "hint", text: "Click a row to highlight that field inside the raw message." }));
+  card.append(el("div", { class: "scroll" }, table));
+  return card;
+}
+
+$("#go-decode").addEventListener("click", async () => {
+  const out = $("#decode-out");
+  out.innerHTML = "";
+  try {
+    const data = await api("/api/decode", { raw: $("#raw-in").value });
+    if (!data.ok) {
+      out.append(errorCard("The parser stopped: " + data.error));
+      const partial = el("div", { class: "card" }, [
+        el("h2", { text: "What could still be read" }),
+        el("dl", { class: "kv" }, [
+          el("dt", { text: "MTI" }), el("dd", { text: data.partial.mti || "-" }),
+          el("dt", { text: "Bitmap" }), el("dd", { class: "mono", text: data.partial.bitmap || "-" }),
+          el("dt", { text: "Length" }), el("dd", { text: String(data.length) + " characters" }),
+        ]),
+      ]);
+      if (data.partial.mti_error) partial.append(el("div", { class: "note warn", text: data.partial.mti_error }));
+      out.append(partial);
+      return;
+    }
+    out.append(messageCard(data, null));
+  } catch (error) {
+    out.append(errorCard(error.message));
+  }
+});
+$("#clear-decode").addEventListener("click", () => {
+  $("#raw-in").value = "";
+  $("#decode-out").innerHTML = "";
+});
+
+/* ---- build ------------------------------------------------------------- */
+let LAST_FLOW = null;
+
+function renderFindings(findings, emptyText) {
+  const card = el("div", { class: "card" }, el("h2", { text: "Invariant check" }));
+  if (!findings.length) {
+    card.append(el("div", { class: "note", text: emptyText }));
+    return card;
+  }
+  const table = el("table");
+  table.append(el("thead", {}, el("tr", {}, [
+    el("th", { text: "" }),
+    el("th", { text: "Invariant" }),
+    el("th", { text: "Severity" }),
+    el("th", { class: "num", text: "Step" }),
+    el("th", { text: "Detail" }),
+  ])));
+  const body = el("tbody");
+  for (const finding of findings) {
+    body.append(el("tr", {}, [
+      el("td", { class: "mono", text: finding.rule }),
+      el("td", { text: finding.title }),
+      el("td", {}, pill(finding.severity)),
+      el("td", { class: "num", text: finding.step === null ? "-" : String(finding.step) }),
+      el("td", { text: finding.detail }),
+    ]));
+  }
+  table.append(body);
+  card.append(el("div", { class: "scroll" }, table));
+  return card;
+}
+
+$("#go-build").addEventListener("click", async () => {
+  const out = $("#build-out");
+  out.innerHTML = "";
+  try {
+    const data = await api("/api/build", {
+      scenario: $("#scenario").value,
+      pan: $("#pan").value,
+      amount: $("#amount").value,
+      currency: $("#currency").value,
+      terminal: $("#terminal").value,
+    });
+    LAST_FLOW = data;
+    const head = el("div", { class: "card" }, [
+      el("h2", { text: data.title }),
+      el("p", { class: "hint", text: data.description }),
+    ]);
+    out.append(head);
+    const steps = el("div", { class: "card" }, el("h2", { text: "The flow, step by step" }));
+    data.steps.forEach((step, index) => {
+      const inbound = step.direction.startsWith("issuer");
+      const block = el("div", { class: "step" + (inbound ? " inbound" : "") });
+      block.append(el("h3", {}, [
+        el("span", { text: (index + 1) + ". " + step.label }),
+        pill(step.severity, step.direction),
+        el("span", { class: "mono", style: "color:var(--ink-muted)", text: step.mti }),
+      ]));
+      block.append(el("p", { class: "hint", text: step.narration }));
+      if (step.note) block.append(el("div", { class: "note", text: step.note }));
+      const details = el("details", {}, el("summary", { text: "Raw message and field table (" + step.rows.length + " elements)" }));
+      details.append(messageCard(step, null, true));
+      block.append(details);
+      steps.append(block);
+    });
+    out.append(steps);
+    out.append(renderFindings(data.findings,
+      "No findings. Every invariant holds on this flow, which is what a generated scenario must do before it is worth pointing at anything."));
+  } catch (error) {
+    out.append(errorCard(error.message));
+  }
+});
+
+/* ---- validate ---------------------------------------------------------- */
+$("#load-sample-flow").addEventListener("click", async () => {
+  if (!LAST_FLOW) {
+    const data = await api("/api/build", { scenario: "atm_reversal_after_timeout" });
+    LAST_FLOW = data;
+  }
+  $("#raws-in").value = LAST_FLOW.steps.map((step) => step.raw).join("\n");
+});
+
+$("#go-validate").addEventListener("click", async () => {
+  const out = $("#validate-out");
+  out.innerHTML = "";
+  try {
+    const data = await api("/api/validate", { raws: $("#raws-in").value });
+    if (data.parse_errors.length) {
+      const card = el("div", { class: "card" }, el("h2", { text: "Lines that would not parse" }));
+      for (const problem of data.parse_errors) {
+        card.append(el("div", { class: "note bad", text: "line " + problem.line + ": " + problem.error }));
+      }
+      out.append(card);
+    }
+    if (data.steps.length) {
+      const card = el("div", { class: "card" }, el("h2", { text: "The flow as read" }));
+      const table = el("table");
+      table.append(el("thead", {}, el("tr", {}, [
+        el("th", { class: "num", text: "Step" }),
+        el("th", { text: "Direction" }),
+        el("th", { text: "MTI" }),
+        el("th", { text: "What it is" }),
+      ])));
+      const body = el("tbody");
+      data.steps.forEach((step, index) => {
+        body.append(el("tr", {}, [
+          el("td", { class: "num", text: String(index + 1) }),
+          el("td", {}, pill(step.severity, step.direction)),
+          el("td", { class: "mono", text: step.mti }),
+          el("td", { text: step.narration }),
+        ]));
+      });
+      table.append(body);
+      card.append(el("div", { class: "scroll" }, table));
+      out.append(card);
+      out.append(renderFindings(data.findings, "No findings: every invariant holds on this flow."));
+    }
+  } catch (error) {
+    out.append(errorCard(error.message));
+  }
+});
+
+/* ---- boot -------------------------------------------------------------- */
+(async function boot() {
+  try {
+    META = await api("/api/meta");
+    const faults = await api("/api/faults");
+
+    renderTiles(META.results, faults);
+    renderFuzz(faults.fuzz);
+    renderCatalogue(faults);
+    renderRules();
+    $("#fuzz-note").textContent = META.results ? META.results.fuzz.note : "";
+
+    const scenario = $("#scenario");
+    for (const option of META.scenarios) {
+      scenario.append(el("option", { value: option.key, text: option.title }));
+    }
+    const describeScenario = () => {
+      const chosen = META.scenarios.find((s) => s.key === scenario.value);
+      $("#scenario-desc").textContent = chosen ? chosen.description : "";
+    };
+    scenario.addEventListener("change", describeScenario);
+    describeScenario();
+
+    const currency = $("#currency");
+    for (const [code, alpha] of Object.entries(META.currencies)) {
+      currency.append(el("option", { value: code, text: alpha + " (" + code + ")", selected: code === "586" ? "selected" : null }));
+    }
+
+    const samples = $("#samples");
+    samples.append(el("span", { class: "hint", style: "margin:0 4px 0 0", text: "Load a sample:" }));
+    for (const key of ["atm_withdrawal_approved", "atm_partial_approval", "balance_inquiry", "network_echo_test"]) {
+      const option = META.scenarios.find((s) => s.key === key);
+      const button = el("button", { type: "button", text: option ? option.title : key });
+      button.addEventListener("click", async () => {
+        const flow = await api("/api/build", { scenario: key });
+        $("#raw-in").value = flow.steps[0].raw;
+        $("#go-decode").click();
+      });
+      samples.append(button);
+    }
+  } catch (error) {
+    $("#tiles").append(el("div", { class: "note bad", text: "Could not load: " + error.message }));
+  }
+})();
+</script>
+</body>
+</html>

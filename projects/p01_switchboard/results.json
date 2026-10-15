@@ -1,0 +1,501 @@
+{
+  "dictionary": {
+    "elements_defined": 50,
+    "elements_exercised": 27,
+    "exercised": [
+      2,
+      3,
+      4,
+      7,
+      11,
+      12,
+      13,
+      14,
+      18,
+      22,
+      25,
+      32,
+      33,
+      37,
+      38,
+      39,
+      41,
+      42,
+      43,
+      49,
+      52,
+      54,
+      70,
+      90,
+      95,
+      102,
+      103
+    ]
+  },
+  "scenarios": {
+    "count": 14,
+    "messages": 33,
+    "steps_per_flow": {
+      "atm_withdrawal_approved": 2,
+      "atm_partial_approval": 2,
+      "atm_insufficient_funds": 2,
+      "atm_reversal_after_timeout": 3,
+      "atm_partial_reversal": 4,
+      "atm_pin_tries_exceeded": 2,
+      "atm_incorrect_pin_then_approved": 4,
+      "pos_purchase_approved": 2,
+      "pos_refund": 2,
+      "pos_chip_fallback_declined": 2,
+      "balance_inquiry": 2,
+      "cardholder_transfer": 2,
+      "network_echo_test": 2,
+      "network_sign_on": 2
+    }
+  },
+  "codec": {
+    "messages_checked": 33,
+    "round_trip_stable": 33,
+    "reparse_equal": 33
+  },
+  "invariants": {
+    "rules": 18,
+    "valid_flows_checked": 14,
+    "valid_flows_with_findings": 0,
+    "false_positives": {}
+  },
+  "fuzz": {
+    "trials": 2000,
+    "rejected": 1004,
+    "accepted": 996,
+    "rejection_rate": 0.502,
+    "groups": {
+      "class_violating": {
+        "trials": 627,
+        "rejected": 627,
+        "rejection_rate": 1.0
+      },
+      "class_legal": {
+        "trials": 988,
+        "rejected": 0,
+        "rejection_rate": 0.0
+      },
+      "framing": {
+        "trials": 385,
+        "rejected": 377,
+        "rejection_rate": 0.9792
+      }
+    },
+    "illegal_characters_accepted": [],
+    "accepted_by_field": {
+      "DE 43 (Card acceptor name and location), class ans": 312,
+      "DE 102 (Account identification 1), class ans": 143,
+      "DE 42 (Card acceptor identification code), class ans": 135,
+      "DE 37 (Retrieval reference number), class an": 91,
+      "DE 41 (Card acceptor terminal identification), class ans": 67,
+      "DE 52 (Personal identification number data), class b": 48,
+      "DE 2 (Primary account number), class n": 34,
+      "DE 4 (Amount, transaction), class n": 31,
+      "DE 3 (Processing code), class n": 19,
+      "DE 7 (Transmission date and time), class n": 17,
+      "DE 12 (Local transaction time), class n": 16,
+      "DE 49 (Currency code, transaction), class n": 12,
+      "DE 33 (Forwarding institution identification code), class n": 11,
+      "DE 11 (System trace audit number), class n": 10,
+      "DE 22 (Point of service entry mode), class n": 10,
+      "DE 32 (Acquiring institution identification code), class n": 10,
+      "framing (MTI, bitmap or a length prefix)": 8,
+      "DE 14 (Expiration date), class n": 7,
+      "DE 18 (Merchant category code), class n": 6,
+      "DE 13 (Local transaction date), class n": 5,
+      "DE 25 (Point of service condition code), class n": 4
+    },
+    "note": "The framing group does not reach 1.000 and cannot. Seven of the eight accepted corruptions turned a valid MTI into another valid MTI, which a parser must accept. The eighth flipped one bitmap bit and swapped DE 14 for DE 16 - both n4, so the layout is byte-identical and the message re-parses as a different, entirely well-formed message. An ISO 8583 bitmap carries no redundancy, so no parser can catch that. It is the reason the invariant layer exists rather than stopping at the codec."
+  },
+  "mutation": {
+    "mutants": 31,
+    "killed": 31,
+    "killed_by_intended_rule": 31,
+    "survived": [],
+    "rules_never_exercised": [],
+    "rows": [
+      {
+        "mutator": "drop_response_code",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L03",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L03"
+        ],
+        "detail": "L03 step 2: MTI 0210 has no DE 39"
+      },
+      {
+        "mutator": "drop_response_code",
+        "scenario": "pos_purchase_approved",
+        "layer": "lifecycle",
+        "expected": "L03",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L03"
+        ],
+        "detail": "L03 step 2: MTI 0210 has no DE 39"
+      },
+      {
+        "mutator": "alter_response_stan",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L02",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L01",
+          "L02"
+        ],
+        "detail": "L01 step 1: MTI 0200 trace 004712 is neither answered nor reversed; L02 step 2: MTI 0210 trace 999999 matches no request in this flow"
+      },
+      {
+        "mutator": "echo_request_mti",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L15",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L01",
+          "L15"
+        ],
+        "detail": "L01 step 1: MTI 0200 trace 004712 is neither answered nor reversed; L01 step 2: MTI 0200 trace 004712 is neither answered nor reversed; L15 step 2: MTI 0200 reuses trace 004712 from step 1"
+      },
+      {
+        "mutator": "change_response_amount",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L04",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L04"
+        ],
+        "detail": "L04 step 2: DE 4 came back as 000000999999 against a request for 000000500000, and DE 39 00 does not permit a change"
+      },
+      {
+        "mutator": "change_response_amount",
+        "scenario": "pos_purchase_approved",
+        "layer": "lifecycle",
+        "expected": "L04",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L04"
+        ],
+        "detail": "L04 step 2: DE 4 came back as 000000999999 against a request for 000000249900, and DE 39 00 does not permit a change"
+      },
+      {
+        "mutator": "full_partial_approval",
+        "scenario": "atm_partial_approval",
+        "layer": "lifecycle",
+        "expected": "L05",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L05"
+        ],
+        "detail": "L05 step 2: DE 39 10 approved 1000000 against a request for 1000000; a partial approval must be lower"
+      },
+      {
+        "mutator": "zero_partial_approval",
+        "scenario": "atm_partial_approval",
+        "layer": "lifecycle",
+        "expected": "L05",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L05"
+        ],
+        "detail": "L05 step 2: DE 39 10 approved zero, which is a decline and should carry its own response code"
+      },
+      {
+        "mutator": "drop_original_data_elements",
+        "scenario": "atm_reversal_after_timeout",
+        "layer": "lifecycle",
+        "expected": "L06",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L01",
+          "L06"
+        ],
+        "detail": "L01 step 1: MTI 0200 trace 004712 is neither answered nor reversed; L06 step 2: MTI 0400 has no DE 90"
+      },
+      {
+        "mutator": "drop_original_data_elements",
+        "scenario": "atm_partial_reversal",
+        "layer": "lifecycle",
+        "expected": "L06",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L06"
+        ],
+        "detail": "L06 step 3: MTI 0400 has no DE 90"
+      },
+      {
+        "mutator": "point_reversal_at_unknown_trace",
+        "scenario": "atm_reversal_after_timeout",
+        "layer": "lifecycle",
+        "expected": "L07",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L01",
+          "L07"
+        ],
+        "detail": "L01 step 1: MTI 0200 trace 004712 is neither answered nor reversed; L07 step 2: DE 90 names trace 888888, which no request in this flow carries"
+      },
+      {
+        "mutator": "drop_network_code",
+        "scenario": "network_echo_test",
+        "layer": "lifecycle",
+        "expected": "L08",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L08"
+        ],
+        "detail": "L08 step 1: MTI 0800 has no DE 70"
+      },
+      {
+        "mutator": "drop_network_code",
+        "scenario": "network_sign_on",
+        "layer": "lifecycle",
+        "expected": "L08",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L08"
+        ],
+        "detail": "L08 step 1: MTI 0800 has no DE 70"
+      },
+      {
+        "mutator": "swap_response_pan",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L09",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L09"
+        ],
+        "detail": "L09 step 2: DE 2 (account number) came back as '4111111111111129' against '4111111111111111' in the request"
+      },
+      {
+        "mutator": "alter_processing_code",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L10",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L10"
+        ],
+        "detail": "L10 step 2: DE 3 (processing code) came back as '012000' against '011000' in the request"
+      },
+      {
+        "mutator": "reverse_a_decline",
+        "scenario": "atm_insufficient_funds",
+        "layer": "lifecycle",
+        "expected": "L11",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L11"
+        ],
+        "detail": "L11 step 3: reverses trace 004712, which was declined with DE 39 51 and therefore moved no money"
+      },
+      {
+        "mutator": "authorise_a_decline",
+        "scenario": "atm_insufficient_funds",
+        "layer": "lifecycle",
+        "expected": "L12",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L12"
+        ],
+        "detail": "L12 step 2: DE 39 51 is a decline but carries authorisation id 'A99999'"
+      },
+      {
+        "mutator": "authorise_a_decline",
+        "scenario": "atm_pin_tries_exceeded",
+        "layer": "lifecycle",
+        "expected": "L12",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L12"
+        ],
+        "detail": "L12 step 2: DE 39 75 is a decline but carries authorisation id 'A99999'"
+      },
+      {
+        "mutator": "switch_response_currency",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L13",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L13"
+        ],
+        "detail": "L13 step 2: DE 49 (currency) came back as '840' against '586' in the request"
+      },
+      {
+        "mutator": "reroute_response_terminal",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L14",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L14"
+        ],
+        "detail": "L14 step 2: DE 41 (terminal) came back as 'ATM99999' against 'ATM00417' in the request"
+      },
+      {
+        "mutator": "clone_request_trace",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L15",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L01",
+          "L15"
+        ],
+        "detail": "L01 step 3: MTI 0200 trace 004712 is neither answered nor reversed; L15 step 3: MTI 0200 reuses trace 004712 from step 1"
+      },
+      {
+        "mutator": "strip_pin_block",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L16",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L16"
+        ],
+        "detail": "L16 step 1: a cash withdrawal at an unattended terminal carries no DE 52 PIN block"
+      },
+      {
+        "mutator": "charge_an_inquiry",
+        "scenario": "balance_inquiry",
+        "layer": "lifecycle",
+        "expected": "L17",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L04",
+          "L17"
+        ],
+        "detail": "L04 step 2: DE 4 came back as 000000000000 against a request for 000000250000, and DE 39 00 does not permit a change; L17 step 1: an inquiry requests DE 4 000000250000, which is not zero"
+      },
+      {
+        "mutator": "deliver_response_first",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L18",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L18"
+        ],
+        "detail": "L18 step 1: the response arrives before its request at step 2"
+      },
+      {
+        "mutator": "drop_the_response",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L01",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L01"
+        ],
+        "detail": "L01 step 1: MTI 0200 trace 004712 is neither answered nor reversed"
+      },
+      {
+        "mutator": "corrupt_bitmap",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "codec",
+        "expected": "codec",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "codec"
+        ],
+        "detail": "codec rejected it: bitmap sets DE 64 but it is not in the dictionary, so the remaining 20 characters cannot be read"
+      },
+      {
+        "mutator": "understate_llvar_length",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "codec",
+        "expected": "codec",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "codec"
+        ],
+        "detail": "codec rejected it: DE 32 (Acquiring institution identification code) declares length 52 at offset 97, above its maximum of 11"
+      },
+      {
+        "mutator": "truncate_fixed_field",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "codec",
+        "expected": "codec",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "codec"
+        ],
+        "detail": "codec rejected it: DE 102 (Account identification 1) declares 18 characters at offset 225, but only 11 remain"
+      },
+      {
+        "mutator": "letter_in_numeric_field",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "codec",
+        "expected": "codec",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "codec"
+        ],
+        "detail": "codec rejected it: DE 4 (Amount, transaction) is class n: 'X' is not allowed in that class"
+      },
+      {
+        "mutator": "overlong_llvar",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "codec",
+        "expected": "codec",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "codec"
+        ],
+        "detail": "codec rejected it: DE 2 (Primary account number) declares length 99 at offset 36, above its maximum of 19"
+      },
+      {
+        "mutator": "trailing_garbage",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "codec",
+        "expected": "codec",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "codec"
+        ],
+        "detail": "codec rejected it: 4 trailing characters after the last data element (DE 102) at offset 243: '0000'"
+      }
+    ]
+  }
+}

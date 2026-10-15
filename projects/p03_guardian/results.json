@@ -1,0 +1,100 @@
+{
+  "testset": {
+    "numerals": 48,
+    "no_amount": 6,
+    "actions": 30,
+    "near_miss": 3,
+    "coercion": 23,
+    "coercion_expected_misses": 4,
+    "replies": 21,
+    "all": 131
+  },
+  "numerals": {
+    "cases": 48,
+    "exact": 48,
+    "accuracy": 1.0,
+    "failures": [],
+    "no_amount_cases": 6,
+    "amounts_invented": 0,
+    "invented": []
+  },
+  "actions": {
+    "cases": 30,
+    "resolved_cases": 20,
+    "resolved_exact": 20,
+    "resolved_accuracy": 1.0,
+    "underspecified_cases": 10,
+    "asked_instead_of_guessed": 10,
+    "ask_accuracy": 1.0,
+    "overall_exact": 30,
+    "overall_accuracy": 1.0,
+    "near_miss_cases": 3,
+    "near_miss_exact": 3,
+    "failures": []
+  },
+  "coercion": {
+    "cases": 23,
+    "in_vocabulary_cases": 19,
+    "verdict_exact": 19,
+    "verdict_accuracy": 1.0,
+    "families_complete": 19,
+    "scripts_in_set": 9,
+    "benign_cases": 5,
+    "benign_blocked": 0,
+    "out_of_vocabulary_cases": 4,
+    "out_of_vocabulary_missed": 4,
+    "miss_rate_out_of_vocabulary": 1.0,
+    "failures": []
+  },
+  "replies": {
+    "cases": 21,
+    "exact": 21,
+    "accuracy": 1.0,
+    "read_as_consent_wrongly": 0,
+    "failures": []
+  },
+  "properties": {
+    "checks": 7,
+    "holding": 7,
+    "detail": [
+      {
+        "property": "an unclear reply is never consent",
+        "holds": true
+      },
+      {
+        "property": "an explicit yes executes the pending action unchanged",
+        "holds": true
+      },
+      {
+        "property": "the ledger chain verifies after a session",
+        "holds": true
+      },
+      {
+        "property": "a coercion script never reaches a confirmation",
+        "holds": true
+      },
+      {
+        "property": "pressure mid-confirmation drops the transfer, and a later yes cannot execute it",
+        "holds": true
+      },
+      {
+        "property": "a no cancels and is recorded",
+        "holds": true
+      },
+      {
+        "property": "editing a ledger entry is detected, and the index is named",
+        "holds": true
+      }
+    ]
+  },
+  "lexicon": {
+    "number_words": 114,
+    "scales": 20,
+    "modifiers": 21,
+    "intents": 7,
+    "intent_phrases": 63,
+    "coercion_families": 7,
+    "coercion_phrases": 98,
+    "contacts": 7
+  }
+}

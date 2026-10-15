@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Policy Bench</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .stack { display: flex; gap: 2px; height: 15px; border-radius: 4px; overflow: hidden; background: var(--surface-sunken); }
+  .stack span { display: block; height: 15px; }
+  .hist { display: flex; flex-direction: column; gap: 7px; }
+  .hist .row { display: grid; grid-template-columns: 74px 1fr auto; gap: 10px; align-items: center; }
+  .hist .row .b { color: var(--ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .hist .row .n { font-size: 12.5px; font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+  .policy-ed { font-family: var(--mono); min-height: 360px; }
+  .side { display: grid; gap: 16px; }
+  @media (min-width: 1000px) { .editor-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 16px; } }
+  .notice { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: var(--surface-sunken); }
+  .notice h4 { margin: 0 0 6px; font-size: 13.5px; }
+  .notice ul { margin: 6px 0 0; padding-left: 18px; }
+  .notice li { margin-bottom: 3px; }
+  .unmet { color: var(--ink-2); }
+  .unmet b { color: var(--ink); font-weight: 600; }
+  .lines { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Policy Bench</h1>
+    <p class="sub">Write a lending policy in words &mdash; see what it would have done before it goes live</p>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="theme" type="button" aria-label="Switch between light and dark">Dark</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="t-overview" aria-selected="true" aria-controls="p-overview">Overview</button>
+  <button role="tab" id="t-editor" aria-selected="false" aria-controls="p-editor">Policy editor</button>
+  <button role="tab" id="t-compare" aria-selected="false" aria-controls="p-compare">Compare versions</button>
+  <button role="tab" id="t-applicant" aria-selected="false" aria-controls="p-applicant">One applicant</button>
+  <button role="tab" id="t-cohort" aria-selected="false" aria-controls="p-cohort">The cohort</button>
+</nav>
+
+<div class="wrap">
+
+  <!-- ------------------------------------------------------------ overview -->
+  <section class="panel active" id="p-overview" role="tabpanel" aria-labelledby="t-overview">
+    <div class="card">
+      <h2>The three bundled policies</h2>
+      <p class="hint">
+        v1 is what the product launched with. v2 raised the income floor and added two risk
+        signals. v3 is v2 with the late fee re-expressed per day &mdash; it is here to be rejected.
+      </p>
+      <div class="tiles" id="tiles"></div>
+      <div id="policy-table" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card">
+      <h2>What the v1 &rarr; v2 tightening actually bought</h2>
+      <p class="hint" id="tighten-line"></p>
+      <div class="bars" id="tighten-bars"></div>
+      <div class="note warn" id="tighten-note" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Approval-rate gap by region, raw and inside income bands</h2>
+      <p class="hint">
+        No policy here mentions region. A gap that collapses once income is held still is
+        income reaching the decision through the income rules; a gap that survives is the policy
+        tracking region through something else.
+      </p>
+      <div class="bars" id="fair-bars"></div>
+      <div class="note" id="fair-reading" style="margin-top:14px"></div>
+      <details style="margin-top:8px">
+        <summary>Table view</summary>
+        <div id="fair-table"></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------------- editor -->
+  <section class="panel" id="p-editor" role="tabpanel" aria-labelledby="t-editor">
+    <div class="card">
+      <div class="row">
+        <label class="field">Start from
+          <select id="policy-pick"></select>
+        </label>
+        <button class="btn" id="go-compile" type="button">Compile and lint</button>
+        <button class="btn" id="go-backtest" type="button">Back-test</button>
+        <label class="field">Segment
+          <select id="segment"><option value="region">region</option><option value="employment">employment</option></select>
+        </label>
+      </div>
+      <div class="editor-grid">
+        <div>
+          <textarea class="policy-ed" id="source" spellcheck="false"></textarea>
+          <p class="hint" style="margin-top:8px">
+            Grammar: <code>decline if &lt;field&gt; &lt;op&gt; &lt;value&gt; because "&hellip;"</code>,
+            <code>score +25 if &hellip;</code>, <code>approve if score &gt;= 45</code>,
+            <code>limit min(0.25 * monthly_income, 20000)</code>, <code>fee 2.5% of limit</code>.
+          </p>
+        </div>
+        <div class="side" id="editor-side"></div>
+      </div>
+    </div>
+    <div id="backtest-out"></div>
+  </section>
+
+  <!-- ------------------------------------------------------------- compare -->
+  <section class="panel" id="p-compare" role="tabpanel" aria-labelledby="t-compare">
+    <div class="card">
+      <h2>Compare two versions on the same cohort</h2>
+      <p class="hint">
+        The same borrowers go through both policies, so every change is attributable to the
+        policy and not to a different sample.
+      </p>
+      <div class="row">
+        <label class="field">Base <select id="cmp-base"></select></label>
+        <label class="field">Candidate <select id="cmp-cand"></select></label>
+        <button class="btn" id="go-compare" type="button">Compare</button>
+      </div>
+    </div>
+    <div id="compare-out"></div>
+  </section>
+
+  <!-- ----------------------------------------------------------- applicant -->
+  <section class="panel" id="p-applicant" role="tabpanel" aria-labelledby="t-applicant">
+    <div class="card">
+      <h2>Score one applicant and read the notice</h2>
+      <p class="hint">
+        The notice is generated from the rule that fired, in English and Roman Urdu. The Urdu is
+        template-based on purpose: it cannot say anything the rule does not.
+      </p>
+      <div class="row" id="applicant-form"></div>
+      <div class="row">
+        <label class="field">Policy <select id="score-policy"></select></label>
+        <button class="btn" id="go-score" type="button">Decide</button>
+      </div>
+    </div>
+    <div id="score-out"></div>
+  </section>
+
+  <!-- -------------------------------------------------------------- cohort -->
+  <section class="panel" id="p-cohort" role="tabpanel" aria-labelledby="t-cohort">
+    <div class="card">
+      <h2>The cohort</h2>
+      <p class="hint" id="cohort-caveat"></p>
+      <div class="tiles" id="cohort-tiles"></div>
+      <div id="cohort-region" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h2>First forty borrowers</h2>
+      <p class="hint" id="cohort-withheld"></p>
+      <div id="cohort-rows" style="max-height:460px; overflow-y:auto"></div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">
+  Standard library only &mdash; no model, no GPU, no API key. The cohort is synthetic and its
+  generator is written out in <code>cohort.py</code>.
+</footer>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, attrs = {}, kids = []) => {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key === "html") node.innerHTML = value;
+    else if (value !== null && value !== undefined) node.setAttribute(key, value);
+  }
+  for (const kid of [].concat(kids)) if (kid) node.append(kid);
+  return node;
+};
+/* Empty a container and put one node in it. Rendering into a container rather than
+   replacing the element keeps the id alive, so a panel can be re-rendered. */
+const mount = (selector, node) => {
+  const host = $(selector);
+  host.innerHTML = "";
+  host.append(node);
+  return host;
+};
+const money = (value, currency) => (currency || "PKR") + " " + Math.round(value).toLocaleString("en-US");
+const rate = (value) => (value === null || value === undefined) ? "n/a" : (100 * value).toFixed(1) + "%";
+
+/* ---- theme & tabs ------------------------------------------------------ */
+let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+function paintTheme() {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  $("#theme").textContent = dark ? "Light" : "Dark";
+}
+$("#theme").addEventListener("click", () => { dark = !dark; paintTheme(); });
+paintTheme();
+
+for (const tab of document.querySelectorAll('[role="tab"]')) {
+  tab.addEventListener("click", () => {
+    for (const other of document.querySelectorAll('[role="tab"]')) other.setAttribute("aria-selected", String(other === tab));
+    for (const panel of document.querySelectorAll(".panel")) panel.classList.toggle("active", panel.id === tab.getAttribute("aria-controls"));
+  });
+}
+
+/* ---- tooltip ----------------------------------------------------------- */
+const tip = $("#tip");
+function showTip(event, html) {
+  tip.innerHTML = html;
+  tip.classList.add("on");
+  const box = tip.getBoundingClientRect();
+  let x = event.clientX + 14, y = event.clientY + 14;
+  if (x + box.width > window.innerWidth - 8) x = event.clientX - box.width - 14;
+  if (y + box.height > window.innerHeight - 8) y = event.clientY - box.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => tip.classList.remove("on");
+
+/* ---- api --------------------------------------------------------------- */
+async function api(path, body) {
+  const options = body === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  };
+  const response = await fetch(path, options);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+  return data;
+}
+const errorCard = (message) => el("div", { class: "card" }, el("div", { class: "note bad", text: message }));
+function pill(level, label) {
+  return el("span", { class: "pill " + (level || "neutral") }, [el("span", { class: "dot" }), el("span", { text: label })]);
+}
+function table(headers, rows) {
+  const node = el("table");
+  node.append(el("thead", {}, el("tr", {}, headers.map((h) =>
+    el("th", { class: h.num ? "num" : null, text: h.label || h })))));
+  const body = el("tbody");
+  for (const row of rows) {
+    body.append(el("tr", {}, row.map((cell) =>
+      cell && cell.node ? el("td", { class: cell.cls || null }, cell.node)
+                        : el("td", { class: (cell && cell.cls) || null, text: cell && cell.text !== undefined ? cell.text : String(cell) }))));
+  }
+  node.append(body);
+  return el("div", { class: "scroll" }, node);
+}
+
+/* ---- simple bar list --------------------------------------------------- */
+function barList(host, items) {
+  host.innerHTML = "";
+  const max = Math.max(...items.map((item) => item.value), 0.0001);
+  for (const item of items) {
+    const fill = el("div", { class: "fill", style: "width:" + (100 * item.value / max).toFixed(1) + "%; background:" + (item.color || "var(--series-1)") });
+    const track = el("div", { class: "track" }, fill);
+    if (item.tip) {
+      track.addEventListener("mousemove", (event) => showTip(event, item.tip));
+      track.addEventListener("mouseleave", hideTip);
+    }
+    host.append(el("div", { class: "bar-row" }, [
+      el("span", { class: "lbl", text: item.label }),
+      track,
+      el("span", { class: "val", text: item.display }),
+    ]));
+  }
+}
+
+/* ---- overview ---------------------------------------------------------- */
+let META = null;
+
+function renderOverview(results) {
+  const keys = Object.keys(results.policies);
+  const v12 = results.comparison_v1_to_v2;
+
+  const tiles = [
+    ["Cohort", results.cohort.size.toLocaleString("en-US"), "synthetic borrowers"],
+    ["Base default rate", rate(results.cohort.base_default_rate), "before any policy"],
+    ["Policies", keys.length, "all round-trip through the parser"],
+    ["Tightening precision", rate(v12.precision_of_the_tightening), "of newly declined, would default"],
+  ];
+  const host = $("#tiles");
+  host.innerHTML = "";
+  for (const [key, value, unit] of tiles) {
+    host.append(el("div", { class: "tile" }, [
+      el("span", { class: "k", text: key }),
+      el("span", { class: "v", text: String(value) }),
+      el("span", { class: "u", text: unit }),
+    ]));
+  }
+
+  mount("#policy-table", table(
+    ["Policy", "Name", { label: "Gates", num: true }, { label: "Rules", num: true },
+     { label: "Approve at", num: true }, { label: "Approval rate", num: true },
+     { label: "Bad rate", num: true }, { label: "Net", num: true }, "Lint"],
+    keys.map((key) => {
+      const meta = results.policies[key];
+      const back = results.backtests[key];
+      const lint = results.lint[key];
+      const level = lint.counts.critical ? "critical" : lint.counts.serious ? "serious" : "good";
+      const label = lint.counts.critical ? lint.counts.critical + " critical"
+                  : lint.counts.serious ? lint.counts.serious + " serious" : "clean";
+      return [
+        { text: key, cls: "mono" }, meta.name,
+        { text: String(meta.gates), cls: "num" }, { text: String(meta.score_rules), cls: "num" },
+        { text: String(meta.approve_at), cls: "num" },
+        { text: rate(back.approval_rate), cls: "num" },
+        { text: rate(back.bad_rate), cls: "num" },
+        { text: money(back.net, back.policy.currency), cls: "num" },
+        { node: pill(level, label) },
+      ];
+    })
+  ));
+
+  $("#tighten-line").textContent =
+    "v2 declines " + v12.newly_declined.toLocaleString("en-US") + " applicants v1 approved. "
+    + v12.newly_declined_who_would_default + " of them would have defaulted; "
+    + v12.newly_declined_who_would_repay.toLocaleString("en-US") + " would have repaid.";
+
+  barList($("#tighten-bars"), [
+    {
+      label: "Would have defaulted", value: v12.newly_declined_who_would_default,
+      display: v12.newly_declined_who_would_default + "  (" + rate(v12.precision_of_the_tightening) + ")",
+      color: "var(--series-1)",
+      tip: "<strong>Correctly declined</strong><br>the borrowers the tightening was for",
+    },
+    {
+      label: "Would have repaid", value: v12.newly_declined_who_would_repay,
+      display: v12.newly_declined_who_would_repay.toLocaleString("en-US"),
+      color: "var(--series-2)",
+      tip: "<strong>Given up</strong><br>good borrowers the tightening also removed",
+    },
+  ]);
+
+  $("#tighten-note").textContent =
+    "Bad rate improved " + Math.abs(v12.delta.bad_rate_points).toFixed(2) + " points and net moved "
+    + (v12.delta.net >= 0 ? "+" : "") + Math.round(v12.delta.net).toLocaleString("en-US")
+    + " PKR, while disbursement fell " + Math.abs(Math.round(v12.delta.disbursed)).toLocaleString("en-US")
+    + " PKR. An approval-rate chart alone shows a tightening; it cannot show that "
+    + rate(1 - v12.precision_of_the_tightening) + " of the people it removed were good.";
+
+  const fair = results.fairness.region;
+  barList($("#fair-bars"), [
+    { label: "Raw gap", value: fair.raw_gap, display: rate(fair.raw_gap),
+      tip: "<strong>" + fair.best.key + " vs " + fair.worst.key + "</strong><br>approval rates "
+           + rate(fair.best.approval_rate) + " and " + rate(fair.worst.approval_rate) },
+    { label: "Within income bands", value: fair.within_band_gap_mean, display: rate(fair.within_band_gap_mean),
+      tip: "mean of the within-band gaps, cells under 40 applications skipped (" + fair.thin_cells_skipped + ")" },
+  ]);
+  $("#fair-reading").textContent = fair.reading + " " + fair.not_a_verdict;
+  mount("#fair-table", table(
+    ["Region", { label: "Applications", num: true }, { label: "Approvals", num: true },
+     { label: "Approval rate", num: true }, { label: "Median income", num: true }],
+    fair.segments.map((row) => [
+      row.key, { text: row.applications.toLocaleString("en-US"), cls: "num" },
+      { text: row.approvals.toLocaleString("en-US"), cls: "num" },
+      { text: rate(row.approval_rate), cls: "num" },
+      { text: row.median_income.toLocaleString("en-US"), cls: "num" },
+    ])
+  ));
+}
+
+/* ---- editor ------------------------------------------------------------ */
+function renderCompile(data) {
+  const side = $("#editor-side");
+  side.innerHTML = "";
+
+  const head = el("div", { class: "card" }, [
+    el("h2", { text: data.name + "  v" + data.version }),
+    el("dl", { class: "kv" }, [
+      el("dt", { text: "Approve at" }), el("dd", { text: String(data.approve_at) }),
+      el("dt", { text: "Limit" }), el("dd", { class: "mono", text: data.limit || "-" }),
+      el("dt", { text: "Charges" }), el("dd", { text: data.charges.join("; ") || "none" }),
+      el("dt", { text: "Fields used" }), el("dd", { text: data.fields_used.join(", ") }),
+      el("dt", { text: "Text round-trips" }), el("dd", { text: data.round_trips ? "yes" : "no" }),
+    ]),
+  ]);
+  side.append(head);
+
+  const lint = data.lint;
+  const card = el("div", { class: "card" }, [
+    el("h2", { text: "Compliance lint" }),
+    el("p", { class: "hint", text: lint.checks_run + " structural checks. " + lint.scope }),
+  ]);
+  if (!lint.notes.length) {
+    card.append(el("div", { class: "note", text: "No notes. None of the eight problems is present." }));
+  } else {
+    for (const note of lint.notes) {
+      card.append(el("div", { class: "note " + (note.severity === "critical" ? "bad" : "warn") }, [
+        el("div", {}, [pill(note.severity, note.check + "  " + note.title)]),
+        el("div", { style: "margin-top:6px", text: note.detail + (note.line ? "  (line " + note.line + ")" : "") }),
+      ]));
+    }
+  }
+  side.append(card);
+
+  const rules = el("div", { class: "card" }, el("h2", { text: "What will run" }));
+  rules.append(table(
+    [{ label: "Line", num: true }, "Kind", "Condition", { label: "Points", num: true }, "Reason given"],
+    data.gates.map((gate) => [
+      { text: String(gate.line), cls: "num lines" },
+      { node: pill(gate.outcome === "decline" ? "critical" : "warning", gate.outcome) },
+      { text: gate.condition, cls: "mono" }, { text: "-", cls: "num" }, gate.reason,
+    ]).concat(data.score_rules.map((rule) => [
+      { text: String(rule.line), cls: "num lines" },
+      { node: pill(rule.points >= 0 ? "good" : "serious", "score") },
+      { text: rule.condition, cls: "mono" },
+      { text: (rule.points >= 0 ? "+" : "") + rule.points, cls: "num" },
+      rule.reason || "(none stated)",
+    ]))
+  ));
+  side.append(rules);
+}
+
+function renderBacktest(data) {
+  const out = $("#backtest-out");
+  out.innerHTML = "";
+  const b = data.backtest;
+  const currency = b.policy.currency;
+
+  const tiles = el("div", { class: "card" }, [
+    el("h2", { text: "Back-test on " + b.applications.toLocaleString("en-US") + " borrowers" }),
+    el("p", { class: "hint", text: "The cohort is synthetic; these numbers describe the generator in cohort.py, not a market." }),
+  ]);
+  const host = el("div", { class: "tiles" });
+  const stats = [
+    ["Approval rate", rate(b.approval_rate), b.approvals.toLocaleString("en-US") + " approved"],
+    ["Referred", rate(b.refer_rate), b.refers.toLocaleString("en-US") + " to an officer"],
+    ["Bad rate", rate(b.bad_rate), "among approved"],
+    ["Disbursed", money(b.disbursed, currency), "average " + money(b.average_limit, currency)],
+    ["Fee revenue", money(b.fee_revenue, currency), "one-off charges only"],
+    ["Expected loss", money(b.expected_loss, currency), rate(b.loss_rate) + " of disbursed"],
+    ["Net", money(b.net, currency), "fees less loss"],
+    ["Declined who would repay", b.declined_who_would_repay.toLocaleString("en-US"), "the cost of the declines"],
+  ];
+  for (const [key, value, unit] of stats) {
+    host.append(el("div", { class: "tile" }, [
+      el("span", { class: "k", text: key }), el("span", { class: "v", text: String(value) }), el("span", { class: "u", text: unit }),
+    ]));
+  }
+  tiles.append(host);
+  out.append(tiles);
+
+  /* score histogram: approved vs declined within each bucket */
+  const hist = el("div", { class: "card" }, [
+    el("h2", { text: "Score distribution, approved against declined" }),
+    el("p", { class: "hint", text: "Gated applicants are absent: they never reached the scorecard, and a score of zero for them would be invented. The bucket containing the threshold is split, and is labelled as such." }),
+    el("div", { class: "legend" }, [
+      el("span", { class: "item" }, [el("span", { class: "swatch", style: "background:var(--series-1)" }), el("span", { text: "approved" })]),
+      el("span", { class: "item" }, [el("span", { class: "swatch", style: "background:var(--series-2)" }), el("span", { text: "declined" })]),
+    ]),
+  ]);
+  const histHost = el("div", { class: "hist" });
+  const maxCount = Math.max(...b.score_histogram.map((row) => row.count), 1);
+  for (const row of b.score_histogram) {
+    const declined = row.count - row.approved;
+    const stack = el("div", { class: "stack", style: "width:" + (100 * row.count / maxCount).toFixed(1) + "%" }, [
+      row.approved ? el("span", { style: "background:var(--series-1); width:" + (100 * row.approved / row.count).toFixed(1) + "%" }) : null,
+      declined ? el("span", { style: "background:var(--series-2); width:" + (100 * declined / row.count).toFixed(1) + "%" }) : null,
+    ]);
+    stack.addEventListener("mousemove", (event) => showTip(event,
+      "<strong>score " + row.from + "-" + row.to + "</strong><br>" + row.count + " applicants, " + row.standing
+      + "<br><span class='tk'>approved</span> " + row.approved + " &middot; <span class='tk'>declined</span> " + declined
+      + "<br><span class='tk'>default rate in bucket</span> " + rate(row.default_rate)));
+    stack.addEventListener("mouseleave", hideTip);
+    histHost.append(el("div", { class: "row" }, [
+      el("span", { class: "b", text: row.from + "-" + row.to }),
+      el("div", { style: "width:100%" }, stack),
+      el("span", { class: "n", text: row.count + "  /  " + rate(row.default_rate) }),
+    ]));
+  }
+  hist.append(histHost);
+  hist.append(el("p", { class: "hint", style: "margin-top:10px", text: "Right-hand column: applicants in the bucket, then the share of them who would default." }));
+  const histTable = el("details", {}, el("summary", { text: "Table view" }));
+  histTable.append(table(
+    [{ label: "Score", num: true }, { label: "Applicants", num: true }, { label: "Approved", num: true },
+     { label: "Declined", num: true }, { label: "Default rate", num: true }, "Standing"],
+    b.score_histogram.map((row) => [
+      { text: row.from + "-" + row.to, cls: "num" },
+      { text: String(row.count), cls: "num" },
+      { text: String(row.approved), cls: "num" },
+      { text: String(row.count - row.approved), cls: "num" },
+      { text: rate(row.default_rate), cls: "num" },
+      row.standing,
+    ])
+  ));
+  hist.append(histTable);
+  out.append(hist);
+
+  /* decline reasons */
+  const reasons = Object.entries(b.decline_reasons);
+  if (reasons.length) {
+    const card = el("div", { class: "card" }, [
+      el("h2", { text: "Why applicants were turned away" }),
+      el("p", { class: "hint", text: "The first gate that fired, or the score threshold when no gate did." }),
+    ]);
+    const bars = el("div", { class: "bars" });
+    card.append(bars);
+    barList(bars, reasons.map(([reason, count]) => ({
+      label: reason.length > 46 ? reason.slice(0, 44) + "..." : reason,
+      value: count, display: count.toLocaleString("en-US"),
+      tip: "<strong>" + reason + "</strong><br>" + count + " applicants",
+    })));
+    const details = el("details", { style: "margin-top:10px" }, el("summary", { text: "Table view" }));
+    details.append(table(["Reason", { label: "Applicants", num: true }],
+      reasons.map(([reason, count]) => [reason, { text: count.toLocaleString("en-US"), cls: "num" }])));
+    card.append(details);
+    out.append(card);
+  }
+
+  /* segments */
+  const seg = el("div", { class: "card" }, [
+    el("h2", { text: "By segment" }),
+    el("p", { class: "hint", text: data.fairness.reading }),
+  ]);
+  seg.append(table(
+    ["Segment", { label: "Applications", num: true }, { label: "Approval rate", num: true },
+     { label: "Bad rate", num: true }, { label: "Median income", num: true }, { label: "Average limit", num: true }],
+    (b.segments[$("#segment").value] || []).map((row) => [
+      row.key, { text: row.applications.toLocaleString("en-US"), cls: "num" },
+      { text: rate(row.approval_rate), cls: "num" }, { text: rate(row.bad_rate), cls: "num" },
+      { text: row.median_income.toLocaleString("en-US"), cls: "num" },
+      { text: Math.round(row.average_limit).toLocaleString("en-US"), cls: "num" },
+    ])
+  ));
+  out.append(seg);
+
+  /* income bands */
+  const bands = el("div", { class: "card" }, [
+    el("h2", { text: "Approval rate by income band" }),
+    el("p", { class: "hint", text: "Five equal-sized bands of the cohort, lowest income first." }),
+  ]);
+  const bandBars = el("div", { class: "bars" });
+  bands.append(bandBars);
+  barList(bandBars, b.income_bands.map((row) => ({
+    label: "band " + row.band,
+    value: row.approval_rate, display: rate(row.approval_rate),
+    tip: "<strong>" + row.income_from.toLocaleString("en-US") + " - " + row.income_to.toLocaleString("en-US")
+         + " " + currency + "</strong><br>" + row.applications + " applicants<br><span class='tk'>bad rate</span> " + rate(row.bad_rate),
+  })));
+  const bandDetails = el("details", { style: "margin-top:10px" }, el("summary", { text: "Table view" }));
+  bandDetails.append(table(
+    [{ label: "Band", num: true }, "Income range", { label: "Applications", num: true },
+     { label: "Approval rate", num: true }, { label: "Bad rate", num: true }],
+    b.income_bands.map((row) => [
+      { text: String(row.band), cls: "num" },
+      row.income_from.toLocaleString("en-US") + " - " + row.income_to.toLocaleString("en-US"),
+      { text: row.applications.toLocaleString("en-US"), cls: "num" },
+      { text: rate(row.approval_rate), cls: "num" }, { text: rate(row.bad_rate), cls: "num" },
+    ])
+  ));
+  bands.append(bandDetails);
+  out.append(bands);
+}
+
+$("#go-compile").addEventListener("click", async () => {
+  try {
+    renderCompile(await api("/api/compile", { source: $("#source").value }));
+  } catch (error) {
+    $("#editor-side").innerHTML = "";
+    $("#editor-side").append(errorCard(error.message));
+  }
+});
+
+$("#go-backtest").addEventListener("click", async () => {
+  const out = $("#backtest-out");
+  out.innerHTML = "";
+  out.append(el("div", { class: "card" }, el("p", { class: "hint", text: "Scoring 5,000 borrowers..." })));
+  try {
+    const data = await api("/api/backtest", { source: $("#source").value, segment: $("#segment").value });
+    renderCompile(await api("/api/compile", { source: $("#source").value }));
+    renderBacktest(data);
+  } catch (error) {
+    out.innerHTML = "";
+    out.append(errorCard(error.message));
+  }
+});
+
+/* ---- compare ----------------------------------------------------------- */
+$("#go-compare").addEventListener("click", async () => {
+  const out = $("#compare-out");
+  out.innerHTML = "";
+  try {
+    const base = META.policies.find((p) => p.key === $("#cmp-base").value);
+    const candidate = META.policies.find((p) => p.key === $("#cmp-cand").value);
+    const data = await api("/api/compare", { base: base.source, candidate: candidate.source });
+
+    const host = el("div", { class: "tiles" });
+    const tiles = [
+      ["Newly declined", data.newly_declined.toLocaleString("en-US"), "approved by the base"],
+      ["Newly approved", data.newly_approved.toLocaleString("en-US"), "declined by the base"],
+      ["Unchanged", data.unchanged.toLocaleString("en-US"), "same outcome"],
+      ["Precision", rate(data.precision_of_the_tightening), "of newly declined, would default"],
+      ["Approval rate", data.delta.approval_rate_points.toFixed(2) + " pts", "change"],
+      ["Bad rate", data.delta.bad_rate_points.toFixed(2) + " pts", "change"],
+      ["Net", Math.round(data.delta.net).toLocaleString("en-US"), "change, PKR"],
+      ["Disbursed", Math.round(data.delta.disbursed).toLocaleString("en-US"), "change, PKR"],
+    ];
+    for (const [key, value, unit] of tiles) {
+      host.append(el("div", { class: "tile" }, [
+        el("span", { class: "k", text: key }), el("span", { class: "v", text: String(value) }), el("span", { class: "u", text: unit }),
+      ]));
+    }
+    out.append(el("div", { class: "card" }, [
+      el("h2", { text: base.key + "  →  " + candidate.key }),
+      host,
+    ]));
+
+    if (data.newly_declined === 0 && data.newly_approved === 0) {
+      out.append(el("div", { class: "card" }, el("div", { class: "note",
+        text: "No credit decision changes between these two policies. Whatever differs between them does not affect who gets a loan - only the terms or the paperwork." })));
+    } else {
+      const card = el("div", { class: "card" }, [
+        el("h2", { text: "Who the change removes" }),
+        el("p", { class: "hint", text: data.newly_declined_who_would_repay.toLocaleString("en-US")
+          + " of the " + data.newly_declined.toLocaleString("en-US")
+          + " newly declined would have repaid." }),
+      ]);
+      const bars = el("div", { class: "bars" });
+      card.append(bars);
+      barList(bars, Object.entries(data.newly_declined_by_segment.region).map(([key, count]) => ({
+        label: key, value: count, display: count.toLocaleString("en-US"),
+        tip: "<strong>" + key + "</strong><br>" + count + " newly declined",
+      })));
+      card.append(el("p", { class: "hint", style: "margin-top:12px", text: "A sample of the borrowers the change removes:" }));
+      card.append(table(
+        ["Borrower", { label: "Income", num: true }, { label: "Wallet months", num: true },
+         { label: "Turnover", num: true }, "Region", "Was", "Now", "Why", "Would have repaid"],
+        data.examples.map((row) => [
+          { text: row.id, cls: "mono" },
+          { text: row.monthly_income.toLocaleString("en-US"), cls: "num" },
+          { text: String(row.wallet_months), cls: "num" },
+          { text: String(row.txn_velocity), cls: "num" },
+          row.region, row.was, row.now, row.why,
+          { node: pill(row.would_have_repaid ? "warning" : "good", row.would_have_repaid ? "yes" : "no") },
+        ])
+      ));
+      out.append(card);
+    }
+  } catch (error) {
+    out.append(errorCard(error.message));
+  }
+});
+
+/* ---- one applicant ----------------------------------------------------- */
+const APPLICANT_FIELDS = [
+  ["monthly_income", "Monthly income"], ["wallet_months", "Wallet months"],
+  ["txn_velocity", "Transactions a month"], ["prior_defaults", "Prior defaults"],
+  ["on_time_repayments", "Repaid on time"], ["avg_balance", "Average balance"],
+  ["age", "Age"], ["dependants", "Dependants"],
+];
+
+function buildApplicantForm(sample) {
+  const host = $("#applicant-form");
+  host.innerHTML = "";
+  for (const [key, label] of APPLICANT_FIELDS) {
+    host.append(el("label", { class: "field" }, [
+      document.createTextNode(label),
+      el("input", { type: "number", id: "f-" + key, value: String(sample[key]), min: "0", step: "1" }),
+    ]));
+  }
+  const employment = el("select", { id: "f-employment" });
+  for (const kind of META.employment) {
+    employment.append(el("option", { value: kind, text: kind, selected: kind === sample.employment ? "selected" : null }));
+  }
+  host.append(el("label", { class: "field" }, [document.createTextNode("Employment"), employment]));
+  const region = el("select", { id: "f-region" });
+  for (const name of META.regions) {
+    region.append(el("option", { value: name, text: name, selected: name === sample.region ? "selected" : null }));
+  }
+  host.append(el("label", { class: "field" }, [document.createTextNode("Region"), region]));
+}
+
+function noticeBlock(title, notice, label) {
+  const block = el("div", { class: "notice" }, [
+    el("h4", { text: title }),
+    el("div", { style: "font-weight:600", text: notice.headline }),
+  ]);
+  if (notice.because && notice.because.length) {
+    const list = el("ul");
+    for (const line of notice.because) list.append(el("li", { text: line }));
+    block.append(list);
+  }
+  if (notice.requirements_not_met && notice.requirements_not_met.length) {
+    block.append(el("div", { class: "hint", style: "margin:8px 0 0", text: label }));
+    const list = el("ul");
+    for (const item of notice.requirements_not_met) {
+      list.append(el("li", { class: "unmet" }, [
+        el("b", { text: item.requirement }),
+        document.createTextNode("  — " + notice.not_met_label + ", worth " + item.worth),
+      ]));
+    }
+    block.append(list);
+  }
+  if (notice.charges && notice.charges.length) {
+    block.append(el("div", { class: "hint", style: "margin-top:8px", text: "Charges: " + notice.charges.join("; ") }));
+  }
+  block.append(el("div", { class: "hint", style: "margin-top:10px", text: notice.rights }));
+  return block;
+}
+
+$("#go-score").addEventListener("click", async () => {
+  const out = $("#score-out");
+  out.innerHTML = "";
+  try {
+    const applicant = {};
+    for (const [key] of APPLICANT_FIELDS) applicant[key] = $("#f-" + key).value;
+    applicant.employment = $("#f-employment").value;
+    applicant.region = $("#f-region").value;
+    const source = META.policies.find((p) => p.key === $("#score-policy").value).source;
+    const data = await api("/api/score", { source, applicant });
+    const decision = data.decision;
+
+    const level = decision.outcome === "approve" ? "good" : decision.outcome === "refer" ? "warning" : "critical";
+    const head = el("div", { class: "card" }, [
+      el("h2", {}, [document.createTextNode("Decision  ")]),
+      el("div", { class: "row" }, [
+        pill(level, decision.outcome),
+        el("span", { class: "hint", style: "margin:0", text: "score " + decision.score + " against a threshold of " + decision.threshold
+          + (decision.outcome === "approve" ? ", limit " + money(decision.limit, "PKR") : "") }),
+      ]),
+    ]);
+    if (decision.gate) {
+      head.append(el("div", { class: "note bad", text: "Gate on line " + decision.gate.line + ": " + decision.gate.condition + " — " + decision.gate.reason }));
+    }
+    out.append(head);
+
+    out.append(el("div", { class: "card" }, [
+      el("h2", { text: "The notice, as the applicant would receive it" }),
+      el("div", { class: "grid cols-2" }, [
+        noticeBlock("English", data.notice.en, "Requirements not met:"),
+        noticeBlock("Roman Urdu", data.notice.ur, "Jo sharayat poori nahi hui:"),
+      ]),
+    ]));
+
+    if (!decision.gate) {
+      const card = el("div", { class: "card" }, [
+        el("h2", { text: "How the score was reached" }),
+        el("p", { class: "hint", text: "Every rule in the policy, whether it fired or not." }),
+      ]);
+      card.append(table(
+        [{ label: "Points", num: true }, "Condition", "Reason", "Fired"],
+        decision.score_lines.map((line) => [
+          { text: (line.points >= 0 ? "+" : "") + line.points, cls: "num" },
+          { text: line.condition, cls: "mono" },
+          line.reason || "(none stated)",
+          { node: pill(line.matched ? "good" : "neutral", line.matched ? "yes" : "no") },
+        ])
+      ));
+      out.append(card);
+    }
+  } catch (error) {
+    out.append(errorCard(error.message));
+  }
+});
+
+/* ---- cohort ------------------------------------------------------------ */
+async function renderCohort() {
+  const data = await api("/api/cohort?limit=40");
+  const summary = data.summary;
+  $("#cohort-caveat").textContent =
+    "Generated, not observed. The generator is written out in full in cohort.py so a reader can "
+    + "see what was assumed and therefore which conclusions would be circular.";
+  $("#cohort-withheld").textContent = data.withheld;
+
+  const host = $("#cohort-tiles");
+  host.innerHTML = "";
+  const tiles = [
+    ["Borrowers", summary.size.toLocaleString("en-US"), "seeded, identical everywhere"],
+    ["Median income", summary.median_income.toLocaleString("en-US"), "PKR a month"],
+    ["Income p10 - p90", summary.income_p10.toLocaleString("en-US") + " - " + summary.income_p90.toLocaleString("en-US"), "PKR"],
+    ["Base default rate", rate(summary.base_default_rate), "before any policy"],
+    ["Loss given default", rate(summary.loss_given_default), "used in the money figures"],
+  ];
+  for (const [key, value, unit] of tiles) {
+    host.append(el("div", { class: "tile" }, [
+      el("span", { class: "k", text: key }), el("span", { class: "v", text: String(value) }), el("span", { class: "u", text: unit }),
+    ]));
+  }
+
+  mount("#cohort-region", table(
+    ["Region", { label: "Borrowers", num: true }, { label: "Share", num: true },
+     { label: "Median income", num: true }, { label: "Median wallet months", num: true },
+     { label: "Base default rate", num: true }],
+    Object.entries(summary.by_region).map(([key, row]) => [
+      key, { text: row.count.toLocaleString("en-US"), cls: "num" }, { text: rate(row.share), cls: "num" },
+      { text: row.median_income.toLocaleString("en-US"), cls: "num" },
+      { text: String(row.median_wallet_months), cls: "num" },
+      { text: rate(row.base_default_rate), cls: "num" },
+    ])
+  ));
+
+  const columns = ["id", "age", "monthly_income", "wallet_months", "txn_velocity", "prior_defaults",
+                   "on_time_repayments", "dependants", "avg_balance", "employment", "region", "would_default"];
+  mount("#cohort-rows", table(
+    columns.map((name) => ({ label: name, num: !["id", "employment", "region"].includes(name) })),
+    data.rows.map((row) => columns.map((name) => ({
+      text: typeof row[name] === "number" ? row[name].toLocaleString("en-US") : String(row[name]),
+      cls: ["id", "employment", "region"].includes(name) ? (name === "id" ? "mono" : null) : "num",
+    })))
+  ));
+}
+
+/* ---- boot -------------------------------------------------------------- */
+(async function boot() {
+  try {
+    META = await api("/api/meta");
+    if (META.results) renderOverview(META.results);
+
+    for (const id of ["#policy-pick", "#cmp-base", "#cmp-cand", "#score-policy"]) {
+      const select = $(id);
+      for (const policy of META.policies) select.append(el("option", { value: policy.key, text: policy.key }));
+    }
+    $("#cmp-base").value = "nano_v1";
+    $("#cmp-cand").value = "nano_v2";
+    $("#policy-pick").value = "nano_v2";
+    $("#score-policy").value = "nano_v2";
+
+    const load = () => {
+      const chosen = META.policies.find((p) => p.key === $("#policy-pick").value);
+      $("#source").value = chosen ? chosen.source : "";
+    };
+    $("#policy-pick").addEventListener("change", load);
+    load();
+
+    buildApplicantForm(META.sample_applicant);
+    await renderCohort();
+    $("#go-compile").click();
+  } catch (error) {
+    $("#tiles").append(el("div", { class: "note bad", text: "Could not load: " + error.message }));
+  }
+})();
+</script>
+</body>
+</html>

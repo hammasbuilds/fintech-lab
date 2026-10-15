@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
-from . import lifecycle
+from . import emv, lifecycle
 from .codec import CodecError, Message, check_values, field_offsets, pack, unpack
 from .scenarios import ACQ_TO_ISS, ISS_TO_ACQ, Context, Flow, Step, build
 
@@ -251,6 +251,49 @@ def _drop_the_response(flow: Flow) -> Flow:
     return flow
 
 
+def _break_pan_check_digit(flow: Flow) -> Flow:
+    index = _first(flow, ACQ_TO_ISS)
+    pan = flow.steps[index].message.fields[2]
+    last = str((int(pan[-1]) + 1) % 10)
+    flow.steps[index].message = flow.steps[index].message.replace(de2=pan[:-1] + last)
+    return flow
+
+
+def _rewrite_chip_amount(flow: Flow) -> Flow:
+    # The terminal's chip data keeps the amount the card approved while DE 4 is raised.
+    # Every field stays individually well-formed, which is what makes this one worth a
+    # rule of its own.
+    index = _first(flow, ACQ_TO_ISS)
+    message = flow.steps[index].message
+    asked = int(message.fields[4])
+    flow.steps[index].message = message.replace(de4=str(asked * 2).zfill(12))
+    return flow
+
+
+def _switch_chip_currency(flow: Flow) -> Flow:
+    index = _first(flow, ACQ_TO_ISS)
+    message = flow.steps[index].message
+    chip = message.fields[55]
+    flow.steps[index].message = message.replace(de55=chip.replace("5F2A020586", "5F2A020840"))
+    return flow
+
+
+def _truncate_chip_data(flow: Flow) -> Flow:
+    index = _first(flow, ACQ_TO_ISS)
+    chip = flow.steps[index].message.fields[55]
+    flow.steps[index].message = flow.steps[index].message.replace(de55=chip[:-6])
+    return flow
+
+
+def _drop_mandatory_chip_tag(flow: Flow) -> Flow:
+    index = _first(flow, ACQ_TO_ISS)
+    message = flow.steps[index].message
+    tags = emv.parse(message.fields[55])
+    kept = "".join(f"{tag.tag}{tag.length:02X}{tag.value}" for tag in tags if tag.tag != "9F26")
+    flow.steps[index].message = message.replace(de55=kept)
+    return flow
+
+
 # ------------------------------------------------------------- codec mutators
 
 
@@ -456,6 +499,42 @@ FLOW_MUTATORS: tuple[FlowMutator, ...] = (
         ("atm_withdrawal_approved",),
         _drop_the_response,
     ),
+    FlowMutator(
+        "break_pan_check_digit",
+        "L19",
+        "One digit of the card number is changed, so the Luhn check fails.",
+        ("atm_withdrawal_approved", "pos_purchase_approved"),
+        _break_pan_check_digit,
+    ),
+    FlowMutator(
+        "rewrite_chip_amount",
+        "L20",
+        "DE 4 is doubled while the chip's own 9F02 keeps the amount the card approved. "
+        "Every field stays well-formed, so only a cross-field rule sees it.",
+        ("atm_withdrawal_approved", "pos_purchase_approved"),
+        _rewrite_chip_amount,
+    ),
+    FlowMutator(
+        "switch_chip_currency",
+        "L21",
+        "The chip's 5F2A says one currency and DE 49 says another.",
+        ("atm_withdrawal_approved",),
+        _switch_chip_currency,
+    ),
+    FlowMutator(
+        "truncate_chip_data",
+        "L22",
+        "DE 55 is cut short mid-tag, so the TLV no longer decodes.",
+        ("atm_withdrawal_approved",),
+        _truncate_chip_data,
+    ),
+    FlowMutator(
+        "drop_mandatory_chip_tag",
+        "L22",
+        "The application cryptogram 9F26 is removed, leaving an authorisation nobody can assess.",
+        ("atm_withdrawal_approved",),
+        _drop_mandatory_chip_tag,
+    ),
 )
 
 CODEC_MUTATORS: tuple[CodecMutator, ...] = (
@@ -562,7 +641,20 @@ def detect(mutant: Mutant) -> Detection:
     return Detection(True, sorted(set(caught)), "; ".join(notes[:3]))
 
 
-def fuzz(trials: int = 2000, seed: int = 7, scenario: str = "atm_withdrawal_approved") -> dict:
+FUZZ_SCENARIOS = (
+    "atm_withdrawal_approved",
+    "pos_purchase_approved",
+    "balance_inquiry",
+    "cardholder_transfer",
+    "network_echo_test",
+)
+
+
+def fuzz(
+    trials: int = 2000,
+    seed: int = 7,
+    scenarios: tuple[str, ...] = FUZZ_SCENARIOS,
+) -> dict:
     """Corrupt one random character of a valid message, ``trials`` times, and count rejects.
 
     The catalogue above is a list of faults chosen because they are known to happen,
@@ -583,6 +675,11 @@ def fuzz(trials: int = 2000, seed: int = 7, scenario: str = "atm_withdrawal_appr
       accepted, and the ones that are still rejected are rejected by the framing, not
       the character: a legal digit inside a length prefix or a bitmap relocates every
       field after it.
+
+    Trials are spread over several scenarios, not one. A single message exercises only
+    the fields it happens to carry, so a one-scenario pass leaves whole character classes
+    - the binary PIN block, the additional-amounts field, the network code - never
+    corrupted at all.
     """
     import random
 
@@ -590,12 +687,16 @@ def fuzz(trials: int = 2000, seed: int = 7, scenario: str = "atm_withdrawal_appr
     from .codec import permits
 
     rng = random.Random(seed)
-    raw = build(scenario, Context()).steps[0].raw
-    spans = field_offsets(raw)
-    owner: dict[int, int] = {}
-    for de, (offset, length) in spans.items():
-        for position in range(offset, offset + length):
-            owner[position] = de
+    messages: list[tuple[str, str, dict[int, int]]] = []
+    for name in scenarios:
+        flow = build(name, Context())
+        for step in flow.steps:
+            spans = field_offsets(step.raw)
+            owner: dict[int, int] = {}
+            for de, (offset, length) in spans.items():
+                for position in range(offset, offset + length):
+                    owner[position] = de
+            messages.append((name, step.raw, owner))
 
     alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "
     groups = {
@@ -607,6 +708,7 @@ def fuzz(trials: int = 2000, seed: int = 7, scenario: str = "atm_withdrawal_appr
     leaks: list[dict[str, object]] = []
     attempted = 0
     while attempted < trials:
+        scenario, raw, owner = messages[rng.randrange(len(messages))]
         position = rng.randrange(len(raw))
         replacement = rng.choice(alphabet)
         if raw[position] == replacement:
@@ -629,7 +731,14 @@ def fuzz(trials: int = 2000, seed: int = 7, scenario: str = "atm_withdrawal_appr
             continue
         accepted_by_field[where] = accepted_by_field.get(where, 0) + 1
         if group == "class_violating" and len(leaks) < 10:
-            leaks.append({"position": position, "character": replacement, "field": where})
+            leaks.append(
+                {
+                    "scenario": scenario,
+                    "position": position,
+                    "character": replacement,
+                    "field": where,
+                }
+            )
 
     rejected = sum(g["rejected"] for g in groups.values())
     for group in groups.values():
@@ -638,6 +747,8 @@ def fuzz(trials: int = 2000, seed: int = 7, scenario: str = "atm_withdrawal_appr
         )
     return {
         "trials": attempted,
+        "messages_in_pool": len(messages),
+        "scenarios": list(scenarios),
         "rejected": rejected,
         "accepted": attempted - rejected,
         "rejection_rate": round(rejected / attempted, 4) if attempted else 0.0,
@@ -693,4 +804,74 @@ def run() -> dict[str, object]:
             rule.rule for rule in lifecycle.RULES if rule.rule not in rules_exercised
         ],
         "rows": [row.__dict__ for row in rows],
+    }
+
+
+def fuzz_binary(
+    trials: int = 1000,
+    seed: int = 13,
+    scenarios: tuple[str, ...] = FUZZ_SCENARIOS,
+) -> dict:
+    """The same pass against binary framing: corrupt one byte and count rejects.
+
+    Worth measuring separately because binary framing is *more* self-checking than the
+    ASCII form, for two reasons that have nothing to do with this project's code: a
+    packed numeric field has four bits per nibble and only ten of sixteen values are
+    legal, and the 2-byte length header has to agree with the number of bytes that
+    follow. So the same class of damage that an ASCII message absorbs silently tends to
+    be caught here.
+
+    The residue is the interesting part, and it is the same residue as before: a byte
+    landing in a text field, or in the bitmap in a way that relocates fields to a layout
+    that still consumes exactly the right number of bytes.
+    """
+    import random
+
+    from .binary import Framing, pack_binary, unpack_binary
+
+    rng = random.Random(seed)
+    frames = [Framing(header=True), Framing(header=False)]
+    pool: list[tuple[str, bytes, Framing]] = []
+    for name in scenarios:
+        flow = build(name, Context())
+        for step in flow.steps:
+            for framing in frames:
+                pool.append((name, pack_binary(step.message, framing), framing))
+
+    rejected = 0
+    header_caught = 0
+    accepted: list[dict[str, object]] = []
+    attempted = 0
+    while attempted < trials:
+        scenario, data, framing = pool[rng.randrange(len(pool))]
+        position = rng.randrange(len(data))
+        replacement = rng.randrange(256)
+        if data[position] == replacement:
+            continue
+        attempted += 1
+        candidate = data[:position] + bytes([replacement]) + data[position + 1 :]
+        try:
+            unpack_binary(candidate, framing)
+        except CodecError as exc:
+            rejected += 1
+            if "length header" in str(exc):
+                header_caught += 1
+            continue
+        if len(accepted) < 10:
+            accepted.append(
+                {
+                    "scenario": scenario,
+                    "byte": position,
+                    "framed": framing.header,
+                    "in_header": framing.header and position < 2,
+                }
+            )
+    return {
+        "trials": attempted,
+        "messages_in_pool": len(pool),
+        "rejected": rejected,
+        "accepted": attempted - rejected,
+        "rejection_rate": round(rejected / attempted, 4) if attempted else 0.0,
+        "caught_by_the_length_header": header_caught,
+        "accepted_examples": accepted,
     }

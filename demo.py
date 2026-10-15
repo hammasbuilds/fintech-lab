@@ -31,8 +31,8 @@ def field(label: str, value: object) -> None:
 
 
 def switchboard() -> None:
-    from projects.p01_switchboard import lifecycle, mutations, narrate, scenarios
-    from projects.p01_switchboard.codec import unpack
+    from projects.p01_switchboard import binary, emv, lifecycle, mutations, narrate, scenarios
+    from projects.p01_switchboard.codec import check_values, pack, unpack
 
     heading(
         "01",
@@ -54,7 +54,35 @@ def switchboard() -> None:
     field("approved", narrate.format_amount(response.fields[4], response.get(49)))
     field("response code", f"{response.fields[39]} - partial approval")
 
-    print("\n  INPUT   the same message, one bitmap bit flipped")
+    print("\n  INPUT   the same message as a switch would actually send it")
+    print("  OUTPUT")
+    data = binary.pack_binary(request)
+    field("binary, with a length header", f"{len(data)} bytes")
+    field("the same thing in ASCII", f"{len(flow.steps[0].raw)} characters")
+    print(f"    hex     {data[:32].hex().upper()}...")
+    verdict = binary.detect(data.hex())
+    field("framing detected as", verdict["framing"])
+    for reason in verdict["reasons"]:
+        print(f"      - {reason}")
+    reparsed, _ = binary.parse_any(data.hex())
+    field("fields identical to the ASCII form", reparsed.fields == request.fields)
+
+    print("\n  INPUT   DE 55, the chip data, which most decoders print as one hex blob")
+    print("  OUTPUT")
+    for tag in emv.parse(request.fields[55])[:6]:
+        meaning = emv.meaning(tag.tag, tag.value)
+        print(f"    {tag.tag:6s} {tag.name[:34]:36s} {tag.value[:16]:18s} {meaning}")
+    print("    ...")
+    field("mandatory tags missing", emv.missing_tags(request.fields[55]) or "none")
+
+    print("\n  INPUT   DE 4 doubled, with the chip's own 9F02 left alone")
+    print("  OUTPUT")
+    tampered = request.replace(de4=str(int(request.fields[4]) * 2).zfill(12))
+    field("every field still well-formed", check_values(tampered.fields) == [])
+    field("the message still parses", unpack(pack(tampered)).fields == tampered.fields)
+    print(f"    caught by  {emv.amount_mismatch(tampered.fields[55], tampered.fields[4])}")
+
+    print("\n  INPUT   one bitmap bit flipped")
     broken = mutations._corrupt_bitmap(flow.steps[0].raw)
     print("  OUTPUT")
     try:
@@ -63,7 +91,7 @@ def switchboard() -> None:
     except Exception as exc:
         print(f"    rejected: {exc}")
 
-    print("\n  INPUT   all 14 scenarios, then 31 injected faults")
+    print("\n  INPUT   all 14 scenarios, then every injected fault")
     valid = scenarios.build_all()
     noisy = [f.key for f in valid if lifecycle.check(f)]
     report = mutations.run()
@@ -82,6 +110,11 @@ def switchboard() -> None:
         f"{violating['rejected']}/{violating['trials']} rejected",
     )
     field("random framing damage", f"{framing['rejected']}/{framing['trials']} rejected")
+    binary_fuzz = mutations.fuzz_binary(trials=500, seed=13)
+    field(
+        "random byte damage, binary",
+        f"{binary_fuzz['rejected']}/{binary_fuzz['trials']} rejected",
+    )
     print(
         "\n  The framing figure is not 100% and cannot be: an ISO 8583 bitmap carries no\n"
         "  redundancy, so flipping one bit can swap DE 14 for DE 16 - both n4 - and the\n"
@@ -102,6 +135,7 @@ def policy_bench() -> None:
         engine,
         explain,
         fairness,
+        sweep,
     )
 
     heading(
@@ -164,6 +198,46 @@ def policy_bench() -> None:
     field("gap within income bands", f"{equity['within_band_gap_mean']:.1%}")
     print(f"\n  {equity['reading']}")
 
+    print("\n  INPUT   v2's score against the outcome, then every possible cutoff")
+    print("  OUTPUT")
+    scored = sweep.score_all(v2, people)
+    disc = sweep.discrimination(scored)
+    field("Gini", f"{disc['gini']}   (AUC {disc['auc']}, KS {disc['ks']})")
+    field("measured on", f"{disc['scored']:,} scored, {disc['gated_out']:,} gated out first")
+    print(f"    {disc['reading']}")
+    cutoff = sweep.sweep(v2, people)
+    print()
+    print(f"    {'cutoff':>7} {'approved':>9} {'bad rate':>9} {'net':>13} {'good declined':>14}")
+    for point in cutoff["points"]:
+        if point["threshold"] % 10:
+            continue
+        print(
+            f"    {point['threshold']:>7g} {point['approval_rate_of_all']:>8.1%}"
+            f" {point['bad_rate']:>9.2%} {point['net']:>13,.0f}"
+            f" {point['good_declined']:>14,}"
+        )
+    print()
+    field("the policy's own cutoff", f"{cutoff['current']['threshold']:g}")
+    field("net-maximising cutoff", f"{cutoff['net_maximising']['threshold']:g}")
+    field("available by moving it", f"{cutoff['net_gain_available']:+,.0f} PKR")
+    print(f"\n    {cutoff['in_sample_warning']}")
+    print(
+        "\n  This is why the tightening cut mostly good borrowers: a Gini of "
+        f"{disc['gini']} barely\n  separates the two groups, so any cutoff on this score "
+        "cuts both at once."
+    )
+
+    print("\n  INPUT   the same cohort as CSV, with the outcome column removed")
+    print("  OUTPUT")
+    bare, meta = cohort.from_csv(cohort.to_csv(people[:500], include_label=False))
+    blind, _ = backtest.run(v2, bare, labelled=meta["labelled"])
+    data = blind.as_dict()
+    field("rows read", f"{meta['rows']:,}")
+    field("approval rate", f"{data['approval_rate']:.1%}")
+    field("bad rate", data["bad_rate"])
+    field("expected loss", data["expected_loss"])
+    print(f"\n    {data['withheld']}")
+
     print("\n  INPUT   one applicant who falls ten points short")
     short = next(
         outcome
@@ -183,7 +257,7 @@ def policy_bench() -> None:
 
 
 def guardian() -> None:
-    from projects.p03_guardian import numerals
+    from projects.p03_guardian import behaviour, coercion, numerals
     from projects.p03_guardian.benchmark import measure
     from projects.p03_guardian.confirm import Session
 
@@ -243,6 +317,38 @@ def guardian() -> None:
     field("anything executed", any(e.kind == "executed" for e in mid.ledger.entries))
     field("audit chain intact", mid.ledger.verify()["intact"])
 
+    print("\n  INPUT   a scam approach that uses none of the detector's vocabulary")
+    print("  OUTPUT")
+    message = "beta main tumhari ammi ki saheli hoon, thori madad chahiye thi"
+    print(f"    message    {message}")
+    field("coercion check", coercion.assess(message).verdict + "   <- it misses this entirely")
+    account = behaviour.demo_profile()
+    field("usual transfer", f"PKR {account.usual_transfer:,.0f}")
+    field("paid before", ", ".join(sorted(account.known_beneficiaries)))
+    conduct = behaviour.assess(account, "Zubair Khan", 50000)
+    field("the transfer it wants", "PKR 50,000 to Zubair Khan, never paid before")
+    field("behaviour", conduct.level)
+    for signal in conduct.signals:
+        print(f"      - {signal.name}: {signal.detail}")
+    print(
+        "\n    Words can be rephrased; this cannot. The layer judges the transfer against\n"
+        "    what the account normally does, and escalates - it asks for the word\n"
+        "    'confirm' instead of a habitual yes. It does not block, because a first\n"
+        "    large transfer to a new payee is also what paying a new landlord looks like."
+    )
+
+    print("\n  INPUT   that transfer, with a habitual yes and then the real word")
+    stepped = Session()
+    stepped.handle("Zubair ko pachaas hazaar bhejo")
+    habitual = stepped.handle("haan")
+    print("  OUTPUT")
+    field(
+        "after 'haan'",
+        f"action {habitual['action']}, step-up required {habitual.get('step_up_required')}",
+    )
+    done = stepped.handle("confirm")
+    field("after 'confirm'", f"{done['state']}, action {done['action'] is not None}")
+
     print("\n  INPUT   the scored test set")
     results = measure()
     print("  OUTPUT")
@@ -266,19 +372,32 @@ def guardian() -> None:
         f"{results['coercion']['benign_blocked']}/{results['coercion']['benign_cases']}",
     )
     field(
-        "out-of-vocabulary scams missed",
+        "scams the words miss",
         f"{results['coercion']['out_of_vocabulary_missed']}"
         f"/{results['coercion']['out_of_vocabulary_cases']}",
+    )
+    field(
+        "of those, escalated anyway",
+        f"{results['paired']['scams_escalated_by_behaviour']}/{results['paired']['scams']}",
+    )
+    field(
+        "missed by both layers",
+        f"{results['paired']['scams_missed_by_both']}/{results['paired']['scams']}",
+    )
+    field(
+        "ordinary transfers escalated",
+        f"{results['paired']['benign_escalated']}/{results['paired']['benign']}",
     )
     field(
         "end-to-end properties holding",
         f"{results['properties']['holding']}/{results['properties']['checks']}",
     )
     print(
-        "\n  The last-but-one line is the honest bound on the detector: four real scam\n"
-        "  approaches that use none of its vocabulary are in the test set, and it lets\n"
-        "  all four through. The confirmation spine, not the detector, is what stands\n"
-        "  between a pressured user and a transfer."
+        "\n  The lexical check still misses all four, and that is still published. What\n"
+        "  changed is that judging the transfer catches them anyway, at a cost of one\n"
+        "  ordinary transfer in five also being slowed down - friction, not a refusal.\n"
+        "  Both halves of that trade are measured, because reporting only the first\n"
+        "  would be advertising."
     )
 
 

@@ -7,7 +7,9 @@
     "coercion": 23,
     "coercion_expected_misses": 4,
     "replies": 21,
-    "all": 131
+    "paired": 9,
+    "paired_scams": 4,
+    "all": 140
   },
   "numerals": {
     "cases": 48,
@@ -53,16 +55,137 @@
     "read_as_consent_wrongly": 0,
     "failures": []
   },
+  "paired": {
+    "cases": 9,
+    "as_expected": 9,
+    "scams": 4,
+    "scams_caught_by_words": 0,
+    "scams_escalated_by_behaviour": 4,
+    "scams_missed_by_both": 0,
+    "benign": 5,
+    "benign_escalated": 1,
+    "rows": [
+      {
+        "label": "ammi's friend",
+        "scam": true,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "elevated",
+        "behaviour_as_expected": true,
+        "signals": [
+          "first_time_beneficiary",
+          "unusually_large",
+          "exceeds_balance"
+        ]
+      },
+      {
+        "label": "the fixer",
+        "scam": true,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "elevated",
+        "behaviour_as_expected": true,
+        "signals": [
+          "first_time_beneficiary",
+          "unusually_large",
+          "exceeds_balance"
+        ]
+      },
+      {
+        "label": "hospital",
+        "scam": true,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "elevated",
+        "behaviour_as_expected": true,
+        "signals": [
+          "first_time_beneficiary",
+          "unusually_large",
+          "exceeds_balance"
+        ]
+      },
+      {
+        "label": "property token",
+        "scam": true,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "elevated",
+        "behaviour_as_expected": true,
+        "signals": [
+          "first_time_beneficiary",
+          "unusually_large",
+          "exceeds_balance"
+        ]
+      },
+      {
+        "label": "usual shopkeeper",
+        "scam": false,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "none",
+        "behaviour_as_expected": true,
+        "signals": []
+      },
+      {
+        "label": "monthly to mother",
+        "scam": false,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "none",
+        "behaviour_as_expected": true,
+        "signals": []
+      },
+      {
+        "label": "small to brother",
+        "scam": false,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "none",
+        "behaviour_as_expected": true,
+        "signals": []
+      },
+      {
+        "label": "slightly larger, known payee",
+        "scam": false,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "none",
+        "behaviour_as_expected": true,
+        "signals": []
+      },
+      {
+        "label": "new landlord",
+        "scam": false,
+        "coercion_verdict": "allow",
+        "coercion_as_expected": true,
+        "behaviour_level": "elevated",
+        "behaviour_as_expected": true,
+        "signals": [
+          "first_time_beneficiary",
+          "unusually_large"
+        ]
+      }
+    ],
+    "reading": "Of 4 scam approaches the word-based check lets through, judging the transfer instead escalates 4. The cost is 1 of 5 ordinary transfers also escalated - and escalation is a slower confirmation, not a refusal, so that cost is friction rather than a blocked payment."
+  },
   "properties": {
-    "checks": 7,
-    "holding": 7,
+    "checks": 9,
+    "holding": 9,
     "detail": [
       {
         "property": "an unclear reply is never consent",
         "holds": true
       },
       {
-        "property": "an explicit yes executes the pending action unchanged",
+        "property": "an escalated transfer is not executed by a habitual yes",
+        "holds": true
+      },
+      {
+        "property": "the step-up word executes the pending action unchanged",
+        "holds": true
+      },
+      {
+        "property": "an ordinary transfer still takes a plain yes",
         "holds": true
       },
       {
@@ -95,6 +218,8 @@
     "intent_phrases": 63,
     "coercion_families": 7,
     "coercion_phrases": 98,
+    "coercion_proximity_patterns": 4,
+    "behaviour_signals": 6,
     "contacts": 7
   }
 }

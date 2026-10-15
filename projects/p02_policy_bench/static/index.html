@@ -37,6 +37,7 @@
 <nav class="tabs" role="tablist">
   <button role="tab" id="t-overview" aria-selected="true" aria-controls="p-overview">Overview</button>
   <button role="tab" id="t-editor" aria-selected="false" aria-controls="p-editor">Policy editor</button>
+  <button role="tab" id="t-threshold" aria-selected="false" aria-controls="p-threshold">Where to set the cutoff</button>
   <button role="tab" id="t-compare" aria-selected="false" aria-controls="p-compare">Compare versions</button>
   <button role="tab" id="t-applicant" aria-selected="false" aria-controls="p-applicant">One applicant</button>
   <button role="tab" id="t-cohort" aria-selected="false" aria-controls="p-cohort">The cohort</button>
@@ -104,7 +105,61 @@
         <div class="side" id="editor-side"></div>
       </div>
     </div>
+    <div class="card">
+      <h2>Use your own borrowers</h2>
+      <p class="hint">
+        Paste CSV with one row per borrower. Without an outcome column every figure that needs a
+        known outcome &mdash; bad rate, expected loss, the precision of a tightening &mdash; is
+        withheld rather than computed against zeros.
+      </p>
+      <div class="row">
+        <button class="btn ghost" id="get-template" type="button">Download a template</button>
+        <button class="btn ghost" id="fill-template" type="button">Paste the bundled cohort</button>
+        <button class="btn" id="load-cohort" type="button">Load</button>
+        <button class="btn ghost" id="use-bundled" type="button">Back to the bundled cohort</button>
+      </div>
+      <textarea id="cohort-csv" rows="5" spellcheck="false" placeholder="id,age,monthly_income,wallet_months,..."></textarea>
+      <div id="cohort-status" style="margin-top:10px"></div>
+    </div>
     <div id="backtest-out"></div>
+  </section>
+
+  <!-- ----------------------------------------------------------- threshold -->
+  <section class="panel" id="p-threshold" role="tabpanel" aria-labelledby="t-threshold">
+    <div class="card">
+      <h2>Discrimination, and then the cutoff</h2>
+      <p class="hint">
+        These are two different questions and they are kept apart. How well the score separates
+        borrowers who repay from borrowers who do not is a property of the <em>scorecard</em>, and
+        moving the cutoff cannot change it. What the business gives up at each cutoff is a property
+        of the <em>decision</em>.
+      </p>
+      <div class="row">
+        <label class="field">Policy <select id="sw-policy"></select></label>
+        <label class="field">Step
+          <select id="sw-step"><option value="5">5 points</option><option value="2">2 points</option><option value="10">10 points</option></select>
+        </label>
+        <button class="btn" id="go-sweep" type="button">Sweep the cutoff</button>
+      </div>
+      <div class="tiles" id="disc-tiles"></div>
+      <div class="note" id="disc-reading" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2>Net by cutoff</h2>
+      <p class="hint">Fees earned less expected loss, at every threshold. The marked points are the policy&rsquo;s own cutoff and the net-maximising one.</p>
+      <div id="sweep-net"></div>
+      <div class="note warn" id="sweep-warning" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2>Approval rate and bad rate by cutoff</h2>
+      <p class="hint">Both are rates on the same 0&ndash;100% scale, so they share one axis. Approval rate here is of the applicants who <em>reached</em> the scorecard, not of all applicants &mdash; the gates already removed the rest.</p>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:var(--series-1)"></span><span>approval rate, of those scored</span></span>
+        <span class="item"><span class="swatch" style="background:var(--series-2)"></span><span>bad rate among approved</span></span>
+      </div>
+      <div id="sweep-rates"></div>
+      <details style="margin-top:12px"><summary>Table view</summary><div id="sweep-table"></div></details>
+    </div>
   </section>
 
   <!-- ------------------------------------------------------------- compare -->
@@ -566,7 +621,7 @@ $("#go-backtest").addEventListener("click", async () => {
   out.innerHTML = "";
   out.append(el("div", { class: "card" }, el("p", { class: "hint", text: "Scoring 5,000 borrowers..." })));
   try {
-    const data = await api("/api/backtest", { source: $("#source").value, segment: $("#segment").value });
+    const data = await api("/api/backtest", { source: $("#source").value, segment: $("#segment").value, cohort: COHORT_TOKEN });
     renderCompile(await api("/api/compile", { source: $("#source").value }));
     renderBacktest(data);
   } catch (error) {
@@ -582,7 +637,7 @@ $("#go-compare").addEventListener("click", async () => {
   try {
     const base = META.policies.find((p) => p.key === $("#cmp-base").value);
     const candidate = META.policies.find((p) => p.key === $("#cmp-cand").value);
-    const data = await api("/api/compare", { base: base.source, candidate: candidate.source });
+    const data = await api("/api/compare", { base: base.source, candidate: candidate.source, cohort: COHORT_TOKEN });
 
     const host = el("div", { class: "tiles" });
     const tiles = [
@@ -800,13 +855,253 @@ async function renderCohort() {
   ));
 }
 
+
+/* ---- line chart --------------------------------------------------------
+   One y-axis, always. Two measures of different scale get two charts; two
+   measures in the same units share one, which is what the rates chart does. */
+function lineChart(series, options) {
+  const opts = Object.assign({ height: 220, format: (v) => String(v), yMax: null, marks: [] }, options || {});
+  const width = 720, height = opts.height;
+  const pad = { top: 18, right: 58, bottom: 30, left: 58 };
+  const xs = series[0].points.map((p) => p.x);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const allY = series.flatMap((s) => s.points.map((p) => p.y));
+  const yMax = opts.yMax !== null ? opts.yMax : Math.max(...allY, 0);
+  const yMin = Math.min(...allY, 0);
+  const span = (yMax - yMin) || 1;
+  const px = (x) => pad.left + ((x - xMin) / ((xMax - xMin) || 1)) * (width - pad.left - pad.right);
+  const py = (y) => height - pad.bottom - ((y - yMin) / span) * (height - pad.top - pad.bottom);
+
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("role", "img");
+  svg.style.display = "block";
+  const make = (tag, attrs) => {
+    const node = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    return node;
+  };
+
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * (height - pad.top - pad.bottom);
+    svg.append(make("line", { class: "grid-line", x1: pad.left, x2: width - pad.right, y1: y, y2: y }));
+    const value = yMax - (i / 4) * span;
+    const label = make("text", { class: "tick", x: pad.left - 8, y: y + 4, "text-anchor": "end" });
+    label.textContent = opts.format(value);
+    svg.append(label);
+  }
+  svg.append(make("line", { class: "axis-line", x1: pad.left, x2: width - pad.right, y1: py(yMin), y2: py(yMin) }));
+  const everyNth = Math.ceil(xs.length / 8);
+  xs.forEach((x, index) => {
+    if (index % everyNth) return;
+    const t = make("text", { class: "tick", x: px(x), y: height - pad.bottom + 16, "text-anchor": "middle" });
+    t.textContent = String(x);
+    svg.append(t);
+  });
+
+  for (const mark of opts.marks) {
+    svg.append(make("line", {
+      class: "grid-line", x1: px(mark.x), x2: px(mark.x), y1: pad.top, y2: height - pad.bottom,
+      stroke: "var(--ink-muted)", "stroke-dasharray": "3 3",
+    }));
+    const t = make("text", { class: "tick", x: px(mark.x), y: pad.top - 4, "text-anchor": "middle" });
+    t.textContent = mark.label;
+    svg.append(t);
+  }
+
+  series.forEach((s) => {
+    const d = s.points.map((p, i) => (i ? "L" : "M") + px(p.x).toFixed(1) + "," + py(p.y).toFixed(1)).join(" ");
+    svg.append(make("path", { class: "series-line", d, stroke: s.color }));
+    const last = s.points[s.points.length - 1];
+    const label = make("text", { class: "tick", x: px(last.x) + 6, y: py(last.y) + 4, fill: "var(--ink-2)" });
+    label.textContent = opts.format(last.y);
+    svg.append(label);
+  });
+
+  const crosshair = make("line", { class: "axis-line", x1: 0, x2: 0, y1: pad.top, y2: height - pad.bottom, opacity: 0 });
+  svg.append(crosshair);
+  const dots = series.map((s) => {
+    const dot = make("circle", { class: "marker", r: 4.5, fill: s.color, opacity: 0 });
+    svg.append(dot);
+    return dot;
+  });
+  const hit = make("rect", {
+    x: pad.left, y: pad.top, width: width - pad.left - pad.right,
+    height: height - pad.top - pad.bottom, fill: "transparent",
+  });
+  svg.append(hit);
+  hit.addEventListener("mousemove", (event) => {
+    const box = svg.getBoundingClientRect();
+    const ratio = width / box.width;
+    const localX = (event.clientX - box.left) * ratio;
+    let nearest = 0, best = Infinity;
+    xs.forEach((x, i) => { const d = Math.abs(px(x) - localX); if (d < best) { best = d; nearest = i; } });
+    crosshair.setAttribute("x1", px(xs[nearest]));
+    crosshair.setAttribute("x2", px(xs[nearest]));
+    crosshair.setAttribute("opacity", 1);
+    let html = "<strong>cutoff " + xs[nearest] + "</strong>";
+    series.forEach((s, i) => {
+      const point = s.points[nearest];
+      dots[i].setAttribute("cx", px(point.x));
+      dots[i].setAttribute("cy", py(point.y));
+      dots[i].setAttribute("opacity", 1);
+      html += "<br><span class='tk'>" + s.name + "</span> " + opts.format(point.y);
+      if (point.note) html += " <span class='tk'>" + point.note + "</span>";
+    });
+    showTip(event, html);
+  });
+  hit.addEventListener("mouseleave", () => {
+    crosshair.setAttribute("opacity", 0);
+    dots.forEach((d) => d.setAttribute("opacity", 0));
+    hideTip();
+  });
+  return svg;
+}
+
+/* ---- threshold sweep --------------------------------------------------- */
+let COHORT_TOKEN = null;
+
+function renderSweep(data) {
+  const disc = data.discrimination;
+  const host = $("#disc-tiles");
+  host.innerHTML = "";
+  if (disc.withheld) {
+    host.append(el("div", { class: "note warn", text: disc.withheld }));
+    $("#disc-reading").textContent = "";
+  } else {
+    const tiles = [
+      ["Gini", disc.gini, "of the score, on those scored"],
+      ["AUC", disc.auc, "the same thing, other convention"],
+      ["KS", disc.ks, "largest gap, at score " + disc.ks_at_score],
+      ["Scored", disc.scored.toLocaleString("en-US"), disc.gated_out.toLocaleString("en-US") + " stopped by a gate"],
+      ["Defaults in that pool", disc.bads.toLocaleString("en-US"), "against " + disc.goods.toLocaleString("en-US") + " who repaid"],
+    ];
+    for (const row of tiles) {
+      host.append(el("div", { class: "tile" }, [
+        el("span", { class: "k", text: row[0] }),
+        el("span", { class: "v", text: String(row[1]) }),
+        el("span", { class: "u", text: row[2] }),
+      ]));
+    }
+    $("#disc-reading").textContent = disc.reading + "  " + disc.caveat;
+  }
+
+  const sweep = data.sweep;
+  if (sweep.withheld) {
+    mount("#sweep-net", el("div", { class: "note warn", text: sweep.withheld }));
+    mount("#sweep-rates", el("div"));
+    mount("#sweep-table", el("div"));
+    $("#sweep-warning").textContent = "";
+    return;
+  }
+
+  const points = sweep.points;
+  mount("#sweep-net", lineChart(
+    [{
+      name: "net", color: "var(--series-1)",
+      points: points.map((p) => ({
+        x: p.threshold, y: p.net,
+        note: "(" + rate(p.approval_rate_of_all) + " of all applicants approved)",
+      })),
+    }],
+    {
+      format: (v) => Math.round(v).toLocaleString("en-US"),
+      marks: [
+        { x: sweep.current.threshold, label: "policy: " + sweep.current.threshold },
+        { x: sweep.net_maximising.threshold, label: "best: " + sweep.net_maximising.threshold },
+      ],
+    }
+  ));
+  $("#sweep-warning").textContent = sweep.in_sample_warning;
+
+  mount("#sweep-rates", lineChart(
+    [
+      { name: "approval rate", color: "var(--series-1)", points: points.map((p) => ({ x: p.threshold, y: p.approval_rate_of_scored })) },
+      { name: "bad rate", color: "var(--series-2)", points: points.map((p) => ({ x: p.threshold, y: p.bad_rate })) },
+    ],
+    { format: (v) => (100 * v).toFixed(1) + "%", yMax: 1 }
+  ));
+
+  mount("#sweep-table", table(
+    [{ label: "Cutoff", num: true }, { label: "Approved", num: true }, { label: "of those scored", num: true },
+     { label: "of all applicants", num: true }, { label: "Bad rate", num: true }, { label: "Net", num: true },
+     { label: "Good declined", num: true }, { label: "Bad declined", num: true }],
+    points.map((p) => [
+      { text: String(p.threshold), cls: "num" },
+      { text: p.approvals.toLocaleString("en-US"), cls: "num" },
+      { text: rate(p.approval_rate_of_scored), cls: "num" },
+      { text: rate(p.approval_rate_of_all), cls: "num" },
+      { text: rate(p.bad_rate), cls: "num" },
+      { text: Math.round(p.net).toLocaleString("en-US"), cls: "num" },
+      { text: p.good_declined.toLocaleString("en-US"), cls: "num" },
+      { text: p.bad_declined.toLocaleString("en-US"), cls: "num" },
+    ])
+  ));
+}
+
+$("#go-sweep").addEventListener("click", async () => {
+  mount("#sweep-net", el("p", { class: "hint", text: "Scoring, then re-deciding at every cutoff..." }));
+  try {
+    const source = META.policies.find((p) => p.key === $("#sw-policy").value).source;
+    renderSweep(await api("/api/sweep", { source, step: $("#sw-step").value, cohort: COHORT_TOKEN }));
+  } catch (error) {
+    mount("#sweep-net", el("div", { class: "note bad", text: error.message }));
+  }
+});
+
+/* ---- supplying a cohort ------------------------------------------------ */
+function cohortStatus(node) { mount("#cohort-status", node); }
+
+$("#fill-template").addEventListener("click", async () => {
+  const response = await fetch("/api/cohort/template");
+  $("#cohort-csv").value = await response.text();
+});
+
+$("#get-template").addEventListener("click", async () => {
+  const response = await fetch("/api/cohort/template");
+  const text = await response.text();
+  const blob = new Blob([text], { type: "text/csv" });
+  const link = el("a", { href: URL.createObjectURL(blob), download: "cohort-template.csv" });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
+});
+
+$("#load-cohort").addEventListener("click", async () => {
+  try {
+    const data = await api("/api/cohort/load", { csv: $("#cohort-csv").value });
+    COHORT_TOKEN = data.cohort;
+    const level = data.labelled ? "good" : "warning";
+    cohortStatus(el("div", {}, [
+      el("div", { class: "row" }, [
+        pill(level, data.rows.toLocaleString("en-US") + " rows loaded"),
+        pill(level, data.labelled ? "outcome column found" : "no outcome column"),
+      ]),
+      el("div", { class: data.labelled ? "note" : "note warn", text: data.note }),
+      data.unknown_columns.length
+        ? el("div", { class: "note", text: "Columns ignored: " + data.unknown_columns.join(", ") })
+        : null,
+    ]));
+  } catch (error) {
+    cohortStatus(el("div", { class: "note bad", text: error.message }));
+  }
+});
+
+$("#use-bundled").addEventListener("click", () => {
+  COHORT_TOKEN = null;
+  cohortStatus(el("div", { class: "note", text: "Back to the bundled synthetic cohort." }));
+});
+
 /* ---- boot -------------------------------------------------------------- */
 (async function boot() {
   try {
     META = await api("/api/meta");
     if (META.results) renderOverview(META.results);
 
-    for (const id of ["#policy-pick", "#cmp-base", "#cmp-cand", "#score-policy"]) {
+    for (const id of ["#policy-pick", "#cmp-base", "#cmp-cand", "#score-policy", "#sw-policy"]) {
       const select = $(id);
       for (const policy of META.policies) select.append(el("option", { value: policy.key, text: policy.key }));
     }
@@ -814,6 +1109,7 @@ async function renderCohort() {
     $("#cmp-cand").value = "nano_v2";
     $("#policy-pick").value = "nano_v2";
     $("#score-policy").value = "nano_v2";
+    $("#sw-policy").value = "nano_v2";
 
     const load = () => {
       const chosen = META.policies.find((p) => p.key === $("#policy-pick").value);

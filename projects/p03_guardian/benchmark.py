@@ -12,6 +12,11 @@ Two figures are reported that a summary would normally leave out:
 * **The coercion detector's miss rate** on scam approaches that use none of its
   vocabulary. Those cases are in the test set on purpose and are counted apart from the
   rest, so the headline cannot be inflated by only testing what the lexicon knows.
+* **What the behavioural layer recovers, and what it costs.** The second round added a
+  non-lexical check, so the paired cases measure both halves of the trade: how many of
+  the scams the lexicon misses are escalated once the *transfer* is judged, and how many
+  ordinary transfers are escalated too. Reporting the first without the second would be
+  advertising, not measurement.
 """
 
 from __future__ import annotations
@@ -21,7 +26,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from . import coercion, confirm, nlu, numerals, testset
+from . import behaviour, coercion, confirm, nlu, numerals, testset
 
 RESULTS = Path(__file__).with_name("results.json")
 
@@ -179,6 +184,59 @@ def _coercion() -> dict[str, Any]:
     }
 
 
+def _paired() -> dict[str, Any]:
+    """Measure the behavioural layer on scams the lexicon misses, and on ordinary traffic."""
+    scams_total = scams_escalated = 0
+    benign_total = benign_escalated = 0
+    both_missed = 0
+    rows: list[dict[str, object]] = []
+    for label, message, payee, amount, want_verdict, want_level, is_scam in testset.PAIRED_CASES:
+        verdict = coercion.assess(message).verdict
+        conduct = behaviour.assess(behaviour.demo_profile(), payee, amount)
+        escalated = conduct.escalated
+        if is_scam:
+            scams_total += 1
+            scams_escalated += int(escalated)
+            if verdict == coercion.ALLOW and not escalated:
+                both_missed += 1
+        else:
+            benign_total += 1
+            benign_escalated += int(escalated)
+        rows.append(
+            {
+                "label": label,
+                "scam": is_scam,
+                "coercion_verdict": verdict,
+                "coercion_as_expected": verdict == want_verdict,
+                "behaviour_level": conduct.level,
+                "behaviour_as_expected": conduct.level == want_level,
+                "signals": [signal.name for signal in conduct.signals],
+            }
+        )
+    return {
+        "cases": len(testset.PAIRED_CASES),
+        "as_expected": sum(
+            1 for row in rows if row["coercion_as_expected"] and row["behaviour_as_expected"]
+        ),
+        "scams": scams_total,
+        "scams_caught_by_words": sum(
+            1 for row in rows if row["scam"] and row["coercion_verdict"] != coercion.ALLOW
+        ),
+        "scams_escalated_by_behaviour": scams_escalated,
+        "scams_missed_by_both": both_missed,
+        "benign": benign_total,
+        "benign_escalated": benign_escalated,
+        "rows": rows,
+        "reading": (
+            f"Of {scams_total} scam approaches the word-based check lets through, judging the "
+            f"transfer instead escalates {scams_escalated}. The cost is "
+            f"{benign_escalated} of {benign_total} ordinary transfers also escalated - and "
+            f"escalation is a slower confirmation, not a refusal, so that cost is friction "
+            f"rather than a blocked payment."
+        ),
+    }
+
+
 def _replies() -> dict[str, Any]:
     right = 0
     failures: list[dict[str, object]] = []
@@ -214,10 +272,19 @@ def _end_to_end() -> dict[str, Any]:
             and session.state == confirm.State.AWAITING_CONFIRMATION,
         }
     )
-    done = session.handle("haan")
+    # This transfer is to a first-time payee for five times the usual amount, so the
+    # behavioural layer escalates it and a habitual "haan" is deliberately not enough.
+    habitual = session.handle("haan")
     checks.append(
         {
-            "property": "an explicit yes executes the pending action unchanged",
+            "property": "an escalated transfer is not executed by a habitual yes",
+            "holds": habitual["action"] is None and habitual.get("step_up_required") is True,
+        }
+    )
+    done = session.handle("confirm")
+    checks.append(
+        {
+            "property": "the step-up word executes the pending action unchanged",
             "holds": done["action"]
             == {
                 "intent": "send_money",
@@ -225,6 +292,18 @@ def _end_to_end() -> dict[str, Any]:
                 "beneficiary": "Rashid Ali",
                 "account_tail": "4417",
             },
+        }
+    )
+
+    # An ordinary transfer to a known payee must still take a plain yes, or the step-up
+    # has simply become the confirmation and means nothing.
+    routine = confirm.Session()
+    routine.handle("Bilal Traders ko teen hazaar bhejo")
+    quick = routine.handle("haan")
+    checks.append(
+        {
+            "property": "an ordinary transfer still takes a plain yes",
+            "holds": quick["action"] is not None and routine.state == confirm.State.EXECUTED,
         }
     )
     checks.append(
@@ -300,6 +379,7 @@ def measure() -> dict[str, Any]:
         "actions": _actions(),
         "coercion": _coercion(),
         "replies": _replies(),
+        "paired": _paired(),
         "properties": _end_to_end(),
         "lexicon": {
             "number_words": len(numerals.UNITS),
@@ -309,6 +389,10 @@ def measure() -> dict[str, Any]:
             "intent_phrases": sum(len(phrases) for phrases in nlu.LEXICON.values()),
             "coercion_families": len(coercion.FAMILIES),
             "coercion_phrases": sum(len(phrases) for _, phrases in coercion.FAMILIES.values()),
+            "coercion_proximity_patterns": sum(
+                len(patterns) for patterns in coercion.PROXIMITY.values()
+            ),
+            "behaviour_signals": 6,
             "contacts": len(nlu.CONTACTS),
         },
     }
@@ -322,6 +406,7 @@ def report(results: dict[str, Any]) -> str:
         results["replies"],
         results["properties"],
     )
+    pr = results["paired"]
     return "\n".join(
         [
             "Guardian - vernacular transaction assistant",
@@ -350,6 +435,16 @@ def report(results: dict[str, Any]) -> str:
             f"/{c['out_of_vocabulary_cases']} missed"
             f"  ({c['miss_rate_out_of_vocabulary']:.0%})  <- the blind spot, measured",
             "",
+            "  judging the transfer rather than the words",
+            f"    scams the words miss       {pr['scams'] - pr['scams_caught_by_words']}"
+            f"/{pr['scams']}",
+            f"    of those, escalated anyway {pr['scams_escalated_by_behaviour']}"
+            f"/{pr['scams']}  <- what this layer recovers",
+            f"    missed by both             {pr['scams_missed_by_both']}/{pr['scams']}",
+            f"    ordinary transfers escalated {pr['benign_escalated']}/{pr['benign']}"
+            "   <- the cost, in friction not refusals",
+            f"    cases behaving as written  {pr['as_expected']}/{pr['cases']}",
+            "",
             "  confirmation replies",
             f"    classified correctly       {r['exact']}/{r['cases']}  ({r['accuracy']:.1%})",
             f"    wrongly read as consent    {r['read_as_consent_wrongly']}"
@@ -366,7 +461,12 @@ def main() -> None:
         # The report prints Urdu; a cp1252 console would otherwise fail on it.
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     results = measure()
-    RESULTS.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # See the note in p01's benchmark: LF explicitly, because CI compares this file.
+    RESULTS.write_text(
+        json.dumps(results, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     print(report(results))
     print(f"\nwritten to {RESULTS}")
 

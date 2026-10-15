@@ -356,5 +356,7 @@ def test_the_test_set_totals_are_consistent() -> None:
         + totals["near_miss"]
         + totals["coercion"]
         + totals["replies"]
+        + totals["paired"]
     )
     assert totals["coercion_expected_misses"] > 0
+    assert totals["paired_scams"] > 0

@@ -249,6 +249,25 @@ def check_values(values: dict[int, str]) -> list[str]:
     return problems
 
 
+def luhn_ok(pan: str) -> bool:
+    """Whether ``pan`` passes the Luhn check digit.
+
+    Every real card number does. A PAN that fails it was mistyped, truncated or invented,
+    and catching that at the switch is cheaper than catching it at the issuer.
+    """
+    digits = [int(ch) for ch in pan if ch.isdigit()]
+    if len(digits) < 12 or len(digits) != len(pan.strip()):
+        return False
+    total = 0
+    for position, digit in enumerate(reversed(digits)):
+        if position % 2:
+            doubled = digit * 2
+            total += doubled - 9 if doubled > 9 else doubled
+        else:
+            total += digit
+    return total % 10 == 0
+
+
 def permits(cls: str, char: str) -> bool:
     """Whether ``char`` is legal anywhere in a field of class ``cls``.
 

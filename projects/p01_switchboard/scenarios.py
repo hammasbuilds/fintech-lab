@@ -15,6 +15,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from . import emv
 from .codec import Message, pack, response_mti, unpack
 
 ACQ_TO_ISS = "acquirer -> issuer"
@@ -37,6 +38,9 @@ class Context:
     merchant: str = "1LINK ATM GULBERG LAHORE          PK"
     mcc: str = "6011"
     transmitted: str = "1015093012"
+    # DE 7 is MMDDhhmmss and carries no year, which is why a reversal has to quote it
+    # rather than infer it. EMV tag 9A does carry one, so it is stated here.
+    year: str = "26"
     local_date: str = "1015"
     local_time: str = "093012"
     rrn: str = "415093000417"
@@ -110,9 +114,42 @@ def _financial_request(
     }
     if with_pin:
         values[52] = ctx.pin_block
+    # A chip or contactless-chip read carries DE 55. Magnetic stripe and fallback reads
+    # do not, and inventing chip data for them would make the fallback scenario lie about
+    # what the terminal actually had.
+    if entry_mode[:2] in {"05", "07"}:
+        values[55] = chip_data(ctx, int(values[4]), processing_code[:2])
     if extra:
         values.update(extra)
     return Message(mti=mti, fields=values)
+
+
+#: EMV transaction types, which are not the same codes as DE 3's first two digits.
+_CHIP_TYPES = {"00": "00", "01": "01", "09": "09", "20": "20", "31": "30", "40": "40"}
+
+
+def chip_data(ctx: Context, minor_units: int, transaction_type: str) -> str:
+    """Build a DE 55 that agrees with the message it is going into.
+
+    Tag 9F02 is the amount the chip authorised and 5F2A the currency it saw. They have to
+    be built from the same values as DE 4 and DE 49 or the scenario would ship the very
+    defect the invariants are there to catch.
+    """
+    return emv.build(
+        {
+            "82": "3C00",
+            "95": "0000000000",
+            "9A": ctx.year + ctx.transmitted[:4],
+            "9C": _CHIP_TYPES.get(transaction_type, "00"),
+            "5F2A": ctx.currency.zfill(4),
+            "9F02": amount_field(minor_units),
+            "9F10": "06010A03A00000",
+            "9F26": ctx.pin_block,
+            "9F27": "80",
+            "9F36": "0021",
+            "9F37": "1A2B3C4D",
+        }
+    )
 
 
 #: The elements an issuer response echoes back unchanged.

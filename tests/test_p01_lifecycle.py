@@ -83,7 +83,7 @@ def base_pair() -> tuple[Message, Message]:
 
 def test_rules_are_uniquely_identified_and_described() -> None:
     ids = [rule.rule for rule in lifecycle.RULES]
-    assert len(ids) == len(set(ids)) == 18
+    assert len(ids) == len(set(ids)) == 22
     for rule in lifecycle.RULES:
         assert rule.severity in {"critical", "serious", "warning"}
         assert rule.why.strip().endswith(".")

@@ -80,10 +80,21 @@
           <div id="live"></div>
         </div>
         <div class="card">
-          <h2>The three rules it will not break</h2>
+          <h2>This account's habits</h2>
+          <p class="hint">
+            The coercion check reads words, so a scam phrased in ordinary language gets past it.
+            This layer judges the <em>transfer</em> against what the account normally does, which
+            is not something a scammer can rephrase.
+          </p>
+          <div id="profile"></div>
+          <div id="conduct" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <h2>The four rules it will not break</h2>
           <div class="note">Nothing executes without a reply that is exactly a yes. "hmm", "acha" or a new sentence are not consent, and the question is asked again.</div>
           <div class="note">Every amount is read back in words before it moves. <strong>pandrah hazaar</strong> and <strong>dedh hazaar</strong> do not sound alike; 15,000 and 1,500 look alike.</div>
           <div class="note bad">When two pressure patterns appear together, there is no confirmation to press. No "proceed anyway" exists, because the user under pressure is the one who would press it.</div>
+          <div class="note warn">Words that only occur in a script <strong>block</strong>. A transfer that is merely unusual for this account <strong>escalates</strong>: it says what stands out and asks for the word <code>confirm</code> rather than a habitual yes. A first large transfer to a new payee is also what paying a new landlord looks like, so refusing it would make the product unusable.</div>
         </div>
       </div>
     </div>
@@ -119,6 +130,12 @@
       <h2>The blind spot, measured</h2>
       <p class="hint" id="blind-line"></p>
       <div id="blind-table"></div>
+    </div>
+    <div class="card">
+      <h2>What judging the transfer recovers, and what it costs</h2>
+      <p class="hint" id="paired-line"></p>
+      <div class="bars" id="paired-bars"></div>
+      <div id="paired-table" style="margin-top:14px"></div>
     </div>
     <div class="card">
       <h2>End-to-end properties</h2>
@@ -328,6 +345,8 @@ async function startSession() {
   paintThread([], null);
   paintState("idle");
   paintLive({});
+  renderConduct(null);
+  if (data.profile) renderProfile(data.profile);
   mount("#ledger-state", el("p", { class: "hint", text: "No entries yet in this conversation." }));
   mount("#ledger-table", el("div"));
 }
@@ -341,6 +360,8 @@ async function send(text) {
     paintThread(outcome.transcript, flavour);
     paintState(outcome.state);
     paintLive(outcome);
+    renderConduct(outcome.behaviour || null);
+    if (outcome.profile) renderProfile(outcome.profile);
     paintLedger(outcome.ledger);
     $("#say").value = "";
   } catch (error) {
@@ -470,6 +491,80 @@ $("#go-inspect").addEventListener("click", async () => {
   }
 });
 
+
+function renderProfile(profile) {
+  if (!profile) return;
+  mount("#profile", table(
+    ["This account", "Value"],
+    [
+      ["Balance", { text: "PKR " + profile.balance.toLocaleString("en-US"), cls: "num" }],
+      ["Usual transfer", { text: "PKR " + profile.usual_transfer.toLocaleString("en-US"), cls: "num" }],
+      ["Sent today", { text: "PKR " + profile.sent_today.toLocaleString("en-US"), cls: "num" }],
+      ["Daily cap", { text: "PKR " + profile.daily_cap.toLocaleString("en-US"), cls: "num" }],
+      ["Paid before", profile.known_beneficiaries.join(", ") || "nobody yet"],
+    ]
+  ));
+}
+
+function renderConduct(conduct) {
+  const host = $("#conduct");
+  host.innerHTML = "";
+  if (!conduct) {
+    host.append(el("p", { class: "hint", text: "Ask for a transfer to see this layer run." }));
+    return;
+  }
+  const level = conduct.level === "elevated" ? "serious" : conduct.level === "note" ? "warning" : "good";
+  host.append(el("div", { class: "row", style: "margin-bottom:6px" }, [
+    pill(level, "behaviour: " + conduct.level),
+    el("span", { class: "hint", style: "margin:0", text: conduct.count + " signal" + (conduct.count === 1 ? "" : "s") }),
+  ]));
+  host.append(el("p", { class: "hint", text: conduct.reason }));
+  if (conduct.signals.length) {
+    host.append(table(["Signal", "What stands out"],
+      conduct.signals.map((s) => [{ text: s.name, cls: "mono" }, s.detail])));
+  }
+}
+
+function renderPaired(pr) {
+  $("#paired-line").textContent = pr.reading;
+  barList($("#paired-bars"), [
+    {
+      label: "Scams the words miss", value: pr.scams - pr.scams_caught_by_words,
+      display: String(pr.scams - pr.scams_caught_by_words) + " of " + pr.scams,
+      color: "var(--series-2)",
+      tip: "<strong>The lexical blind spot</strong><br>ordinary language, no listed phrase",
+    },
+    {
+      label: "Of those, escalated anyway", value: pr.scams_escalated_by_behaviour,
+      display: String(pr.scams_escalated_by_behaviour) + " of " + pr.scams,
+      color: "var(--series-1)",
+      tip: "<strong>Recovered by judging the transfer</strong><br>first-time payee, unusual size, balance sweep",
+    },
+    {
+      label: "Missed by both", value: pr.scams_missed_by_both,
+      display: String(pr.scams_missed_by_both) + " of " + pr.scams,
+      color: "var(--series-4)",
+      tip: "<strong>Still through</strong><br>neither the words nor the transfer stood out",
+    },
+    {
+      label: "Ordinary transfers escalated", value: pr.benign_escalated,
+      display: String(pr.benign_escalated) + " of " + pr.benign,
+      color: "var(--series-3)",
+      tip: "<strong>The cost</strong><br>a slower confirmation, never a refusal",
+    },
+  ]);
+  mount("#paired-table", table(
+    ["Case", "Kind", "Coercion", "Behaviour", "Signals"],
+    pr.rows.map((row) => [
+      row.label,
+      { node: pill(row.scam ? "critical" : "good", row.scam ? "scam" : "ordinary") },
+      { node: pill(row.coercion_verdict === "allow" ? "neutral" : "warning", row.coercion_verdict) },
+      { node: pill(row.behaviour_level === "elevated" ? "serious" : row.behaviour_level === "note" ? "warning" : "good", row.behaviour_level) },
+      { text: row.signals.join(", ") || "-", cls: "mono" },
+    ])
+  ));
+}
+
 /* ---- scorecard --------------------------------------------------------- */
 function renderScorecard(data) {
   const n = data.numerals, a = data.actions, c = data.coercion, r = data.replies, p = data.properties;
@@ -486,7 +581,9 @@ function renderScorecard(data) {
     ["Asked instead of guessing", a.asked_instead_of_guessed + "/" + a.underspecified_cases, rate(a.ask_accuracy)],
     ["Wrongly read as consent", r.read_as_consent_wrongly, "must be zero"],
     ["Ordinary traffic blocked", c.benign_blocked + "/" + c.benign_cases, "false blocks"],
-    ["Out-of-vocabulary scams missed", c.out_of_vocabulary_missed + "/" + c.out_of_vocabulary_cases, rate(c.miss_rate_out_of_vocabulary)],
+    ["Scams the words miss", c.out_of_vocabulary_missed + "/" + c.out_of_vocabulary_cases, "the lexical blind spot"],
+    ["Of those, escalated anyway", data.paired.scams_escalated_by_behaviour + "/" + data.paired.scams, "by judging the transfer"],
+    ["Missed by both layers", data.paired.scams_missed_by_both + "/" + data.paired.scams, "still through"],
     ["Properties holding", p.holding + "/" + p.checks, "end to end"],
   ];
   const host = $("#score-tiles");
@@ -529,6 +626,7 @@ function renderScorecard(data) {
     ]
   ));
 
+  renderPaired(data.paired);
   mount("#props", table(["Property", "Holds"],
     p.detail.map((check) => [check.property, { node: pill(check.holds ? "good" : "critical", check.holds ? "yes" : "no") }])));
 }

@@ -311,6 +311,8 @@ def totals() -> dict[str, int]:
         "coercion": len(COERCION_CASES),
         "coercion_expected_misses": sum(1 for case in COERCION_CASES if case[3]),
         "replies": len(REPLY_CASES),
+        "paired": len(PAIRED_CASES),
+        "paired_scams": sum(1 for case in PAIRED_CASES if case[6]),
         "all": (
             len(NUMERAL_CASES)
             + len(NO_AMOUNT_CASES)
@@ -318,5 +320,48 @@ def totals() -> dict[str, int]:
             + len(NEAR_MISS_CASES)
             + len(COERCION_CASES)
             + len(REPLY_CASES)
+            + len(PAIRED_CASES)
         ),
     }
+
+
+# ---------------------------------------------------------------- paired cases
+# The coercion check reads words and the set above measures what that misses. These
+# cases pair a message with the transfer it is trying to produce, so the behavioural
+# layer can be measured on the same scams - and, just as importantly, so the cost of
+# that layer is measured on ordinary transfers.
+#
+# (label, message, beneficiary, amount, expected coercion verdict,
+#  expected behaviour level, scam)
+PAIRED_CASES: tuple[tuple[str, str, str, float, str, str, bool], ...] = (
+    # The four approaches the lexical check misses, each with its transfer.
+    (
+        "ammi's friend",
+        "beta main tumhari ammi ki saheli hoon, thori madad chahiye thi",
+        "Zubair Khan", 50000, "allow", "elevated", True,
+    ),
+    (
+        "the fixer",
+        "main wohi hoon jisne kal tumhara kaam karwaya tha, account number note karo",
+        "Zubair Khan", 40000, "allow", "elevated", True,
+    ),
+    (
+        "hospital",
+        "mera beta hospital mein hai, tum jitna kar sako bhej do",
+        "Rashida Bibi", 35000, "allow", "elevated", True,
+    ),
+    (
+        "property token",
+        "property ka token amount aaj dena hoga warna deal nikal jayegi",
+        "Ayesha Noor", 45000, "allow", "elevated", True,
+    ),
+    # Ordinary transfers. An escalation on any of these is a cost, not a catch.
+    ("usual shopkeeper", "Bilal Traders ko teen hazaar bhejo", "Bilal Traders", 3200, "allow", "none", False),
+    ("monthly to mother", "Nasreen ko barah hazaar bhejo", "Nasreen Akhtar", 12000, "allow", "none", False),
+    ("small to brother", "Imran ko hazaar bhejo", "Imran Shah", 1000, "allow", "none", False),
+    ("slightly larger, known payee", "Bilal Traders ko paanch hazaar bhejo", "Bilal Traders", 5000, "allow", "none", False),
+    # A legitimate first large transfer. Escalating this is correct behaviour and is
+    # counted as a cost rather than claimed as a catch: the system slows down, and the
+    # user goes ahead.
+    ("new landlord", "Rashid Ali ko pandrah hazaar bhejo", "Rashid Ali", 15000, "allow", "elevated", False),
+)

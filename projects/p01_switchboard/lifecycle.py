@@ -18,8 +18,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .codec import Message, is_request, response_mti
-from .narrate import RESPONSE_CODES, decode_original_data_elements
+from . import emv
+from .codec import Message, is_request, luhn_ok, response_mti
+from .narrate import RESPONSE_CODES, decode_original_data_elements, mask_pan
 from .scenarios import Flow
 
 APPROVED = {"00", "10"}
@@ -161,6 +162,32 @@ RULES: tuple[Rule, ...] = (
         "critical",
         "Out-of-order traffic means the two were matched by luck, not by trace.",
     ),
+    Rule(
+        "L19",
+        "The account number passes the Luhn check",
+        "serious",
+        "Every real card number does; one that fails was mistyped or invented.",
+    ),
+    Rule(
+        "L20",
+        "Chip tag 9F02 matches the transaction amount",
+        "critical",
+        "A mismatch debits the cardholder an amount the chip never authorised, and every "
+        "field is individually well-formed, so nothing else catches it.",
+    ),
+    Rule(
+        "L21",
+        "Chip tag 5F2A matches the transaction currency",
+        "serious",
+        "The chip and the message must agree on what currency was approved.",
+    ),
+    Rule(
+        "L22",
+        "Chip data is well-formed and carries the mandatory tags",
+        "serious",
+        "An authorisation cannot be assessed without the cryptogram, its information "
+        "data, the counter, the interchange profile and the issuer application data.",
+    ),
 )
 
 BY_RULE: dict[str, Rule] = {r.rule: r for r in RULES}
@@ -284,6 +311,7 @@ def check(flow: Flow) -> list[Finding]:
 
     findings.extend(_check_requests(requests))
     findings.extend(_check_declines(requests, responses, matched, reversals))
+    findings.extend(_check_every_message(messages))
     return _sorted(findings)
 
 
@@ -381,6 +409,52 @@ def _check_pair(
                     step,
                 )
             )
+    return out
+
+
+def _check_every_message(messages: list[Message]) -> list[Finding]:
+    """Checks that look inside one message: the account number and the chip data.
+
+    These run on responses as well as requests. A response echoes DE 2, and an echo of a
+    PAN that fails its own check digit is still a PAN that cannot exist.
+    """
+    out: list[Finding] = []
+    for index, message in enumerate(messages, start=1):
+        pan = message.get(2)
+        if pan is not None and not luhn_ok(pan):
+            out.append(
+                _finding(
+                    "L19",
+                    f"step {index}: DE 2 {mask_pan(pan)} fails the Luhn check digit",
+                    index,
+                )
+            )
+
+        chip = message.get(55)
+        if chip is None:
+            continue
+        try:
+            emv.parse(chip)
+        except emv.EmvError as exc:
+            out.append(_finding("L22", f"step {index}: DE 55 does not decode - {exc}", index))
+            continue
+        missing = emv.missing_tags(chip)
+        # Only an authorisation or financial *request* must carry the full set; a
+        # response or a reversal echoing part of the chip data is not incomplete.
+        if missing and message.mti[1] in {"1", "2"} and message.mti[2] in {"0", "2"}:
+            out.append(
+                _finding(
+                    "L22",
+                    f"step {index}: DE 55 is missing mandatory tag(s) {', '.join(missing)}",
+                    index,
+                )
+            )
+        mismatch = emv.amount_mismatch(chip, message.get(4))
+        if mismatch:
+            out.append(_finding("L20", f"step {index}: {mismatch}", index))
+        currency = emv.currency_mismatch(chip, message.get(49))
+        if currency:
+            out.append(_finding("L21", f"step {index}: {currency}", index))
     return out
 
 

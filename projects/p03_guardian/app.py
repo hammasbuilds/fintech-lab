@@ -18,7 +18,7 @@ from typing import Any
 from shared.theme import attach_theme
 from shared.webkit import App, BadRequest, Request, Response, run
 
-from . import coercion, confirm, nlu, numerals, testset
+from . import behaviour, coercion, confirm, nlu, numerals, testset
 from .benchmark import measure
 
 STATIC = Path(__file__).with_name("static")
@@ -61,6 +61,15 @@ def meta(_request: Request) -> Response:
                 for c in nlu.CONTACTS
             ],
             "intents": {intent: list(phrases) for intent, phrases in nlu.LEXICON.items()},
+            "behaviour_signals": {
+                "first_time_beneficiary": "the payee has never been paid from this account",
+                "unusually_large": f"at least {behaviour.LARGE_MULTIPLE:g} times the usual "
+                "transfer to this payee, or to anyone if they are new",
+                "balance_sweep": f"at least {behaviour.SWEEP_SHARE:.0%} of the balance",
+                "exceeds_balance": "more than is in the account, so it cannot complete",
+                "beyond_daily_cap": "would push the day's total past the account's cap",
+                "rapid_repeat": f"{behaviour.BURST_COUNT} or more transfers within the hour",
+            },
             "coercion_families": {
                 family: {"description": description, "phrases": len(phrases)}
                 for family, (description, phrases) in coercion.FAMILIES.items()
@@ -88,10 +97,18 @@ def new_session(request: Request) -> Response:
     if language not in {"en", "ur"}:
         raise BadRequest("language must be en or ur")
     token = secrets.token_urlsafe(12)
-    _sessions[token] = confirm.Session(language=language)
+    session = confirm.Session(language=language)
+    _sessions[token] = session
     while len(_sessions) > MAX_SESSIONS:
         _sessions.popitem(last=False)
-    return Response.json({"session": token, "language": language, "state": "idle"})
+    return Response.json(
+        {
+            "session": token,
+            "language": language,
+            "state": "idle",
+            "profile": _profile(session),
+        }
+    )
 
 
 @app.route("POST", "/api/say")
@@ -107,6 +124,7 @@ def say(request: Request) -> Response:
             **outcome,
             "transcript": [turn.as_dict() for turn in session.transcript],
             "ledger": session.ledger.as_dict(),
+            "profile": _profile(session),
         }
     )
 
@@ -136,6 +154,13 @@ def inspect(request: Request) -> Response:
                 for issue in utterance.issues
             ],
             "coercion": assessment.as_dict(),
+            "behaviour": behaviour.assess(
+                behaviour.demo_profile(),
+                utterance.beneficiary.name
+                if utterance.beneficiary
+                else (utterance.target_number or None),
+                utterance.amount.value if utterance.amount else None,
+            ).as_dict(),
             "reply_class": confirm.classify_reply(text),
         }
     )
@@ -147,6 +172,17 @@ def scorecard(_request: Request) -> Response:
 
 
 # --------------------------------------------------------------------- helpers
+
+
+def _profile(session: confirm.Session) -> dict[str, Any]:
+    profile = session.profile
+    return {
+        "balance": profile.balance,
+        "daily_cap": profile.daily_cap,
+        "usual_transfer": profile.usual_transfer,
+        "sent_today": profile.sent_today(),
+        "known_beneficiaries": sorted(profile.known_beneficiaries),
+    }
 
 
 @lru_cache(maxsize=1)

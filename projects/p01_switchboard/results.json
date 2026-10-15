@@ -1,7 +1,7 @@
 {
   "dictionary": {
     "elements_defined": 50,
-    "elements_exercised": 27,
+    "elements_exercised": 28,
     "exercised": [
       2,
       3,
@@ -25,6 +25,7 @@
       49,
       52,
       54,
+      55,
       70,
       90,
       95,
@@ -55,66 +56,179 @@
   "codec": {
     "messages_checked": 33,
     "round_trip_stable": 33,
-    "reparse_equal": 33
+    "reparse_equal": 33,
+    "binary_round_trip_stable": 33,
+    "binary_bytes_vs_ascii_characters": {
+      "binary": 244,
+      "ascii": 386
+    },
+    "framing_detected": 3,
+    "framings_tried": 3
+  },
+  "chip": {
+    "messages_with_de55": 12,
+    "tags_parsed": 132,
+    "distinct_tags": [
+      "5F2A",
+      "82",
+      "95",
+      "9A",
+      "9C",
+      "9F02",
+      "9F10",
+      "9F26",
+      "9F27",
+      "9F36",
+      "9F37"
+    ],
+    "unknown_tags": [],
+    "cross_field_checks": [
+      "9F02 against DE 4",
+      "5F2A against DE 49",
+      "mandatory tags"
+    ]
   },
   "invariants": {
-    "rules": 18,
+    "rules": 22,
     "valid_flows_checked": 14,
     "valid_flows_with_findings": 0,
     "false_positives": {}
   },
+  "fuzz_binary": {
+    "trials": 1000,
+    "messages_in_pool": 20,
+    "rejected": 659,
+    "accepted": 341,
+    "rejection_rate": 0.659,
+    "caught_by_the_length_header": 13,
+    "accepted_examples": [
+      {
+        "scenario": "pos_purchase_approved",
+        "byte": 85,
+        "framed": false,
+        "in_header": false
+      },
+      {
+        "scenario": "pos_purchase_approved",
+        "byte": 82,
+        "framed": false,
+        "in_header": false
+      },
+      {
+        "scenario": "pos_purchase_approved",
+        "byte": 214,
+        "framed": true,
+        "in_header": false
+      },
+      {
+        "scenario": "balance_inquiry",
+        "byte": 213,
+        "framed": true,
+        "in_header": false
+      },
+      {
+        "scenario": "pos_purchase_approved",
+        "byte": 203,
+        "framed": true,
+        "in_header": false
+      },
+      {
+        "scenario": "atm_withdrawal_approved",
+        "byte": 44,
+        "framed": false,
+        "in_header": false
+      },
+      {
+        "scenario": "cardholder_transfer",
+        "byte": 70,
+        "framed": true,
+        "in_header": false
+      },
+      {
+        "scenario": "balance_inquiry",
+        "byte": 155,
+        "framed": true,
+        "in_header": false
+      },
+      {
+        "scenario": "cardholder_transfer",
+        "byte": 49,
+        "framed": true,
+        "in_header": false
+      },
+      {
+        "scenario": "cardholder_transfer",
+        "byte": 22,
+        "framed": false,
+        "in_header": false
+      }
+    ]
+  },
   "fuzz": {
     "trials": 2000,
-    "rejected": 1004,
-    "accepted": 996,
-    "rejection_rate": 0.502,
+    "messages_in_pool": 10,
+    "scenarios": [
+      "atm_withdrawal_approved",
+      "pos_purchase_approved",
+      "balance_inquiry",
+      "cardholder_transfer",
+      "network_echo_test"
+    ],
+    "rejected": 1218,
+    "accepted": 782,
+    "rejection_rate": 0.609,
     "groups": {
       "class_violating": {
-        "trials": 627,
-        "rejected": 627,
+        "trials": 651,
+        "rejected": 651,
         "rejection_rate": 1.0
       },
       "class_legal": {
-        "trials": 988,
+        "trials": 767,
         "rejected": 0,
         "rejection_rate": 0.0
       },
       "framing": {
-        "trials": 385,
-        "rejected": 377,
-        "rejection_rate": 0.9792
+        "trials": 582,
+        "rejected": 567,
+        "rejection_rate": 0.9742
       }
     },
     "illegal_characters_accepted": [],
     "accepted_by_field": {
-      "DE 43 (Card acceptor name and location), class ans": 312,
-      "DE 102 (Account identification 1), class ans": 143,
-      "DE 42 (Card acceptor identification code), class ans": 135,
-      "DE 37 (Retrieval reference number), class an": 91,
-      "DE 41 (Card acceptor terminal identification), class ans": 67,
-      "DE 52 (Personal identification number data), class b": 48,
+      "DE 102 (Account identification 1), class ans": 128,
+      "DE 55 (Integrated circuit card data), class b": 113,
+      "DE 43 (Card acceptor name and location), class ans": 82,
+      "DE 37 (Retrieval reference number), class an": 79,
+      "DE 41 (Card acceptor terminal identification), class ans": 52,
+      "DE 7 (Transmission date and time), class n": 39,
       "DE 2 (Primary account number), class n": 34,
-      "DE 4 (Amount, transaction), class n": 31,
-      "DE 3 (Processing code), class n": 19,
-      "DE 7 (Transmission date and time), class n": 17,
-      "DE 12 (Local transaction time), class n": 16,
-      "DE 49 (Currency code, transaction), class n": 12,
-      "DE 33 (Forwarding institution identification code), class n": 11,
-      "DE 11 (System trace audit number), class n": 10,
-      "DE 22 (Point of service entry mode), class n": 10,
-      "DE 32 (Acquiring institution identification code), class n": 10,
-      "framing (MTI, bitmap or a length prefix)": 8,
-      "DE 14 (Expiration date), class n": 7,
-      "DE 18 (Merchant category code), class n": 6,
-      "DE 13 (Local transaction date), class n": 5,
-      "DE 25 (Point of service condition code), class n": 4
+      "DE 42 (Card acceptor identification code), class ans": 34,
+      "DE 54 (Additional amounts), class an": 30,
+      "DE 38 (Authorization identification response), class an": 28,
+      "DE 4 (Amount, transaction), class n": 26,
+      "DE 11 (System trace audit number), class n": 19,
+      "DE 52 (Personal identification number data), class b": 19,
+      "DE 39 (Response code), class an": 18,
+      "DE 32 (Acquiring institution identification code), class n": 15,
+      "framing (MTI, bitmap or a length prefix)": 15,
+      "DE 12 (Local transaction time), class n": 11,
+      "DE 103 (Account identification 2), class ans": 9,
+      "DE 33 (Forwarding institution identification code), class n": 7,
+      "DE 13 (Local transaction date), class n": 6,
+      "DE 3 (Processing code), class n": 6,
+      "DE 49 (Currency code, transaction), class n": 3,
+      "DE 14 (Expiration date), class n": 3,
+      "DE 18 (Merchant category code), class n": 3,
+      "DE 70 (Network management information code), class n": 2,
+      "DE 25 (Point of service condition code), class n": 1
     },
     "note": "The framing group does not reach 1.000 and cannot. Seven of the eight accepted corruptions turned a valid MTI into another valid MTI, which a parser must accept. The eighth flipped one bitmap bit and swapped DE 14 for DE 16 - both n4, so the layout is byte-identical and the message re-parses as a different, entirely well-formed message. An ISO 8583 bitmap carries no redundancy, so no parser can catch that. It is the reason the invariant layer exists rather than stopping at the codec."
   },
   "mutation": {
-    "mutants": 31,
-    "killed": 31,
-    "killed_by_intended_rule": 31,
+    "mutants": 38,
+    "killed": 38,
+    "killed_by_intended_rule": 38,
     "survived": [],
     "rules_never_exercised": [],
     "rows": [
@@ -396,9 +510,10 @@
         "by_intended": true,
         "caught_by": [
           "L04",
-          "L17"
+          "L17",
+          "L20"
         ],
-        "detail": "L04 step 2: DE 4 came back as 000000000000 against a request for 000000250000, and DE 39 00 does not permit a change; L17 step 1: an inquiry requests DE 4 000000250000, which is not zero"
+        "detail": "L04 step 2: DE 4 came back as 000000000000 against a request for 000000250000, and DE 39 00 does not permit a change; L20 step 1: chip tag 9F02 authorised 0 minor units but DE 4 asks for 250,000 - the cardholder would be debited an amount the chip never approved; L17 step 1: an inquiry requests DE 4 000000250000, which is not zero"
       },
       {
         "mutator": "deliver_response_first",
@@ -423,6 +538,94 @@
           "L01"
         ],
         "detail": "L01 step 1: MTI 0200 trace 004712 is neither answered nor reversed"
+      },
+      {
+        "mutator": "break_pan_check_digit",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L19",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L09",
+          "L19"
+        ],
+        "detail": "L09 step 2: DE 2 (account number) came back as '4111111111111111' against '4111111111111112' in the request; L19 step 1: DE 2 411111******1112 fails the Luhn check digit"
+      },
+      {
+        "mutator": "break_pan_check_digit",
+        "scenario": "pos_purchase_approved",
+        "layer": "lifecycle",
+        "expected": "L19",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L09",
+          "L19"
+        ],
+        "detail": "L09 step 2: DE 2 (account number) came back as '4111111111111111' against '4111111111111112' in the request; L19 step 1: DE 2 411111******1112 fails the Luhn check digit"
+      },
+      {
+        "mutator": "rewrite_chip_amount",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L20",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L04",
+          "L20"
+        ],
+        "detail": "L04 step 2: DE 4 came back as 000000500000 against a request for 000001000000, and DE 39 00 does not permit a change; L20 step 1: chip tag 9F02 authorised 500,000 minor units but DE 4 asks for 1,000,000 - the cardholder would be debited an amount the chip never approved"
+      },
+      {
+        "mutator": "rewrite_chip_amount",
+        "scenario": "pos_purchase_approved",
+        "layer": "lifecycle",
+        "expected": "L20",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L04",
+          "L20"
+        ],
+        "detail": "L04 step 2: DE 4 came back as 000000249900 against a request for 000000499800, and DE 39 00 does not permit a change; L20 step 1: chip tag 9F02 authorised 249,900 minor units but DE 4 asks for 499,800 - the cardholder would be debited an amount the chip never approved"
+      },
+      {
+        "mutator": "switch_chip_currency",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L21",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L21"
+        ],
+        "detail": "L21 step 1: chip tag 5F2A says currency 0840 but DE 49 says 586"
+      },
+      {
+        "mutator": "truncate_chip_data",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L22",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L22"
+        ],
+        "detail": "L22 step 1: DE 55 does not decode - tag 9F37 at byte 63 declares 4 bytes but only 1 remain"
+      },
+      {
+        "mutator": "drop_mandatory_chip_tag",
+        "scenario": "atm_withdrawal_approved",
+        "layer": "lifecycle",
+        "expected": "L22",
+        "killed": true,
+        "by_intended": true,
+        "caught_by": [
+          "L22"
+        ],
+        "detail": "L22 step 1: DE 55 is missing mandatory tag(s) 9F26"
       },
       {
         "mutator": "corrupt_bitmap",
@@ -458,7 +661,7 @@
         "caught_by": [
           "codec"
         ],
-        "detail": "codec rejected it: DE 102 (Account identification 1) declares 18 characters at offset 225, but only 11 remain"
+        "detail": "codec rejected it: DE 102 (Account identification 1) declares 18 characters at offset 368, but only 11 remain"
       },
       {
         "mutator": "letter_in_numeric_field",
@@ -494,7 +697,7 @@
         "caught_by": [
           "codec"
         ],
-        "detail": "codec rejected it: 4 trailing characters after the last data element (DE 102) at offset 243: '0000'"
+        "detail": "codec rejected it: 4 trailing characters after the last data element (DE 102) at offset 386: '0000'"
       }
     ]
   }

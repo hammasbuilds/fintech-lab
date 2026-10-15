@@ -89,11 +89,24 @@
       <h2>Decode a raw message</h2>
       <p class="hint">Paste an ASCII-framed message: 4-character MTI, 16-character hex bitmap, then the data elements.</p>
       <div class="row samples" id="samples"></div>
-      <textarea id="raw-in" rows="4" spellcheck="false" placeholder="0200F238..."></textarea>
+      <textarea id="raw-in" rows="4" spellcheck="false" placeholder="0200F238...  or a hex dump: 00AA0200F2..."></textarea>
       <div class="row" style="margin-top:10px">
+        <label class="field">Framing
+          <select id="framing">
+            <option value="auto">detect it</option>
+            <option value="ascii">ASCII</option>
+            <option value="binary">binary, with a 2-byte length header</option>
+            <option value="binary-no-header">binary, no length header</option>
+          </select>
+        </label>
         <button class="btn" id="go-decode" type="button">Decode</button>
         <button class="btn ghost" id="clear-decode" type="button">Clear</button>
       </div>
+      <p class="hint" style="margin-top:8px">
+        A log pulled off a live switch is binary: a packed bitmap, BCD numeric fields and a
+        length header. Detection tries each framing against the parser and shows its
+        reasoning rather than silently picking one.
+      </p>
     </div>
     <div id="decode-out"></div>
   </section>
@@ -236,6 +249,20 @@ async function api(path, body) {
 }
 function errorCard(message) {
   return el("div", { class: "card" }, el("div", { class: "note bad", text: message }));
+}
+/* One table builder, so a new panel does not come with its own slightly different one. */
+function table(headers, rows) {
+  const node = el("table");
+  node.append(el("thead", {}, el("tr", {}, headers.map((h) =>
+    el("th", { class: h.num ? "num" : null, text: h.label || h })))));
+  const body = el("tbody");
+  for (const row of rows) {
+    body.append(el("tr", {}, row.map((cell) =>
+      cell && cell.node ? el("td", { class: cell.cls || null }, cell.node)
+        : el("td", { class: (cell && cell.cls) || null, text: cell && cell.text !== undefined ? cell.text : String(cell) }))));
+  }
+  node.append(body);
+  return el("div", { class: "scroll" }, node);
 }
 
 /* ---- severity pill ----------------------------------------------------- */
@@ -451,11 +478,74 @@ function messageCard(data, title, compact) {
   return card;
 }
 
+function detectionCard(detection) {
+  const card = el("div", { class: "card" }, [
+    el("h2", { text: "How the framing was worked out" }),
+    el("p", { class: "hint", text: detection.framing ? ("Read as " + detection.framing + ".") : "No framing parsed this." }),
+  ]);
+  const list = el("ul", { style: "margin:0; padding-left:20px; font-size:13px; color:var(--ink-2)" });
+  for (const reason of detection.reasons) list.append(el("li", { text: reason }));
+  card.append(list);
+  return card;
+}
+
+function framingCard(data) {
+  const card = el("div", { class: "card" }, [
+    el("h2", { text: "Framing" }),
+    el("div", { class: "row" }, [
+      pill("good", data.framing),
+      el("span", { class: "hint", style: "margin:0", text: data.re_serialised
+        ? "Shown re-serialised to the ASCII form, so the field offsets below line up with characters you can count."
+        : "Shown exactly as pasted." }),
+    ]),
+  ]);
+  const list = el("details", {}, el("summary", { text: "How it was worked out" }));
+  const reasons = el("ul", { style: "margin:6px 0 0; padding-left:20px; font-size:13px; color:var(--ink-2)" });
+  for (const reason of data.detection.reasons) reasons.append(el("li", { text: reason }));
+  list.append(reasons);
+  card.append(list);
+  return card;
+}
+
+function chipTagRows(tags, depth, rows) {
+  for (const tag of tags) {
+    rows.push([
+      { text: "  ".repeat(depth) + tag.tag, cls: "mono" },
+      tag.name,
+      { text: String(tag.length), cls: "num" },
+      { text: tag.value.length > 40 ? tag.value.slice(0, 38) + "..." : tag.value, cls: "mono" },
+      tag.meaning || (tag.known ? "" : "not in the tag dictionary; bytes kept as they are"),
+    ]);
+    if (tag.children && tag.children.length) chipTagRows(tag.children, depth + 1, rows);
+  }
+  return rows;
+}
+
+function chipCard(chip) {
+  const card = el("div", { class: "card" }, [
+    el("h2", { text: "DE 55, the chip data" }),
+    el("p", { class: "hint", text: "BER-TLV. Most decoders print this field as one hex blob, which is where a 9F02 that disagrees with DE 4 hides." }),
+  ]);
+  for (const problem of chip.problems) {
+    card.append(el("div", { class: "note bad", text: problem }));
+  }
+  if (!chip.problems.length && chip.tags.length) {
+    card.append(el("div", { class: "note", text: "9F02 agrees with DE 4, 5F2A agrees with DE 49, and every mandatory tag is present." }));
+  }
+  if (chip.tags.length) {
+    card.append(table(
+      ["Tag", "Name", { label: "Bytes", num: true }, "Value", "What it means"],
+      chipTagRows(chip.tags, 0, [])
+    ));
+  }
+  return card;
+}
+
 $("#go-decode").addEventListener("click", async () => {
   const out = $("#decode-out");
   out.innerHTML = "";
   try {
-    const data = await api("/api/decode", { raw: $("#raw-in").value });
+    const data = await api("/api/decode", { raw: $("#raw-in").value, framing: $("#framing").value });
     if (!data.ok) {
       out.append(errorCard("The parser stopped: " + data.error));
       const partial = el("div", { class: "card" }, [
@@ -468,9 +558,12 @@ $("#go-decode").addEventListener("click", async () => {
       ]);
       if (data.partial.mti_error) partial.append(el("div", { class: "note warn", text: data.partial.mti_error }));
       out.append(partial);
+      if (data.detection) out.append(detectionCard(data.detection));
       return;
     }
+    out.append(framingCard(data));
     out.append(messageCard(data, null));
+    if (data.chip && (data.chip.tags.length || data.chip.problems.length)) out.append(chipCard(data.chip));
   } catch (error) {
     out.append(errorCard(error.message));
   }

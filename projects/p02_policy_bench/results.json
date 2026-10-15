@@ -100,6 +100,8 @@
   },
   "backtests": {
     "nano_v1": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v1",
         "version": "1",
@@ -111,12 +113,12 @@
       "declines": 2165,
       "approval_rate": 0.567,
       "refer_rate": 0.0,
-      "bad_rate": 0.0261,
-      "loss_rate": 0.0168,
       "disbursed": 26984871.25,
       "average_limit": 9518.47,
       "fee_revenue": 674623.01,
       "time_priced_revenue": 0.0,
+      "bad_rate": 0.0261,
+      "loss_rate": 0.0168,
       "expected_loss": 453091.88,
       "net": 221531.13,
       "defaults_among_approved": 74,
@@ -323,6 +325,8 @@
       ]
     },
     "nano_v2": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v2",
         "version": "2",
@@ -334,12 +338,12 @@
       "declines": 3138,
       "approval_rate": 0.3194,
       "refer_rate": 0.053,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
       "disbursed": 17167845.75,
       "average_limit": 10750.06,
       "fee_revenue": 429196.82,
       "time_priced_revenue": 0.0,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
       "expected_loss": 199272.19,
       "net": 229924.63,
       "defaults_among_approved": 27,
@@ -566,6 +570,8 @@
       ]
     },
     "nano_v3_timepriced": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v3",
         "version": "3",
@@ -577,12 +583,12 @@
       "declines": 3138,
       "approval_rate": 0.3194,
       "refer_rate": 0.053,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
       "disbursed": 17167845.75,
       "average_limit": 10750.06,
       "fee_revenue": 429196.82,
       "time_priced_revenue": 171679.08,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
       "expected_loss": 199272.19,
       "net": 229924.63,
       "defaults_among_approved": 27,
@@ -854,6 +860,8 @@
   },
   "comparison_v1_to_v2": {
     "base": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v1",
         "version": "1",
@@ -865,12 +873,12 @@
       "declines": 2165,
       "approval_rate": 0.567,
       "refer_rate": 0.0,
-      "bad_rate": 0.0261,
-      "loss_rate": 0.0168,
       "disbursed": 26984871.25,
       "average_limit": 9518.47,
       "fee_revenue": 674623.01,
       "time_priced_revenue": 0.0,
+      "bad_rate": 0.0261,
+      "loss_rate": 0.0168,
       "expected_loss": 453091.88,
       "net": 221531.13,
       "defaults_among_approved": 74,
@@ -1077,6 +1085,8 @@
       ]
     },
     "candidate": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v2",
         "version": "2",
@@ -1088,12 +1098,12 @@
       "declines": 3138,
       "approval_rate": 0.3194,
       "refer_rate": 0.053,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
       "disbursed": 17167845.75,
       "average_limit": 10750.06,
       "fee_revenue": 429196.82,
       "time_priced_revenue": 0.0,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
       "expected_loss": 199272.19,
       "net": 229924.63,
       "defaults_among_approved": 27,
@@ -1322,8 +1332,6 @@
     "newly_approved": 0,
     "newly_declined": 1238,
     "unchanged": 3762,
-    "newly_declined_who_would_repay": 1191,
-    "newly_declined_who_would_default": 47,
     "newly_declined_by_segment": {
       "region": {
         "central-urban": 526,
@@ -1435,16 +1443,21 @@
         "would_have_repaid": true
       }
     ],
+    "labelled": true,
     "delta": {
       "approval_rate_points": -24.76,
       "bad_rate_points": -0.92,
       "net": 8393.5,
       "disbursed": -9817025.5
     },
-    "precision_of_the_tightening": 0.038
+    "precision_of_the_tightening": 0.038,
+    "newly_declined_who_would_repay": 1191,
+    "newly_declined_who_would_default": 47
   },
   "comparison_v2_to_v3": {
     "base": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v2",
         "version": "2",
@@ -1456,12 +1469,12 @@
       "declines": 3138,
       "approval_rate": 0.3194,
       "refer_rate": 0.053,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
       "disbursed": 17167845.75,
       "average_limit": 10750.06,
       "fee_revenue": 429196.82,
       "time_priced_revenue": 0.0,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
       "expected_loss": 199272.19,
       "net": 229924.63,
       "defaults_among_approved": 27,
@@ -1688,6 +1701,8 @@
       ]
     },
     "candidate": {
+      "labelled": true,
+      "withheld": null,
       "policy": {
         "name": "Nano loan v3",
         "version": "3",
@@ -1699,12 +1714,12 @@
       "declines": 3138,
       "approval_rate": 0.3194,
       "refer_rate": 0.053,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
       "disbursed": 17167845.75,
       "average_limit": 10750.06,
       "fee_revenue": 429196.82,
       "time_priced_revenue": 171679.08,
+      "bad_rate": 0.0169,
+      "loss_rate": 0.0116,
       "expected_loss": 199272.19,
       "net": 229924.63,
       "defaults_among_approved": 27,
@@ -1933,20 +1948,21 @@
     "newly_approved": 0,
     "newly_declined": 0,
     "unchanged": 5000,
-    "newly_declined_who_would_repay": 0,
-    "newly_declined_who_would_default": 0,
     "newly_declined_by_segment": {
       "region": {},
       "employment": {}
     },
     "examples": [],
+    "labelled": true,
     "delta": {
       "approval_rate_points": 0.0,
       "bad_rate_points": 0.0,
       "net": 0.0,
       "disbursed": 0.0
     },
-    "precision_of_the_tightening": null
+    "precision_of_the_tightening": null,
+    "newly_declined_who_would_repay": 0,
+    "newly_declined_who_would_default": 0
   },
   "fairness": {
     "region": {
@@ -2322,6 +2338,369 @@
       "reading": "The gap falls from 49.6% to 13.7% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than employment itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
       "not_a_verdict": "This is a measurement, not a compliance opinion. Whether a variable is a legitimate business necessity is a legal question about the product, and nothing here can answer it."
     }
+  },
+  "discrimination": {
+    "scored": 2531,
+    "gated_out": 2469,
+    "bads": 67,
+    "goods": 2464,
+    "auc": 0.6421,
+    "gini": 0.2842,
+    "ks": 0.2587,
+    "ks_at_score": 35.0,
+    "reading": "Weak separation. A cutoff on this score will cut good and bad alike.",
+    "caveat": "Measured on the 2,531 borrowers who reached the scorecard. The 2,469 stopped by a gate are excluded, which flatters the figure whenever the gates are removing bad borrowers."
+  },
+  "cutoff_sweep": {
+    "step": 5.0,
+    "applications": 5000,
+    "scored_population": 2531,
+    "gated_out": 2469,
+    "points": [
+      {
+        "threshold": -15.0,
+        "approvals": 2531,
+        "approval_rate_of_scored": 1.0,
+        "approval_rate_of_all": 0.5062,
+        "bad_rate": 0.0265,
+        "disbursed": 23816153.75,
+        "fee_revenue": 595403.84,
+        "expected_loss": 396288.56,
+        "net": 199115.28,
+        "good_declined": 0,
+        "bad_declined": 0
+      },
+      {
+        "threshold": -10.0,
+        "approvals": 2528,
+        "approval_rate_of_scored": 0.9988,
+        "approval_rate_of_all": 0.5056,
+        "bad_rate": 0.0265,
+        "disbursed": 23799812.75,
+        "fee_revenue": 594995.32,
+        "expected_loss": 396288.56,
+        "net": 198706.76,
+        "good_declined": 3,
+        "bad_declined": 0
+      },
+      {
+        "threshold": -5.0,
+        "approvals": 2528,
+        "approval_rate_of_scored": 0.9988,
+        "approval_rate_of_all": 0.5056,
+        "bad_rate": 0.0265,
+        "disbursed": 23799812.75,
+        "fee_revenue": 594995.32,
+        "expected_loss": 396288.56,
+        "net": 198706.76,
+        "good_declined": 3,
+        "bad_declined": 0
+      },
+      {
+        "threshold": 0.0,
+        "approvals": 2528,
+        "approval_rate_of_scored": 0.9988,
+        "approval_rate_of_all": 0.5056,
+        "bad_rate": 0.0265,
+        "disbursed": 23799812.75,
+        "fee_revenue": 594995.32,
+        "expected_loss": 396288.56,
+        "net": 198706.76,
+        "good_declined": 3,
+        "bad_declined": 0
+      },
+      {
+        "threshold": 5.0,
+        "approvals": 2461,
+        "approval_rate_of_scored": 0.9723,
+        "approval_rate_of_all": 0.4922,
+        "bad_rate": 0.0252,
+        "disbursed": 23415473.25,
+        "fee_revenue": 585386.83,
+        "expected_loss": 375216.0,
+        "net": 210170.83,
+        "good_declined": 65,
+        "bad_declined": 5
+      },
+      {
+        "threshold": 10.0,
+        "approvals": 2459,
+        "approval_rate_of_scored": 0.9716,
+        "approval_rate_of_all": 0.4918,
+        "bad_rate": 0.0252,
+        "disbursed": 23404201.0,
+        "fee_revenue": 585105.03,
+        "expected_loss": 375216.0,
+        "net": 209889.03,
+        "good_declined": 67,
+        "bad_declined": 5
+      },
+      {
+        "threshold": 15.0,
+        "approvals": 2414,
+        "approval_rate_of_scored": 0.9538,
+        "approval_rate_of_all": 0.4828,
+        "bad_rate": 0.024,
+        "disbursed": 23141725.5,
+        "fee_revenue": 578543.14,
+        "expected_loss": 356473.31,
+        "net": 222069.83,
+        "good_declined": 108,
+        "bad_declined": 9
+      },
+      {
+        "threshold": 20.0,
+        "approvals": 2352,
+        "approval_rate_of_scored": 0.9293,
+        "approval_rate_of_all": 0.4704,
+        "bad_rate": 0.023,
+        "disbursed": 22763306.5,
+        "fee_revenue": 569082.66,
+        "expected_loss": 341149.5,
+        "net": 227933.16,
+        "good_declined": 166,
+        "bad_declined": 13
+      },
+      {
+        "threshold": 25.0,
+        "approvals": 2165,
+        "approval_rate_of_scored": 0.8554,
+        "approval_rate_of_all": 0.433,
+        "bad_rate": 0.0208,
+        "disbursed": 21544066.75,
+        "fee_revenue": 538601.67,
+        "expected_loss": 296052.56,
+        "net": 242549.11,
+        "good_declined": 344,
+        "bad_declined": 22
+      },
+      {
+        "threshold": 30.0,
+        "approvals": 2124,
+        "approval_rate_of_scored": 0.8392,
+        "approval_rate_of_all": 0.4248,
+        "bad_rate": 0.0212,
+        "disbursed": 21292665.25,
+        "fee_revenue": 532316.63,
+        "expected_loss": 296052.56,
+        "net": 236264.07,
+        "good_declined": 385,
+        "bad_declined": 22
+      },
+      {
+        "threshold": 35.0,
+        "approvals": 1965,
+        "approval_rate_of_scored": 0.7764,
+        "approval_rate_of_all": 0.393,
+        "bad_rate": 0.0193,
+        "disbursed": 20078151.5,
+        "fee_revenue": 501953.79,
+        "expected_loss": 253047.75,
+        "net": 248906.04,
+        "good_declined": 537,
+        "bad_declined": 29
+      },
+      {
+        "threshold": 40.0,
+        "approvals": 1733,
+        "approval_rate_of_scored": 0.6847,
+        "approval_rate_of_all": 0.3466,
+        "bad_rate": 0.0167,
+        "disbursed": 18605634.0,
+        "fee_revenue": 465140.85,
+        "expected_loss": 210033.19,
+        "net": 255107.66,
+        "good_declined": 760,
+        "bad_declined": 38
+      },
+      {
+        "threshold": 45.0,
+        "approvals": 1597,
+        "approval_rate_of_scored": 0.631,
+        "approval_rate_of_all": 0.3194,
+        "bad_rate": 0.0169,
+        "disbursed": 17167845.75,
+        "fee_revenue": 429196.14,
+        "expected_loss": 199272.19,
+        "net": 229923.96,
+        "good_declined": 894,
+        "bad_declined": 40
+      },
+      {
+        "threshold": 50.0,
+        "approvals": 1369,
+        "approval_rate_of_scored": 0.5409,
+        "approval_rate_of_all": 0.2738,
+        "bad_rate": 0.0175,
+        "disbursed": 15450057.75,
+        "fee_revenue": 386251.44,
+        "expected_loss": 185047.88,
+        "net": 201203.57,
+        "good_declined": 1119,
+        "bad_declined": 43
+      },
+      {
+        "threshold": 55.0,
+        "approvals": 1108,
+        "approval_rate_of_scored": 0.4378,
+        "approval_rate_of_all": 0.2216,
+        "bad_rate": 0.019,
+        "disbursed": 12810643.25,
+        "fee_revenue": 320266.08,
+        "expected_loss": 166358.25,
+        "net": 153907.83,
+        "good_declined": 1377,
+        "bad_declined": 46
+      },
+      {
+        "threshold": 60.0,
+        "approvals": 912,
+        "approval_rate_of_scored": 0.3603,
+        "approval_rate_of_all": 0.1824,
+        "bad_rate": 0.0186,
+        "disbursed": 10932906.0,
+        "fee_revenue": 273322.65,
+        "expected_loss": 142291.88,
+        "net": 131030.78,
+        "good_declined": 1569,
+        "bad_declined": 50
+      },
+      {
+        "threshold": 65.0,
+        "approvals": 722,
+        "approval_rate_of_scored": 0.2853,
+        "approval_rate_of_all": 0.1444,
+        "bad_rate": 0.0152,
+        "disbursed": 8724438.75,
+        "fee_revenue": 218110.97,
+        "expected_loss": 93773.25,
+        "net": 124337.72,
+        "good_declined": 1753,
+        "bad_declined": 56
+      },
+      {
+        "threshold": 70.0,
+        "approvals": 451,
+        "approval_rate_of_scored": 0.1782,
+        "approval_rate_of_all": 0.0902,
+        "bad_rate": 0.0133,
+        "disbursed": 5673373.0,
+        "fee_revenue": 141834.33,
+        "expected_loss": 50568.75,
+        "net": 91265.58,
+        "good_declined": 2019,
+        "bad_declined": 61
+      },
+      {
+        "threshold": 75.0,
+        "approvals": 403,
+        "approval_rate_of_scored": 0.1592,
+        "approval_rate_of_all": 0.0806,
+        "bad_rate": 0.0124,
+        "disbursed": 5196574.0,
+        "fee_revenue": 129914.35,
+        "expected_loss": 44802.56,
+        "net": 85111.79,
+        "good_declined": 2066,
+        "bad_declined": 62
+      },
+      {
+        "threshold": 80.0,
+        "approvals": 165,
+        "approval_rate_of_scored": 0.0652,
+        "approval_rate_of_all": 0.033,
+        "bad_rate": 0.0,
+        "disbursed": 2071982.75,
+        "fee_revenue": 51799.57,
+        "expected_loss": 0.0,
+        "net": 51799.57,
+        "good_declined": 2299,
+        "bad_declined": 67
+      },
+      {
+        "threshold": 85.0,
+        "approvals": 82,
+        "approval_rate_of_scored": 0.0324,
+        "approval_rate_of_all": 0.0164,
+        "bad_rate": 0.0,
+        "disbursed": 1111320.0,
+        "fee_revenue": 27783.0,
+        "expected_loss": 0.0,
+        "net": 27783.0,
+        "good_declined": 2382,
+        "bad_declined": 67
+      },
+      {
+        "threshold": 90.0,
+        "approvals": 82,
+        "approval_rate_of_scored": 0.0324,
+        "approval_rate_of_all": 0.0164,
+        "bad_rate": 0.0,
+        "disbursed": 1111320.0,
+        "fee_revenue": 27783.0,
+        "expected_loss": 0.0,
+        "net": 27783.0,
+        "good_declined": 2382,
+        "bad_declined": 67
+      },
+      {
+        "threshold": 95.0,
+        "approvals": 0,
+        "approval_rate_of_scored": 0.0,
+        "approval_rate_of_all": 0.0,
+        "bad_rate": 0.0,
+        "disbursed": 0.0,
+        "fee_revenue": 0.0,
+        "expected_loss": 0.0,
+        "net": 0.0,
+        "good_declined": 2464,
+        "bad_declined": 67
+      }
+    ],
+    "current_threshold": 45.0,
+    "current": {
+      "threshold": 45.0,
+      "approvals": 1597,
+      "approval_rate_of_scored": 0.631,
+      "approval_rate_of_all": 0.3194,
+      "bad_rate": 0.0169,
+      "disbursed": 17167845.75,
+      "fee_revenue": 429196.14,
+      "expected_loss": 199272.19,
+      "net": 229923.96,
+      "good_declined": 894,
+      "bad_declined": 40
+    },
+    "net_maximising": {
+      "threshold": 40.0,
+      "approvals": 1733,
+      "approval_rate_of_scored": 0.6847,
+      "approval_rate_of_all": 0.3466,
+      "bad_rate": 0.0167,
+      "disbursed": 18605634.0,
+      "fee_revenue": 465140.85,
+      "expected_loss": 210033.19,
+      "net": 255107.66,
+      "good_declined": 760,
+      "bad_declined": 38
+    },
+    "net_gain_available": 25183.71,
+    "in_sample_warning": "The net-maximising threshold of 40 is chosen on the same 2,531 borrowers it is scored against. It is the best cutoff for this cohort's past, and an optimistic estimate for anyone it has not seen. Treat the shape of the curve as the finding, not the argmax."
+  },
+  "supplied_cohorts": {
+    "csv_round_trip": true,
+    "rows": 200,
+    "labelled_detected": true,
+    "unlabelled_detected": false,
+    "withheld_without_a_label": [
+      "bad_rate",
+      "loss_rate",
+      "expected_loss",
+      "net",
+      "defaults_among_approved",
+      "declined_who_would_repay",
+      "declined_who_would_default"
+    ]
   },
   "explanations": {
     "untranslated_fields": [],

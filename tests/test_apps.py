@@ -264,12 +264,19 @@ def test_guardian_runs_a_whole_conversation() -> None:
     )
     assert first["state"] == "awaiting_confirmation"
     assert "15 thousand rupees" in first["reply"]
+    # First-time payee, several times the usual amount: the behavioural layer escalates,
+    # so a habitual yes is deliberately not enough here.
+    assert first["behaviour"]["level"] == "elevated"
     _, unclear = call(guardian, "POST", "/api/say", {"session": token, "text": "acha"})
     assert unclear["action"] is None
-    _, done = call(guardian, "POST", "/api/say", {"session": token, "text": "haan"})
+    _, habitual = call(guardian, "POST", "/api/say", {"session": token, "text": "haan"})
+    assert habitual["action"] is None
+    assert habitual["step_up_required"] is True
+    _, done = call(guardian, "POST", "/api/say", {"session": token, "text": "confirm"})
     assert done["state"] == "executed"
     assert done["action"]["amount"] == 15000
     assert done["ledger"]["verification"]["intact"] is True
+    assert done["profile"]["sent_today"] >= 15000
 
 
 def test_guardian_blocks_a_script_and_logs_the_refusal() -> None:
@@ -397,3 +404,130 @@ def test_policy_bench_results_json_matches_the_bundled_policies() -> None:
         assert entry["score_rules"] == len(policy.score_rules), f"{key} rule count is stale"
         assert entry["approve_at"] == policy.approve_at, f"{key} threshold is stale"
         assert entry["fields_used"] == policy.fields_used, f"{key} field list is stale"
+
+
+# --------------------------------------- the endpoints added in the second round
+
+
+def test_switchboard_decodes_a_binary_dump_and_says_how_it_knew() -> None:
+    from projects.p01_switchboard import binary, scenarios
+    from projects.p01_switchboard.codec import pack
+
+    message = scenarios.build("atm_withdrawal_approved").steps[0].message
+    for raw, expected in (
+        (pack(message), "ascii"),
+        (binary.pack_binary(message).hex().upper(), "binary"),
+        (binary.pack_binary(message, binary.Framing(header=False)).hex(), "binary-no-header"),
+    ):
+        status, data = call(switchboard, "POST", "/api/decode", {"raw": raw})
+        assert status == 200 and data["ok"], expected
+        assert data["framing"] == expected
+        assert data["detection"]["reasons"]
+        assert data["chip"]["tags"]
+        assert data["chip"]["problems"] == []
+        assert [row["de"] for row in data["rows"]] == [str(de) for de in message.present]
+
+
+def test_switchboard_reports_a_chip_amount_that_disagrees_with_de4() -> None:
+    from projects.p01_switchboard import scenarios
+    from projects.p01_switchboard.codec import pack
+
+    flow = scenarios.build("atm_withdrawal_approved")
+    tampered = flow.steps[0].message.replace(de4="000001000000")
+    status, data = call(switchboard, "POST", "/api/decode", {"raw": pack(tampered)})
+    assert status == 200 and data["ok"], "every field is well-formed, so it must parse"
+    assert any("never approved" in problem for problem in data["chip"]["problems"])
+
+
+def test_switchboard_rejects_an_unknown_framing() -> None:
+    assert call(switchboard, "POST", "/api/decode", {"raw": "0200", "framing": "nope"})[0] == 400
+
+
+def test_policy_bench_sweeps_the_cutoff_and_keeps_both_denominators() -> None:
+    _, meta = call(policy_bench, "GET", "/api/meta")
+    source = next(p["source"] for p in meta["policies"] if p["key"] == "nano_v2")
+    status, data = call(policy_bench, "POST", "/api/sweep", {"source": source, "step": 10})
+    assert status == 200
+    assert data["discrimination"]["gini"] is not None
+    assert data["sweep"]["points"]
+    for point in data["sweep"]["points"]:
+        assert point["approval_rate_of_all"] <= point["approval_rate_of_scored"]
+    assert "in_sample_warning" in data["sweep"]
+
+
+def test_policy_bench_takes_a_cohort_as_csv_and_withholds_what_it_cannot_know() -> None:
+    from projects.p02_policy_bench import cohort
+
+    _, meta = call(policy_bench, "GET", "/api/meta")
+    source = next(p["source"] for p in meta["policies"] if p["key"] == "nano_v2")
+    people = cohort.generate(size=200, seed=77)
+
+    status, labelled = call(
+        policy_bench, "POST", "/api/cohort/load", {"csv": cohort.to_csv(people)}
+    )
+    assert status == 200 and labelled["labelled"] is True
+    _, report = call(
+        policy_bench, "POST", "/api/backtest", {"source": source, "cohort": labelled["cohort"]}
+    )
+    assert report["backtest"]["applications"] == 200
+    assert report["backtest"]["bad_rate"] is not None
+
+    status, bare = call(
+        policy_bench,
+        "POST",
+        "/api/cohort/load",
+        {"csv": cohort.to_csv(people, include_label=False)},
+    )
+    assert status == 200 and bare["labelled"] is False
+    _, blind = call(
+        policy_bench, "POST", "/api/backtest", {"source": source, "cohort": bare["cohort"]}
+    )
+    assert blind["backtest"]["bad_rate"] is None
+    assert blind["backtest"]["withheld"]
+    _, no_sweep = call(
+        policy_bench, "POST", "/api/sweep", {"source": source, "cohort": bare["cohort"]}
+    )
+    assert "withheld" in no_sweep["sweep"]
+    assert "withheld" in no_sweep["discrimination"]
+
+
+def test_policy_bench_serves_a_cohort_template_as_csv() -> None:
+    status, body = call(policy_bench, "GET", "/api/cohort/template")
+    assert status == 200
+    header = body.decode("utf-8").splitlines()[0]
+    assert "monthly_income" in header and "would_default" in header
+
+
+def test_policy_bench_rejects_bad_cohort_input() -> None:
+    assert call(policy_bench, "POST", "/api/cohort/load", {"csv": "  "})[0] == 400
+    assert call(policy_bench, "POST", "/api/cohort/load", {"csv": "a,b\n1,2"})[0] == 400
+    _, meta = call(policy_bench, "GET", "/api/meta")
+    source = next(p["source"] for p in meta["policies"] if p["key"] == "nano_v2")
+    assert call(policy_bench, "POST", "/api/backtest", {"source": source, "cohort": "no"})[0] == 400
+    assert call(policy_bench, "POST", "/api/sweep", {"source": source, "step": 0})[0] == 400
+    assert call(policy_bench, "POST", "/api/sweep", {"source": source, "step": "x"})[0] == 400
+
+
+def test_guardian_reports_the_account_profile_and_the_behavioural_verdict() -> None:
+    _, created = call(guardian, "POST", "/api/session", {"language": "en"})
+    assert created["profile"]["usual_transfer"] > 0
+    _, out = call(
+        guardian,
+        "POST",
+        "/api/say",
+        {"session": created["session"], "text": "Zubair ko pachaas hazaar bhejo"},
+    )
+    assert out["behaviour"]["level"] == "elevated"
+    assert {s["name"] for s in out["behaviour"]["signals"]} >= {"first_time_beneficiary"}
+    assert "confirm" in out["reply"]
+
+
+def test_guardian_scorecard_reports_what_the_behavioural_layer_recovers() -> None:
+    _, data = call(guardian, "GET", "/api/scorecard")
+    paired = data["paired"]
+    assert paired["scams"] > 0
+    assert paired["scams_escalated_by_behaviour"] == paired["scams"]
+    assert paired["scams_missed_by_both"] == 0
+    # And the cost is reported alongside it, not left out.
+    assert "benign_escalated" in paired
+    assert paired["benign_escalated"] <= paired["benign"]

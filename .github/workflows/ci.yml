@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    # Windows is in the matrix on purpose. The repo is developed there, line endings
+    # differ, and the console codepage is not UTF-8 - which is exactly the kind of thing
+    # that passes locally and fails for everyone else.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.11"
+          - os: ubuntu-latest
+            python: "3.13"
+          - os: windows-latest
+            python: "3.11"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --extra dev --python ${{ matrix.python }}
+
+      - name: Confirm there are no runtime dependencies
+        run: uv run python scripts/check_no_runtime_deps.py
+
+      - name: Lint
+        run: uv run ruff check shared projects tests demo.py
+
+      - name: Format
+        run: uv run ruff format --check shared projects tests demo.py
+
+      - name: Tests
+        run: uv run pytest -q
+
+      - name: Benchmarks still run and agree with the committed results
+        run: |
+          uv run python -m projects.p01_switchboard.benchmark
+          uv run python -m projects.p02_policy_bench.benchmark
+          uv run python -m projects.p03_guardian.benchmark
+
+      - name: The committed results did not change
+        shell: bash
+        run: |
+          # results.json is committed and the dashboards read it. If re-running a
+          # benchmark changes it, the published numbers were stale.
+          git diff --exit-code -- projects/*/results.json
+
+      - name: Demo
+        run: uv run python demo.py

@@ -16,8 +16,8 @@ from typing import Any
 from shared.theme import attach_theme
 from shared.webkit import App, BadRequest, Request, Response, run
 
+from . import binary, emv, lifecycle, mutations, narrate, scenarios
 from . import fields as F
-from . import lifecycle, mutations, narrate, scenarios
 from .codec import CodecError, Message, describe_mti, field_offsets, is_request, pack, unpack
 
 STATIC = Path(__file__).with_name("static")
@@ -60,21 +60,58 @@ def meta(_request: Request) -> Response:
 @app.route("POST", "/api/decode")
 def decode(request: Request) -> Response:
     payload = request.json()
-    raw = str(payload.get("raw", "")).strip()
-    if not raw:
+    raw = str(payload.get("raw", ""))
+    if not raw.strip():
         raise BadRequest("paste a raw message first")
+    wanted = str(payload.get("framing", "auto"))
+    if wanted not in {"auto", binary.ASCII, binary.BINARY, binary.BINARY_NO_HEADER}:
+        raise BadRequest(f"unknown framing {wanted!r}")
+
+    detection = binary.detect(raw)
     try:
-        message = unpack(raw)
+        if wanted == "auto":
+            message, framing = binary.parse_any(raw)
+        elif wanted == binary.ASCII:
+            message, framing = unpack(raw), binary.ASCII
+        else:
+            data = bytes.fromhex("".join(raw.split()))
+            message = binary.unpack_binary(data, binary.Framing(header=wanted == binary.BINARY))
+            framing = wanted
     except CodecError as exc:
         return Response.json(
             {
                 "ok": False,
                 "error": str(exc),
+                "framing": None,
+                "detection": detection,
                 "partial": _best_effort(raw),
                 "length": len(raw),
             }
         )
-    return Response.json({"ok": True, **_describe(message, raw)})
+    except ValueError as exc:
+        return Response.json(
+            {
+                "ok": False,
+                "error": f"that is not hexadecimal, so it cannot be a binary dump: {exc}",
+                "framing": None,
+                "detection": detection,
+                "partial": _best_effort(raw),
+                "length": len(raw),
+            }
+        )
+    # Field offsets only mean anything against the ASCII form; for a binary dump the
+    # message is re-serialised to ASCII so the highlighting is still truthful about which
+    # characters belong to which element.
+    display = raw if framing == binary.ASCII else pack(message)
+    return Response.json(
+        {
+            "ok": True,
+            "framing": framing,
+            "detection": detection,
+            "re_serialised": framing != binary.ASCII,
+            **_describe(message, display),
+        }
+    )
 
 
 @app.route("POST", "/api/build")
@@ -171,7 +208,26 @@ def _describe(message: Message, raw: str) -> dict[str, Any]:
         spans = field_offsets(raw) if raw else {}
     except CodecError:
         spans = {}
+    chip = message.get(55)
+    chip_tags: list[dict[str, object]] = []
+    chip_problems: list[str] = []
+    if chip is not None:
+        try:
+            chip_tags = [tag.as_dict() for tag in emv.parse(chip)]
+        except emv.EmvError as exc:
+            chip_problems.append(str(exc))
+        else:
+            for problem in (
+                emv.amount_mismatch(chip, message.get(4)),
+                emv.currency_mismatch(chip, message.get(49)),
+            ):
+                if problem:
+                    chip_problems.append(problem)
+            missing = emv.missing_tags(chip)
+            if missing:
+                chip_problems.append(f"mandatory tag(s) missing: {', '.join(missing)}")
     return {
+        "chip": {"tags": chip_tags, "problems": chip_problems},
         "mti": message.mti,
         "mti_parts": describe_mti(message.mti),
         "is_request": is_request(message.mti),

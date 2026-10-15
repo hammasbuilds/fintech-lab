@@ -175,3 +175,106 @@ def summary(borrowers: list[Borrower]) -> dict[str, object]:
             for kind in EMPLOYMENT
         },
     }
+
+
+# --------------------------------------------------------------- your own data
+
+
+REQUIRED_COLUMNS = tuple(
+    name for name in Borrower.__dataclass_fields__ if name not in {"id", "would_default"}
+)
+
+
+class CohortError(Exception):
+    """A supplied cohort that cannot be used, with the row and column named."""
+
+
+def from_csv(text: str, *, label_column: str = "would_default") -> tuple[list[Borrower], dict]:
+    """Read a cohort from CSV text, so the sandbox can be pointed at a real portfolio.
+
+    The label column is optional and the difference matters: **without an outcome column
+    there is no bad rate, no expected loss and no tightening precision**, because every
+    one of those figures is computed against a known outcome. A cohort with no label can
+    still be used to see who a policy approves and what it would disburse, and this
+    function says which of the two it returned rather than filling the label with zeros
+    and reporting a 0% bad rate.
+    """
+    import csv
+    import io
+
+    stream = io.StringIO(text.lstrip("\ufeff"))
+    reader = csv.DictReader(stream)
+    if reader.fieldnames is None:
+        raise CohortError("the CSV has no header row")
+    header = [name.strip() for name in reader.fieldnames]
+    missing = [name for name in REQUIRED_COLUMNS if name not in header]
+    if missing:
+        raise CohortError(
+            f"these columns are required and missing: {', '.join(missing)}. "
+            f"The header needs: {', '.join(REQUIRED_COLUMNS)}"
+        )
+    labelled = label_column in header
+
+    borrowers: list[Borrower] = []
+    for number, row in enumerate(reader, start=2):  # row 1 is the header
+        clean = {key.strip(): (value or "").strip() for key, value in row.items() if key}
+        values: dict[str, object] = {}
+        for name in REQUIRED_COLUMNS:
+            raw = clean.get(name, "")
+            if raw == "":
+                raise CohortError(f"row {number}: column {name!r} is empty")
+            if name in {"employment", "region"}:
+                values[name] = raw
+                continue
+            try:
+                values[name] = int(float(raw))
+            except ValueError:
+                raise CohortError(
+                    f"row {number}: column {name!r} is {raw!r}, which is not a number"
+                ) from None
+        label = 0
+        if labelled:
+            raw_label = clean.get(label_column, "")
+            if raw_label not in {"0", "1"}:
+                raise CohortError(
+                    f"row {number}: {label_column!r} is {raw_label!r}; it must be 0 or 1"
+                )
+            label = int(raw_label)
+        borrowers.append(
+            Borrower(id=clean.get("id") or f"R{number - 1:05d}", would_default=label, **values)  # type: ignore[arg-type]
+        )
+
+    if not borrowers:
+        raise CohortError("the CSV has a header but no rows")
+    return borrowers, {
+        "rows": len(borrowers),
+        "labelled": labelled,
+        "label_column": label_column if labelled else None,
+        "unknown_columns": [
+            name for name in header if name not in REQUIRED_COLUMNS + ("id", label_column)
+        ],
+        "note": (
+            "Outcome column found, so bad rate, expected loss and tightening precision "
+            "are all available."
+            if labelled
+            else "No outcome column, so this cohort can show who is approved and what "
+            "would be disbursed, but every figure that needs a known outcome - bad rate, "
+            "expected loss, the precision of a tightening - is withheld rather than "
+            "computed against zeros."
+        ),
+    }
+
+
+def to_csv(borrowers: list[Borrower], *, include_label: bool = True) -> str:
+    """Write a cohort out, so the bundled one can be used as a template."""
+    import csv
+    import io
+
+    columns = ["id", *REQUIRED_COLUMNS] + (["would_default"] if include_label else [])
+    out = io.StringIO()
+    writer = csv.DictWriter(out, fieldnames=columns, lineterminator="\n")
+    writer.writeheader()
+    for borrower in borrowers:
+        row = {name: getattr(borrower, name) for name in columns}
+        writer.writerow(row)
+    return out.getvalue()

@@ -10,11 +10,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/hammasbuilds/fintech-lab/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/fintech-lab/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/dependencies-none-success" alt="dependencies">
   <img src="https://img.shields.io/badge/GPU-not%20required-success" alt="gpu">
   <img src="https://img.shields.io/badge/API%20keys-none-success" alt="api keys">
-  <img src="https://img.shields.io/badge/tests-354%20passing-success" alt="tests">
+  <img src="https://img.shields.io/badge/tests-474%20passing-success" alt="tests">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -47,17 +48,20 @@ enough to read, and what grades it is deterministic code rather than a model's o
 
 | | Project | What it is | The number that matters | Tests |
 |---|---|---|---|---|
-| [**01**](projects/p01_switchboard/) | [**Switchboard**](projects/p01_switchboard/) | An ISO 8583 workbench: paste raw card traffic and read it in English, generate a transaction lifecycle from a scenario, check a flow against 18 invariants. | **31 of 31** injected faults killed, every one by the rule written for it, with **0** false positives across 14 valid flows. Of 2,000 random corruptions, **627/627** illegal characters rejected. | 77 |
-| [**02**](projects/p02_policy_bench/) | [**Policy Bench**](projects/p02_policy_bench/) | A lending-policy language a product owner can read, compiled to something executable, back-tested on a borrower cohort with segment impact and decline notices in two languages. | The v1&rarr;v2 tightening declines **1,238** more applicants. **47** of them would have defaulted; **1,191** would have repaid. Precision: **3.8%**. | 50 |
-| [**03**](projects/p03_guardian/) | [**Guardian**](projects/p03_guardian/) | A transaction assistant for Roman Urdu, Urdu and code-mixed speech, with a confirmation spine and a coercion check. No model: a lexicon and a grammar. | **131** hand-written cases. Amounts **48/48**, actions **30/30**, replies **21/21**, and **0** replies wrongly read as consent. Four scam approaches outside its vocabulary: **all four missed**, reported as the bound. | 173 |
+| [**01**](projects/p01_switchboard/) | [**Switchboard**](projects/p01_switchboard/) | An ISO 8583 workbench. Reads both the ASCII form and the **binary framing a real switch sends** (packed bitmap, BCD fields, length header), tells them apart on its own, expands DE 55 chip data as BER-TLV, and checks a flow against 22 invariants. | **38 of 38** injected faults killed, every one by the rule written for it, with **0** false positives across 14 valid flows. Of 2,000 random character corruptions, **651/651** illegal ones rejected; of 1,000 random byte corruptions of the binary form, **659** rejected. | 128 |
+| [**02**](projects/p02_policy_bench/) | [**Policy Bench**](projects/p02_policy_bench/) | A lending-policy language a product owner can read, compiled to something executable, back-tested on a borrower cohort &mdash; or **on your own, loaded as CSV** &mdash; with a cutoff sweep, Gini and KS, segment impact, and decline notices in two languages. | The v1&rarr;v2 tightening declines **1,238** more applicants: **47** would have defaulted, **1,191** would have repaid, precision **3.8%**. The sweep says why &mdash; the scorecard's Gini is **0.284**, so any cutoff cuts both groups at once &mdash; and finds **40** rather than 45 worth **+25,184 PKR**. | 74 |
+| [**03**](projects/p03_guardian/) | [**Guardian**](projects/p03_guardian/) | A transaction assistant for Roman Urdu, Urdu and code-mixed speech: a confirmation spine, a coercion check on the words, and a **behavioural check on the transfer**. No model: a lexicon, a grammar and an account history. | **140** hand-written cases. Amounts **48/48**, actions **30/30**, replies **21/21**, **0** wrongly read as consent. The lexical check still misses **4/4** scams phrased in ordinary language; judging the transfer escalates **4/4** of them, at a cost of **1 in 5** ordinary transfers also slowed. | 209 |
 
-Counts are the tests in each project's own files: 77 + 50 + 173 = 300. A further 40
-exercise the three dashboards and 14 the shared web kit, for 354 in total.
+Counts are the tests in each project's own files: 128 + 74 + 209 = 411. A further 49
+exercise the three dashboards and 14 the shared web kit, for 474 in total.
 
-Two of the three ship a number that is deliberately *not* flattering. Switchboard's
-random-corruption rejection rate stops at 97.9% on the framing because an ISO 8583 bitmap
-has no redundancy, and Guardian misses every scam that avoids its lexicon. Both are
-measured and printed rather than left out.
+Each project ships a number that is deliberately *not* flattering. Switchboard's
+random-corruption rejection rate stops at 97.4% on the framing, because an ISO 8583
+bitmap has no redundancy and a single bit flip can produce a different valid message.
+Policy Bench's scorecard has a Gini of 0.284, which is weak, and the sweep says so in
+those words. Guardian's word-based check misses every scam that avoids its lexicon, and
+the layer that recovers those scams also slows down one ordinary transfer in five. All of
+it is measured and printed rather than left out.
 
 ## Input / Output
 
@@ -82,14 +86,32 @@ One command runs all three and prints what they did. `uv run python demo.py`
     rejected: bitmap sets DE 64 but it is not in the dictionary, so the remaining
               20 characters cannot be read
 
-  INPUT   all 14 scenarios, then 31 injected faults
+  INPUT   the same message as a switch would actually send it
+  binary, with a length header   244 bytes
+  the same thing in ASCII        386 characters
+    hex     00F20200F23C448188E092000000000004000000164111111111111111011000...
+  framing detected as            binary
+      - the first two bytes read 242, which is exactly the number of bytes that
+        follow - that is a length header
+      - binary parses cleanly
+  fields identical to the ASCII form True
+
+  INPUT   DE 4 doubled, with the chip's own 9F02 left alone
+  every field still well-formed  True
+  the message still parses       True
+    caught by  chip tag 9F02 authorised 1,000,000 minor units but DE 4 asks for
+               2,000,000 - the cardholder would be debited an amount the chip
+               never approved
+
+  INPUT   all 14 scenarios, then every injected fault
   valid flows checked            14 (33 messages)
   false positives on them        0
-  killed                         31/31
-  killed by the intended rule    31/31
+  killed                         38/38
+  killed by the intended rule    38/38
   invariants never exercised     none
-  random illegal characters      627/627 rejected
-  random framing damage          377/385 rejected
+  random illegal characters      651/651 rejected
+  random framing damage          567/582 rejected
+  random byte damage, binary     319/500 rejected
 ```
 
 ### 02 &mdash; compile three policies and diff two of them
@@ -116,6 +138,23 @@ One command runs all three and prints what they did. `uv run python demo.py`
   INPUT   v2's approvals, grouped by region (no policy here mentions region)
   raw approval-rate gap          39.0%  (central-urban vs east-rural)
   gap within income bands        17.0%
+
+  INPUT   v2's score against the outcome, then every possible cutoff
+  Gini                           0.2842   (AUC 0.6421, KS 0.2587)
+  measured on                    2,531 scored, 2,469 gated out first
+    Weak separation. A cutoff on this score will cut good and bad alike.
+
+     cutoff  approved  bad rate           net  good declined
+         30    42.5%     2.12%       236,264            385
+         40    34.7%     1.67%       255,108            760
+         50    27.4%     1.75%       201,204          1,119
+
+  the policy's own cutoff        45
+  net-maximising cutoff          40
+  available by moving it         +25,184 PKR
+
+  This is why the tightening cut mostly good borrowers: a Gini of 0.2842 barely
+  separates the two groups, so any cutoff on this score cuts both at once.
 ```
 
 ### 03 &mdash; a transfer, an unclear reply, then a yes
@@ -141,6 +180,19 @@ One command runs all three and prints what they did. `uv run python demo.py`
   action after the yes           None
   anything executed              False
   audit chain intact             True
+
+  INPUT   a scam approach that uses none of the detector's vocabulary
+    message    beta main tumhari ammi ki saheli hoon, thori madad chahiye thi
+  coercion check                 allow   <- it misses this entirely
+  the transfer it wants          PKR 50,000 to Zubair Khan, never paid before
+  behaviour                      elevated
+      - first_time_beneficiary: Zubair Khan has not been paid from this account before
+      - unusually_large: 50,000 is 15.6 times the usual transfer, 3,200
+      - exceeds_balance: 50,000 is more than the 18,424 in the account
+
+  INPUT   that transfer, with a habitual yes and then the real word
+  after 'haan'                   action None, step-up required True
+  after 'confirm'                executed, action True
 ```
 
 ## The dashboards
@@ -156,12 +208,15 @@ make serve03        # Guardian      http://127.0.0.1:8103
 
 On Windows, `run.bat 1`, `run.bat 2`, `run.bat 3`.
 
-- **Switchboard** &mdash; Overview, Decode (click a field to highlight it inside the raw
-  message), Build a flow, Validate pasted traffic, Rules.
-- **Policy Bench** &mdash; Overview, a policy editor with live compile and lint, version
-  comparison, one applicant with both notices, and the cohort.
-- **Guardian** &mdash; a phone-shaped assistant with the three language layers shown live,
-  an inspector, the scorecard, and the hash-chained audit trail.
+- **Switchboard** &mdash; Overview, Decode (either framing, worked out for itself, with the
+  reasoning shown; click a field to highlight it in the raw message; DE 55 expanded tag by
+  tag), Build a flow, Validate pasted traffic, Rules.
+- **Policy Bench** &mdash; Overview, a policy editor with live compile and lint, a cutoff
+  sweep with Gini and KS, version comparison, one applicant with both notices, and the
+  cohort &mdash; bundled or loaded from your own CSV.
+- **Guardian** &mdash; a phone-shaped assistant with all four layers shown live, the
+  account's own habits beside them, an inspector, the scorecard, and the hash-chained
+  audit trail.
 
 Chart colours are the validated categorical palette, checked with the palette validator in
 both light and dark mode. The two slots that fall below 3:1 on the light surface carry
@@ -171,7 +226,7 @@ direct value labels and a table view, which is the relief that warning requires.
 
 ```bash
 make install        # uv sync --extra dev
-make test           # 354 tests
+make test           # 474 tests
 make lint           # ruff check + format --check
 make demo           # the output above
 make bench          # re-measure all three and rewrite results.json
@@ -184,11 +239,12 @@ make bench          # re-measure all three and rewrite results.json
   a statement about that generator, not about a market. It is a sandbox, and the UI says so
   on the page.
 - **Project 03's test set is hand-written**, so its accuracy figures measure the lexicon
-  against cases chosen by the same person who wrote it. The out-of-vocabulary miss rate is
-  in the set as the counterweight, and it is 4 of 4.
-- **Project 01's fault catalogue is hand-written too.** A 31/31 kill rate is coverage of
-  *known* fault classes. The random-corruption pass is the complement, and it is the one
-  that does not reach 100%.
+  against cases chosen by the same person who wrote it. Two counterweights are in the set:
+  the word check's miss rate on scams that avoid its vocabulary (4 of 4), and the cost of
+  the behavioural layer that recovers them (1 ordinary transfer in 5 also slowed).
+- **Project 01's fault catalogue is hand-written too.** A 38/38 kill rate is coverage of
+  *known* fault classes. The random-corruption passes over both framings are the
+  complement, and they are the ones that do not reach 100%.
 - Nothing here moves money, connects to a switch, or makes a credit decision about a real
   person. The compliance lint in project 02 checks eight structural properties of a policy
   document; passing it is not compliance, and the tool says that in its own output.

@@ -272,7 +272,7 @@ def test_fields_are_kept_in_element_order() -> None:
 
 
 def test_scenario_values_flow_through_to_the_message() -> None:
-    flow = build("atm_withdrawal_approved", Context(pan="5555444433332222", amount=123456))
+    flow = build("atm_withdrawal_approved", Context(pan="5105105105105100", amount=123456))
     request = flow.steps[0].message
-    assert request.fields[2] == "5555444433332222"
+    assert request.fields[2] == "5105105105105100"
     assert request.fields[4] == "000000123456"

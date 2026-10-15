@@ -32,6 +32,11 @@ class Backtest:
     policy_name: str
     policy_version: str
     currency: str
+    #: False when the cohort has no outcome column. Everything derived from a known
+    #: outcome - bad rate, expected loss, net, the cost of the declines - is then
+    #: withheld rather than computed against a label that is absent. Filling a missing
+    #: label with zeros and reporting a 0% bad rate is the worst available option.
+    labelled: bool = True
     applications: int = 0
     approvals: int = 0
     refers: int = 0
@@ -73,7 +78,25 @@ class Backtest:
         return self.disbursed / self.approvals if self.approvals else 0.0
 
     def as_dict(self) -> dict[str, object]:
+        outcome_figures: dict[str, object] = {
+            "bad_rate": round(self.bad_rate, 4),
+            "loss_rate": round(self.loss_rate, 4),
+            "expected_loss": round(self.expected_loss, 2),
+            "net": round(self.net, 2),
+            "defaults_among_approved": self.defaults_among_approved,
+            "declined_who_would_repay": self.declined_who_would_repay,
+            "declined_who_would_default": self.declined_who_would_default,
+        }
+        if not self.labelled:
+            outcome_figures = dict.fromkeys(outcome_figures)
         return {
+            "labelled": self.labelled,
+            "withheld": None
+            if self.labelled
+            else (
+                "This cohort has no outcome column, so bad rate, expected loss, net and "
+                "the cost of the declines cannot be computed and are left empty."
+            ),
             "policy": {
                 "name": self.policy_name,
                 "version": self.policy_version,
@@ -85,17 +108,11 @@ class Backtest:
             "declines": self.declines,
             "approval_rate": round(self.approval_rate, 4),
             "refer_rate": round(self.refer_rate, 4),
-            "bad_rate": round(self.bad_rate, 4),
-            "loss_rate": round(self.loss_rate, 4),
             "disbursed": round(self.disbursed, 2),
             "average_limit": round(self.average_limit, 2),
             "fee_revenue": round(self.fee_revenue, 2),
             "time_priced_revenue": round(self.time_priced_revenue, 2),
-            "expected_loss": round(self.expected_loss, 2),
-            "net": round(self.net, 2),
-            "defaults_among_approved": self.defaults_among_approved,
-            "declined_who_would_repay": self.declined_who_would_repay,
-            "declined_who_would_default": self.declined_who_would_default,
+            **outcome_figures,
             "decline_reasons": self.decline_reasons,
             "score_histogram": self.score_histogram,
             "segments": self.segments,
@@ -103,11 +120,20 @@ class Backtest:
         }
 
 
-def run(policy: Policy, borrowers: list[Borrower]) -> tuple[Backtest, list[Outcome]]:
-    """Score every borrower and aggregate. Returns the report and the per-borrower rows."""
+def run(
+    policy: Policy, borrowers: list[Borrower], *, labelled: bool = True
+) -> tuple[Backtest, list[Outcome]]:
+    """Score every borrower and aggregate. Returns the report and the per-borrower rows.
+
+    ``labelled`` is False for a supplied cohort with no outcome column; see
+    :class:`Backtest`.
+    """
     outcomes = [Outcome(borrower, evaluate(policy, borrower.record())) for borrower in borrowers]
     report = Backtest(
-        policy_name=policy.name, policy_version=str(policy.version), currency=policy.currency
+        policy_name=policy.name,
+        policy_version=str(policy.version),
+        currency=policy.currency,
+        labelled=labelled,
     )
     report.applications = len(outcomes)
     reasons: dict[str, int] = {}
@@ -259,42 +285,54 @@ class Comparison:
     def as_dict(self) -> dict[str, object]:
         base_rate = float(self.base["approval_rate"])  # type: ignore[arg-type]
         candidate_rate = float(self.candidate["approval_rate"])  # type: ignore[arg-type]
-        base_bad = float(self.base["bad_rate"])  # type: ignore[arg-type]
-        candidate_bad = float(self.candidate["bad_rate"])  # type: ignore[arg-type]
+        labelled = bool(self.base["labelled"])
+        base_bad = float(self.base["bad_rate"] or 0.0) if labelled else 0.0
+        candidate_bad = float(self.candidate["bad_rate"] or 0.0) if labelled else 0.0
         return {
             "base": self.base,
             "candidate": self.candidate,
             "newly_approved": self.newly_approved,
             "newly_declined": self.newly_declined,
             "unchanged": self.unchanged,
-            "newly_declined_who_would_repay": self.newly_declined_who_would_repay,
-            "newly_declined_who_would_default": self.newly_declined_who_would_default,
             "newly_declined_by_segment": self.newly_declined_by_segment,
             "examples": self.examples,
+            "labelled": labelled,
             "delta": {
                 "approval_rate_points": round(100 * (candidate_rate - base_rate), 2),
-                "bad_rate_points": round(100 * (candidate_bad - base_bad), 2),
+                "bad_rate_points": round(100 * (candidate_bad - base_bad), 2) if labelled else None,
                 "net": round(
                     float(self.candidate["net"]) - float(self.base["net"]),  # type: ignore[arg-type]
                     2,
-                ),
+                )
+                if labelled
+                else None,
                 "disbursed": round(
                     float(self.candidate["disbursed"]) - float(self.base["disbursed"]),  # type: ignore[arg-type]
                     2,
                 ),
             },
+            # Precision needs a known outcome. Without one the numerator is a count of
+            # zeros, which would report every tightening as perfectly imprecise.
             "precision_of_the_tightening": (
                 round(self.newly_declined_who_would_default / self.newly_declined, 4)
-                if self.newly_declined
+                if self.newly_declined and labelled
                 else None
             ),
+            "newly_declined_who_would_repay": self.newly_declined_who_would_repay
+            if labelled
+            else None,
+            "newly_declined_who_would_default": self.newly_declined_who_would_default
+            if labelled
+            else None,
         }
 
 
-def compare(base: Policy, candidate: Policy, borrowers: list[Borrower]) -> Comparison:
+def compare(
+    base: Policy, candidate: Policy, borrowers: list[Borrower], *, labelled: bool = True
+) -> Comparison:
     """What changing from ``base`` to ``candidate`` does, borrower by borrower."""
-    base_report, base_outcomes = run(base, borrowers)
-    candidate_report, candidate_outcomes = run(candidate, borrowers)
+    base_report, base_outcomes = run(base, borrowers, labelled=labelled)
+    candidate_report, candidate_outcomes = run(candidate, borrowers, labelled=labelled)
 
     newly_approved = newly_declined = unchanged = 0
     would_repay = would_default = 0

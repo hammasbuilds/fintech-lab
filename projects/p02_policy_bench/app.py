@@ -8,6 +8,7 @@ every backtest in the UI slower for no change in the answer.
 from __future__ import annotations
 
 import json
+import secrets
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
@@ -16,7 +17,7 @@ from typing import Any
 from shared.theme import attach_theme
 from shared.webkit import App, BadRequest, Request, Response, run
 
-from . import backtest, cohort, compliance, dsl, engine, explain, fairness
+from . import backtest, cohort, compliance, dsl, engine, explain, fairness, sweep
 
 STATIC = Path(__file__).with_name("static")
 POLICIES = Path(__file__).with_name("policies")
@@ -37,6 +38,23 @@ def _policy_source(key: str) -> str:
     if not path.is_file():
         raise BadRequest(f"no bundled policy called {key!r}")
     return path.read_text(encoding="utf-8")
+
+
+#: Cohorts supplied by the user, by token. Capped: each one is thousands of records.
+_uploaded: dict[str, tuple[list[cohort.Borrower], bool]] = {}
+MAX_UPLOADS = 8
+MAX_CSV_BYTES = 512 * 1024
+
+
+def _cohort(payload: dict[str, Any]) -> tuple[list[cohort.Borrower], bool]:
+    """The bundled cohort, or an uploaded one when the request names it."""
+    token = payload.get("cohort")
+    if not token:
+        return borrowers(), True
+    found = _uploaded.get(str(token))
+    if found is None:
+        raise BadRequest("that uploaded cohort has expired; load it again")
+    return found
 
 
 def _compile(source: str) -> dsl.Policy:
@@ -118,8 +136,9 @@ def run_backtest(request: Request) -> Response:
     attribute = str(payload.get("segment", "region"))
     if attribute not in {"region", "employment"}:
         raise BadRequest("segment must be region or employment")
+    people, labelled = _cohort(payload)
     try:
-        report, outcomes = backtest.run(policy, borrowers())
+        report, outcomes = backtest.run(policy, people, labelled=labelled)
     except engine.EvaluationError as exc:
         raise BadRequest(str(exc)) from None
     return Response.json(
@@ -137,8 +156,9 @@ def run_compare(request: Request) -> Response:
     payload = request.json()
     base = _compile(str(payload.get("base", "")))
     candidate = _compile(str(payload.get("candidate", "")))
+    people, labelled = _cohort(payload)
     try:
-        result = backtest.compare(base, candidate, borrowers())
+        result = backtest.compare(base, candidate, people, labelled=labelled)
     except engine.EvaluationError as exc:
         raise BadRequest(str(exc)) from None
     return Response.json({"ok": True, **result.as_dict()})
@@ -171,6 +191,68 @@ def score_one(request: Request) -> Response:
             },
         }
     )
+
+
+@app.route("POST", "/api/sweep")
+def run_sweep(request: Request) -> Response:
+    payload = request.json()
+    policy = _compile(str(payload.get("source", "")))
+    try:
+        step = float(payload.get("step", 5))
+    except (TypeError, ValueError):
+        raise BadRequest("step must be a number") from None
+    if not 1 <= step <= 25:
+        raise BadRequest("step must be between 1 and 25 score points")
+    people, labelled = _cohort(payload)
+    scored = sweep.score_all(policy, people)
+    return Response.json(
+        {
+            "ok": True,
+            "labelled": labelled,
+            "discrimination": sweep.discrimination(scored)
+            if labelled
+            else {
+                "withheld": (
+                    "the cohort has no outcome column, so there is nothing to measure "
+                    "the score's ranking against"
+                )
+            },
+            "sweep": sweep.sweep(policy, people, step=step)
+            if labelled
+            else {
+                "withheld": (
+                    "a sweep ranks cutoffs by what they cost and earn, and both need a "
+                    "known outcome"
+                )
+            },
+        }
+    )
+
+
+@app.route("POST", "/api/cohort/load")
+def load_cohort(request: Request) -> Response:
+    """Take a cohort as pasted CSV, so the sandbox can be pointed at real borrowers."""
+    payload = request.json()
+    text = payload.get("csv")
+    if not isinstance(text, str) or not text.strip():
+        raise BadRequest("paste some CSV first")
+    if len(text) > MAX_CSV_BYTES:
+        raise BadRequest(f"that CSV is over the {MAX_CSV_BYTES // 1024} KiB limit")
+    try:
+        people, meta = cohort.from_csv(text)
+    except cohort.CohortError as exc:
+        raise BadRequest(str(exc)) from None
+    token = secrets.token_urlsafe(9)
+    _uploaded[token] = (people, bool(meta["labelled"]))
+    while len(_uploaded) > MAX_UPLOADS:
+        _uploaded.pop(next(iter(_uploaded)))
+    return Response.json({"ok": True, "cohort": token, **meta, "summary": cohort.summary(people)})
+
+
+@app.route("GET", "/api/cohort/template")
+def cohort_template(_request: Request) -> Response:
+    """The first rows of the bundled cohort as CSV, to use as a header template."""
+    return Response.text(cohort.to_csv(borrowers()[:25]), content_type="text/csv")
 
 
 @app.route("GET", "/api/cohort")

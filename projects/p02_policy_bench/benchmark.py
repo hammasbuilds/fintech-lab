@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from . import backtest, cohort, compliance, dsl, explain, fairness
+from . import backtest, cohort, compliance, dsl, explain, fairness, sweep
 
 HERE = Path(__file__).parent
 POLICIES = HERE / "policies"
@@ -55,6 +55,19 @@ def measure() -> dict[str, Any]:
         for attribute in ("region", "employment")
     }
 
+    scored = sweep.score_all(policies["nano_v2"], borrowers)
+    discrimination = sweep.discrimination(scored)
+    cutoff = sweep.sweep(policies["nano_v2"], borrowers)
+
+    # The CSV path is exercised here rather than only in the tests, because a feature
+    # that no measurement touches is a feature nobody notices breaking.
+    exported = cohort.to_csv(borrowers[:200])
+    reloaded, csv_meta = cohort.from_csv(exported)
+    unlabelled, unlabelled_meta = cohort.from_csv(
+        cohort.to_csv(borrowers[:200], include_label=False)
+    )
+    unlabelled_report, _ = backtest.run(policies["nano_v2"], unlabelled, labelled=False)
+
     return {
         "cohort": cohort.summary(borrowers),
         "policies": {
@@ -74,6 +87,19 @@ def measure() -> dict[str, Any]:
         "comparison_v1_to_v2": comparison,
         "comparison_v2_to_v3": fee_only,
         "fairness": equity,
+        "discrimination": discrimination,
+        "cutoff_sweep": cutoff,
+        "supplied_cohorts": {
+            "csv_round_trip": reloaded == borrowers[:200],
+            "rows": csv_meta["rows"],
+            "labelled_detected": csv_meta["labelled"],
+            "unlabelled_detected": unlabelled_meta["labelled"],
+            "withheld_without_a_label": [
+                key
+                for key, value in unlabelled_report.as_dict().items()
+                if value is None and key != "withheld"
+            ],
+        },
         "explanations": {
             "untranslated_fields": explain.untranslated_fields(),
             "languages": ["en", "ur"],
@@ -134,6 +160,32 @@ def report(results: dict[str, Any]) -> str:
         f"    lint                       {v3_critical} critical",
     ]
 
+    disc = results["discrimination"]
+    cut = results["cutoff_sweep"]
+    supplied = results["supplied_cohorts"]
+    lines += [
+        "",
+        "  v2's scorecard, on the applicants who reached it",
+        f"    Gini                       {disc['gini']}   (AUC {disc['auc']}, KS {disc['ks']})",
+        f"    scored                     {disc['scored']:,}"
+        f"   ({disc['gated_out']:,} stopped by a gate first)",
+        f"    reading                    {disc['reading']}",
+        "",
+        "  where the cutoff should be",
+        f"    policy's own cutoff        {cut['current']['threshold']:g}"
+        f"   net {cut['current']['net']:>12,.0f} PKR",
+        f"    net-maximising cutoff      {cut['net_maximising']['threshold']:g}"
+        f"   net {cut['net_maximising']['net']:>12,.0f} PKR",
+        f"    available by moving it     {cut['net_gain_available']:+,.0f} PKR"
+        "   (in-sample; see results.json)",
+        "",
+        "  a supplied cohort",
+        f"    CSV round trip             {'yes' if supplied['csv_round_trip'] else 'NO'}",
+        f"    outcome column detected    {supplied['labelled_detected']}"
+        f" / {supplied['unlabelled_detected']} when absent",
+        f"    figures withheld with no label  {len(supplied['withheld_without_a_label'])}",
+    ]
+
     equity = results["fairness"]["region"]
     lines += [
         "",
@@ -148,7 +200,8 @@ def report(results: dict[str, Any]) -> str:
 
 def main() -> None:
     results = measure()
-    RESULTS.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    # See the note in p01's benchmark: LF explicitly, because CI compares this file.
+    RESULTS.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(report(results))
     print(f"\nwritten to {RESULTS}")
 

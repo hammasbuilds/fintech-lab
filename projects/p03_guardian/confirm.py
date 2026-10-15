@@ -12,6 +12,14 @@ Three properties, and they are the product:
 3. **A blocked assessment cannot be confirmed past.** When the coercion check blocks, the
    session refuses to even offer a confirmation. There is no "proceed anyway" button,
    because a user under pressure is exactly the user who would press it.
+
+A fourth thing was added in the second round. The coercion check reads words, and the
+test set measures what that misses: four scam approaches phrased in ordinary language,
+four misses. :mod:`behaviour` judges the transfer instead of the sentence, and when a
+transfer is unusual for the account it **escalates** the confirmation - says what stands
+out, and requires the full word ``confirm`` rather than a habitual "haan". It never
+blocks, because a first large transfer to a new payee is also what paying a new landlord
+looks like. Words that only occur in a script block; unusual behaviour slows things down.
 """
 
 from __future__ import annotations
@@ -19,7 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from . import coercion, nlu, numerals
+from . import behaviour, coercion, nlu, numerals
 from .ledger import Ledger
 
 
@@ -31,6 +39,11 @@ class State(StrEnum):
     REFUSED = "refused"
     BLOCKED = "blocked"
 
+
+#: The only replies accepted when the behavioural layer has escalated. A habitual
+#: "haan" is exactly what someone being talked through a transfer says, so an escalated
+#: confirmation asks for a word they have to mean.
+STEP_UP = {"confirm", "confirm karo", "tasdeeq", "haan tasdeeq", "yes confirm"}
 
 #: Replies that mean yes. Closed set, matched whole.
 AFFIRMATIVE = {
@@ -55,7 +68,10 @@ AFFIRMATIVE = {
     "ہاں",
     "جی ہاں",
     "ٹھیک ہے",
-}
+} | STEP_UP
+# The step-up words are folded in rather than listed twice. They have to be a subset:
+# a word that is accepted as a step-up but not recognised as a yes can never execute
+# anything, which is what the first version of this did to "confirm karo" and "tasdeeq".
 
 #: Replies that mean no. Also closed.
 NEGATIVE = {
@@ -98,6 +114,9 @@ class Session:
     transcript: list[Turn] = field(default_factory=list)
     ledger: Ledger = field(default_factory=Ledger)
     contacts: tuple[nlu.Contact, ...] = nlu.CONTACTS
+    profile: behaviour.Profile = field(default_factory=behaviour.demo_profile)
+    conduct: behaviour.Assessment | None = None
+    stepped_up: bool = False
 
     # -- helpers --
     def say(self, text: str) -> Turn:
@@ -125,6 +144,7 @@ class Session:
             # pending action is dropped rather than held, so a later bare "haan" cannot
             # confirm it.
             self.pending = None
+            self.stepped_up = False
             self.state = State.BLOCKED
             self.assessment = assessment
             message = self._blocked_message(assessment)
@@ -195,13 +215,31 @@ class Session:
 
         self.pending = utterance
         self.state = State.AWAITING_CONFIRMATION
-        reply = self.say(self.read_back(utterance, assessment))
-        self.ledger.append("confirmation_requested", {"action": utterance.action()})
+        payee = (
+            utterance.beneficiary.name
+            if utterance.beneficiary
+            else (utterance.target_number or None)
+        )
+        conduct = behaviour.assess(
+            self.profile, payee, utterance.amount.value if utterance.amount else None
+        )
+        self.conduct = conduct
+        self.stepped_up = conduct.escalated
+        reply = self.say(self.read_back(utterance, assessment, conduct))
+        self.ledger.append(
+            "confirmation_requested",
+            {
+                "action": utterance.action(),
+                "behaviour": conduct.level,
+                "signals": [signal.name for signal in conduct.signals],
+            },
+        )
         return {
             "state": self.state.value,
             "reply": reply.text,
             "utterance": utterance.as_dict(),
             "assessment": assessment.as_dict(),
+            "behaviour": conduct.as_dict(),
             "action": None,
         }
 
@@ -209,10 +247,48 @@ class Session:
     def _resolve_confirmation(self, text: str) -> dict[str, object]:
         reply_kind = classify_reply(text)
         pending = self.pending
+        if (
+            reply_kind == "affirmative"
+            and self.stepped_up
+            and numerals.normalise(text).strip().lower().strip(".!?,") not in STEP_UP
+        ):
+            # Escalated: a plain yes is not enough. Nothing is refused, the question is
+            # asked again in stronger terms.
+            self.ledger.append("step_up_required", {"text": text})
+            message = self.say(
+                (
+                    "Because this transfer is unusual for your account, a plain yes is not "
+                    "enough. Reply with the word 'confirm' if you are sure, or 'no' to stop. "
+                    "Nothing has been sent."
+                )
+                if self.language == "en"
+                else (
+                    "Yeh transfer aap ke account ke liye ghair-mamooli hai, is liye sirf "
+                    "'haan' kaafi nahi. Yaqeen ho to 'confirm' likhein, warna 'nahi'. "
+                    "Abhi kuch nahi bheja gaya."
+                )
+            )
+            return {
+                "state": self.state.value,
+                "reply": message.text,
+                "action": None,
+                "step_up_required": True,
+                "assessment": None,
+            }
         if reply_kind == "affirmative" and pending is not None:
             action = pending.action()
             self.state = State.EXECUTED
             self.pending = None
+            if pending.amount is not None:
+                # The profile learns, so the same payee is not "first time" twice and the
+                # daily total actually accumulates.
+                self.profile.record(
+                    pending.beneficiary.name
+                    if pending.beneficiary
+                    else pending.target_number or "unknown",
+                    pending.amount.value,
+                )
+            self.stepped_up = False
             entry = self.ledger.append("executed", {"action": action})
             message = self.say(self._executed_message(pending))
             return {
@@ -224,6 +300,7 @@ class Session:
             }
         if reply_kind == "negative":
             self.state = State.REFUSED
+            self.stepped_up = False
             dropped = self.pending.action() if self.pending else None
             self.pending = None
             self.ledger.append("refused_by_user", {"action": dropped})
@@ -258,7 +335,10 @@ class Session:
 
     # -- messages --
     def read_back(
-        self, utterance: nlu.Utterance, assessment: coercion.Assessment | None = None
+        self,
+        utterance: nlu.Utterance,
+        assessment: coercion.Assessment | None = None,
+        conduct: behaviour.Assessment | None = None,
     ) -> str:
         urdu = self.language == "ur"
         amount = utterance.amount.value if utterance.amount else 0.0
@@ -307,11 +387,22 @@ class Session:
             )
         if assessment is not None and assessment.verdict == coercion.WARN:
             body += "  " + assessment.reason
-        body += (
-            "  Reply 'yes' to send or 'no' to cancel."
-            if not urdu
-            else "  Bhejne ke liye 'haan', mansookh karne ke liye 'nahi'."
-        )
+        if conduct is not None and conduct.level != behaviour.NONE:
+            body += "  " + conduct.reason
+            if conduct.escalated:
+                body += "  " + behaviour.advice(self.language)
+        if conduct is not None and conduct.escalated:
+            body += (
+                "  Reply with the word 'confirm' to send, or 'no' to cancel."
+                if not urdu
+                else "  Bhejne ke liye 'confirm' likhein, mansookh karne ke liye 'nahi'."
+            )
+        else:
+            body += (
+                "  Reply 'yes' to send or 'no' to cancel."
+                if not urdu
+                else "  Bhejne ke liye 'haan', mansookh karne ke liye 'nahi'."
+            )
         return body
 
     def _executed_message(self, utterance: nlu.Utterance) -> str:
@@ -368,6 +459,15 @@ class Session:
             "state": self.state.value,
             "language": self.language,
             "pending": self.pending.as_dict() if self.pending else None,
+            "behaviour": self.conduct.as_dict() if self.conduct else None,
+            "step_up_required": self.stepped_up,
+            "profile": {
+                "balance": self.profile.balance,
+                "daily_cap": self.profile.daily_cap,
+                "usual_transfer": self.profile.usual_transfer,
+                "sent_today": self.profile.sent_today(),
+                "known_beneficiaries": sorted(self.profile.known_beneficiaries),
+            },
             "transcript": [turn.as_dict() for turn in self.transcript],
             "ledger": self.ledger.as_dict(),
         }

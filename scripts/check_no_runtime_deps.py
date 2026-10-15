@@ -32,7 +32,12 @@ def main() -> int:
     # And the stronger check: nothing under shared/ or projects/ may import anything
     # outside the standard library.
     offenders: list[str] = []
-    for path in sorted((root / "shared").rglob("*.py")) + sorted((root / "projects").rglob("*.py")):
+    shipped = (
+        sorted((root / "shared").rglob("*.py"))
+        + sorted((root / "projects").rglob("*.py"))
+        + sorted((root / "observatory").rglob("*.py"))
+    )
+    for path in shipped:
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             stripped = line.strip()
             if not stripped.startswith(("import ", "from ")):

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fintech-lab</title>
+<meta name="description" content="Three fintech products that run on the standard library: an ISO 8583 payment-message workbench, a lending-policy sandbox, and a Roman Urdu transaction assistant.">
+<link rel="stylesheet" href="theme.css">
+<style>
+  .hero { padding: 36px 0 8px; }
+  .hero h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  .hero p { color: var(--ink-2); font-size: 15.5px; max-width: 70ch; margin: 0 0 6px; }
+  .badges { display: flex; gap: 7px; flex-wrap: wrap; margin: 16px 0 0; }
+  .badges .pill { background: var(--surface); }
+  .grid3 { display: grid; gap: 16px; margin-top: 8px; }
+  @media (min-width: 1000px) { .grid3 { grid-template-columns: 1fr 1fr 1fr; } }
+  .proj { display: flex; flex-direction: column; margin: 0; }
+  .proj .num { font-size: 11.5px; letter-spacing: 0.08em; color: var(--ink-muted); font-weight: 600; }
+  .proj h2 { font-size: 17px; margin: 2px 0 6px; }
+  .proj .tag { color: var(--ink-2); font-size: 13.5px; margin: 0 0 10px; }
+  .figs { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; font-size: 13px; margin: 0; }
+  .figs dt { color: var(--ink-2); }
+  .figs dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .small { font-size: 12px; margin: 8px 0 0; }
+  .claim { font-size: 13.5px; margin: 10px 0 0; flex: 1 1 auto; }
+  .opener { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }
+  .opener a { text-decoration: none; font-size: 12.5px; padding: 6px 11px; }
+  code.cmd { font-family: var(--mono); background: var(--surface-sunken); padding: 2px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>fintech-lab</h1>
+    <p>Three fintech products that run on the standard library: an ISO 8583 payment-message
+       workbench, a lending-policy sandbox, and a transaction assistant for Roman Urdu.</p>
+    <p>No dependencies, no model, no GPU, no API key, no network call. In all three the thing
+       deciding the outcome is small enough to read, and what grades it is deterministic code
+       rather than a model's opinion.</p>
+    <div class="badges">
+      <span class="pill neutral"><span class="dot"></span><span>474 tests</span></span>
+      <span class="pill good"><span class="dot"></span><span>zero runtime dependencies</span></span>
+      <span class="pill good"><span class="dot"></span><span>GPU not required</span></span>
+      <span class="pill neutral"><span class="dot"></span><span>Python 3.11+</span></span>
+    </div>
+    <div class="opener" style="margin-top:18px">
+      <a class="btn" href="https://github.com/hammasbuilds/fintech-lab">Repository</a>
+      <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab#input--output">Input and output</a>
+      <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/actions/workflows/ci.yml">CI</a>
+    </div>
+  </div>
+
+  <div class="grid3">
+      <div class="card proj">
+        <span class="num">01</span>
+        <h2>Switchboard</h2>
+        <p class="tag">Reads both the ASCII form a specification uses and the binary framing a live switch sends, and works out which it was given by trying each against the parser.</p>
+        <dl class="figs"><dt>Invariants</dt><dd>22</dd><dt>Faults killed by their rule</dt><dd>38/38</dd><dt>False positives on valid traffic</dt><dd>0</dd><dt>EMV tags parsed</dt><dd>132</dd></dl>
+        <p class="hint small">From the project's own results.json, written by its benchmark.</p>
+        <p class="claim">38 of 38 injected faults killed, every one by the rule written for it, with zero false positives on valid traffic. Of 2,000 random character corruptions, all 651 that were illegal for their field were rejected.</p>
+        <div class="opener">
+          <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p01_switchboard">Source</a>
+          <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p01_switchboard/README.md">What it does and what it measures</a>
+        </div>
+      </div>
+      <div class="card proj">
+        <span class="num">02</span>
+        <h2>Policy Bench</h2>
+        <p class="tag">A lending policy written in words, compiled to something executable that prints back to the same text, and back-tested before it goes live.</p>
+        <dl class="figs"><dt>Borrowers</dt><dd>5,000</dd><dt>Scorecard Gini</dt><dd>0.2842</dd><dt>Tightening precision</dt><dd>3.8%</dd><dt>Better cutoff worth</dt><dd>+25,184 PKR</dd></dl>
+        <p class="hint small">From the project's own results.json, written by its benchmark.</p>
+        <p class="claim">The v1 to v2 tightening declines 1,238 more applicants: 47 would have defaulted and 1,191 would have repaid. The cutoff sweep says why - the scorecard&#x27;s Gini is 0.284, so any cutoff cuts both groups at once.</p>
+        <div class="opener">
+          <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p02_policy_bench">Source</a>
+          <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p02_policy_bench/README.md">What it does and what it measures</a>
+        </div>
+      </div>
+      <div class="card proj">
+        <span class="num">03</span>
+        <h2>Guardian</h2>
+        <p class="tag">A transaction assistant for Roman Urdu and code-mixed speech, with no model: a lexicon, a grammar, and the account&#x27;s own history.</p>
+        <dl class="figs"><dt>Test cases</dt><dd>140</dd><dt>Actions correct</dt><dd>30/30</dd><dt>Replies wrongly read as consent</dt><dd>0</dd><dt>Scams the words miss, recovered</dt><dd>4/4</dd></dl>
+        <p class="hint small">From the project's own results.json, written by its benchmark.</p>
+        <p class="claim">Its word-based check misses all 4 scams phrased in ordinary language, and that is published. Judging the transfer instead escalates 4 of 4, at a cost of 1 ordinary transfer in 5 also slowed.</p>
+        <div class="opener">
+          <a class="btn" href="https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p03_guardian">Source</a>
+          <a class="btn ghost" href="https://github.com/hammasbuilds/fintech-lab/blob/main/projects/p03_guardian/README.md">What it does and what it measures</a>
+        </div>
+      </div>
+  </div>
+
+  <div class="card">
+    <h2>The dashboards run locally, and that is not a limitation being hidden</h2>
+    <p class="hint">
+      Each project serves a single-page dashboard, an input/output proof at <code
+      class="cmd">/io</code>, and its own request counters. They need a Python process, and
+      this page is static files on GitHub Pages, so they are not hosted here. One command
+      brings all three up together with a control panel in front of them:
+    </p>
+    <pre class="out">git clone https://github.com/hammasbuilds/fintech-lab
+cd fintech-lab
+uv run python -m observatory --start-all      # then open http://127.0.0.1:8100</pre>
+    <p class="hint">
+      The Observatory starts and stops each project, shows whether it is actually answering
+      on its port rather than merely spawned, reads each one's own counters, and links
+      through to every project's dashboard, proof page, source and README &mdash; so there is
+      one place to open them from instead of a shortcut per project.
+    </p>
+    <p class="hint">
+      Or run one on its own: <code class="cmd">make serve01</code>,
+      <code class="cmd">make serve02</code>, <code class="cmd">make serve03</code>. To see
+      the numbers above without a browser at all: <code class="cmd">uv run python demo.py</code>.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>What is deliberately not flattering</h2>
+    <p class="hint">
+      Each project publishes a figure that does not favour it, because the alternative is a
+      page of round numbers that cannot be wrong.
+    </p>
+    <ul class="hint" style="padding-left:20px">
+      <li><strong>Switchboard</strong> stops at 97.4% on random framing damage. An ISO 8583
+          bitmap carries no redundancy, so one flipped bit can swap a field for another of the
+          same width and produce a different valid message. No parser can catch that, which is
+          why the invariant layer exists.</li>
+      <li><strong>Policy Bench</strong> reports a Gini of 0.284 and calls it weak separation in
+          those words. Its cohort is synthetic and its generator is written out in full, so every
+          figure is a statement about that generator rather than about a market.</li>
+      <li><strong>Guardian</strong> misses every scam that avoids its vocabulary, and the layer
+          that recovers those also slows one ordinary transfer in five. Both halves are
+          measured; reporting only the first would be advertising.</li>
+    </ul>
+  </div>
+
+  <footer class="foot" style="padding-left:0">
+    Muhammad Hammas &middot; <a href="https://github.com/hammasbuilds/fintech-lab">github.com/hammasbuilds/fintech-lab</a> &middot; MIT
+  </footer>
+</div>
+</body>
+</html>

@@ -14,8 +14,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from shared.iopage import Page, Row, Section, attach_io
 from shared.theme import attach_theme
-from shared.webkit import App, BadRequest, Request, Response, run
+from shared.webkit import App, BadRequest, Request, Response, attach_metrics, run
 
 from . import backtest, cohort, compliance, dsl, engine, explain, fairness, sweep
 
@@ -25,6 +26,7 @@ RESULTS = Path(__file__).with_name("results.json")
 
 app = App("policy-bench", static_dir=STATIC)
 attach_theme(app)
+attach_metrics(app)
 
 
 @lru_cache(maxsize=1)
@@ -299,6 +301,145 @@ def main(port: int = 8102) -> None:
     run(app, port=port)
 
 
+# ------------------------------------------------------------- input / output
+
+
+def io_page() -> Page:
+    results = _results() or {}
+    people = borrowers()
+    sources = {path.stem: path.read_text(encoding="utf-8") for path in POLICIES.glob("*.policy")}
+    v1 = dsl.compile_policy(sources["nano_v1"])
+    v2 = dsl.compile_policy(sources["nano_v2"])
+
+    compiled = Section(
+        title="A policy written in words, compiled to something executable",
+        note="The tree is what runs, and it prints back to the same text - so the document "
+        "the credit team argues over and the thing deciding applications cannot drift apart.",
+        given=sources["nano_v2"].strip(),
+        rows=[
+            Row("gates", str(len(v2.gates))),
+            Row("scoring rules", str(len(v2.score_rules))),
+            Row("approve at", f"{v2.approve_at:g}"),
+            Row(
+                "text round-trips through the parser",
+                "yes" if dsl.compile_policy(v2.render()).render() == v2.render() else "NO",
+            ),
+            Row(
+                "compliance lint",
+                "clean" if not compliance.review(v2) else f"{len(compliance.review(v2))} note(s)",
+            ),
+        ],
+    )
+
+    rows = []
+    for key in ("nano_v1", "nano_v2", "nano_v3_timepriced"):
+        back = results.get("backtests", {}).get(key, {})
+        lint = results.get("lint", {}).get(key, {}).get("counts", {})
+        flag = "clean" if not lint.get("critical") else f"{lint['critical']} critical"
+        rows.append(
+            Row(
+                key,
+                f"approvals {back.get('approval_rate', 0):.1%}   "
+                f"bad rate {back.get('bad_rate') or 0:.2%}   "
+                f"net {back.get('net') or 0:,.0f} PKR   lint {flag}",
+            )
+        )
+    tested = Section(
+        title="Back-test every bundled policy on the same borrowers",
+        note="5,000 synthetic borrowers from a seeded generator written out in full in cohort.py.",
+        given="three policy files and 5,000 borrowers",
+        rows=rows,
+    )
+
+    comparison = results.get("comparison_v1_to_v2", {})
+    delta = comparison.get("delta", {})
+    tightening = Section(
+        title="What a tightening actually costs",
+        note="Raise the income floor, penalise turnover.",
+        given="move from nano_v1 to nano_v2",
+        rows=[
+            Row("newly declined", f"{comparison.get('newly_declined', 0):,}"),
+            Row(
+                "of those, would have defaulted",
+                str(comparison.get("newly_declined_who_would_default", "-")),
+            ),
+            Row(
+                "of those, would have repaid",
+                f"{comparison.get('newly_declined_who_would_repay') or 0:,}",
+            ),
+            Row(
+                "precision of the tightening",
+                f"{(comparison.get('precision_of_the_tightening') or 0):.1%}",
+            ),
+            Row("bad rate", f"{delta.get('bad_rate_points', 0):+.2f}", "points"),
+            Row("net", f"{delta.get('net', 0):+,.0f}", "PKR"),
+            Row("disbursed", f"{delta.get('disbursed', 0):+,.0f}", "PKR"),
+        ],
+        reading="The tightening works, and it costs "
+        f"{comparison.get('newly_declined_who_would_repay') or 0:,} good borrowers to avoid "
+        f"{comparison.get('newly_declined_who_would_default', 0)}. An approval-rate chart "
+        "shows only the first half of that sentence.",
+    )
+
+    disc = results.get("discrimination", {})
+    cut = results.get("cutoff_sweep", {})
+    cutoff = Section(
+        title="Where the cutoff should be, and why the tightening cut good borrowers",
+        note="Discrimination is a property of the scorecard; the cutoff is a property of "
+        "the decision. Moving one cannot change the other.",
+        given="score every borrower once, then re-decide at every threshold",
+        rows=[
+            Row("Gini", str(disc.get("gini", "-"))),
+            Row("AUC", str(disc.get("auc", "-"))),
+            Row("KS", str(disc.get("ks", "-"))),
+            Row(
+                "measured on",
+                f"{disc.get('scored', 0):,} scored, {disc.get('gated_out', 0):,} gated out first",
+            ),
+            Row("the policy's own cutoff", f"{cut.get('current', {}).get('threshold', '-')}"),
+            Row("net-maximising cutoff", f"{cut.get('net_maximising', {}).get('threshold', '-')}"),
+            Row("available by moving it", f"{cut.get('net_gain_available', 0):+,.0f}", "PKR"),
+        ],
+        reading=f"{disc.get('reading', '')} {cut.get('in_sample_warning', '')}",
+    )
+
+    equity = results.get("fairness", {}).get("region", {})
+    fairness_section = Section(
+        title="Approval-rate gap by region, raw and inside income bands",
+        note="No policy here mentions region at all.",
+        given="nano_v2's approvals, grouped by region",
+        rows=[
+            Row("raw gap", f"{equity.get('raw_gap', 0):.1%}"),
+            Row("gap within income bands", f"{equity.get('within_band_gap_mean', 0):.1%}"),
+        ],
+        reading=f"{equity.get('reading', '')} {equity.get('not_a_verdict', '')}",
+    )
+
+    del people, v1
+    return Page(
+        title="Policy Bench",
+        subtitle="Lending-policy sandbox - input and output",
+        sections=[compiled, tested, tightening, cutoff, fairness_section],
+        links=[
+            ("Open the dashboard", "/"),
+            (
+                "Source on GitHub",
+                "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p02_policy_bench",
+            ),
+            ("All three projects", "https://hammasbuilds.github.io/fintech-lab/"),
+        ],
+        caveat="The bundled cohort is synthetic and its generator is written out in full in "
+        "cohort.py. Every figure here is a statement about that generator, not about a "
+        "market. Load your own cohort as CSV to get numbers about something real.",
+    )
+
+
+attach_io(app, io_page)
+
+# The __main__ block stays last on purpose. Anything registered after it never
+# runs when this module is executed as a program, because main() blocks in the server
+# loop and never returns - so a route added below here would exist on import and be
+# missing when served, which is the one mode that counts.
 if __name__ == "__main__":
     import argparse
 

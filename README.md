@@ -5,17 +5,18 @@
   <a href="#what-it-does">What it does</a> &middot;
   <a href="#projects">Projects</a> &middot;
   <a href="#input--output">Input / Output</a> &middot;
-  <a href="#the-dashboards">The dashboards</a> &middot;
+  <a href="#one-panel-for-all-three">One panel for all three</a> &middot;
   <a href="#scope">Scope</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/hammasbuilds/fintech-lab/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/fintech-lab/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <a href="https://hammasbuilds.github.io/fintech-lab/"><img src="https://img.shields.io/badge/page-live-success" alt="published page"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/dependencies-none-success" alt="dependencies">
   <img src="https://img.shields.io/badge/GPU-not%20required-success" alt="gpu">
   <img src="https://img.shields.io/badge/API%20keys-none-success" alt="api keys">
-  <img src="https://img.shields.io/badge/tests-474%20passing-success" alt="tests">
+  <img src="https://img.shields.io/badge/tests-505%20passing-success" alt="tests">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -53,7 +54,8 @@ enough to read, and what grades it is deterministic code rather than a model's o
 | [**03**](projects/p03_guardian/) | [**Guardian**](projects/p03_guardian/) | A transaction assistant for Roman Urdu, Urdu and code-mixed speech: a confirmation spine, a coercion check on the words, and a **behavioural check on the transfer**. No model: a lexicon, a grammar and an account history. | **140** hand-written cases. Amounts **48/48**, actions **30/30**, replies **21/21**, **0** wrongly read as consent. The lexical check still misses **4/4** scams phrased in ordinary language; judging the transfer escalates **4/4** of them, at a cost of **1 in 5** ordinary transfers also slowed. | 209 |
 
 Counts are the tests in each project's own files: 128 + 74 + 209 = 411. A further 49
-exercise the three dashboards and 14 the shared web kit, for 474 in total.
+exercise the three dashboards, 31 the control panel and the published page, and 14 the
+shared web kit, for 505 in total.
 
 Each project ships a number that is deliberately *not* flattering. Switchboard's
 random-corruption rejection rate stops at 97.4% on the framing, because an ISO 8583
@@ -195,10 +197,38 @@ One command runs all three and prints what they did. `uv run python demo.py`
   after 'confirm'                executed, action True
 ```
 
-## The dashboards
+## One panel for all three
 
-Each project has a single-page dashboard served by the standard library, sharing one
-stylesheet. Nothing starts on import; these commands are the only things that open a port.
+```bash
+uv run python -m observatory --start-all      # then open http://127.0.0.1:8100
+```
+
+One page that starts and stops each project, shows whether it is actually up, reads each
+one's own request counters, and links straight through to everything &mdash; so there is a
+single place to open a project from instead of a shortcut per project.
+
+Per project it gives you five openers: the **dashboard**, the **input and output** proof,
+the **source**, the **README**, and the **published page**. Plus the project's own headline
+numbers, read from the `results.json` its benchmark wrote.
+
+| | |
+|---|---|
+| `make observatory` | the panel, projects left alone |
+| `make observatory-all` | the panel, all three started |
+| `run.bat` | the same on Windows (`run.bat panel`, or `run.bat 1\|2\|3` for one project) |
+
+Two things it is careful about, because this is where a control panel usually lies:
+
+- **"Running" means a request came back**, not that a process was spawned. Those differ
+  exactly when it matters: a port already taken, an import error, a crash two seconds in.
+- **Closing the panel does not stop the projects.** They are separate processes tracked in
+  a file, so the next launch adopts whatever is still up. An adopted server is shown as
+  running *and* as not this panel's to stop &mdash; it gets no Stop button, because a
+  button that cannot work is worse than none. (Inferring its pid from the port was tried
+  and removed: the pid netstat reported was not the process that had bound the port, and a
+  supervisor that kills a wrongly-inferred pid is far worse than one that admits a limit.)
+
+### Each project on its own
 
 ```bash
 make serve01        # Switchboard   http://127.0.0.1:8101
@@ -206,7 +236,9 @@ make serve02        # Policy Bench  http://127.0.0.1:8102
 make serve03        # Guardian      http://127.0.0.1:8103
 ```
 
-On Windows, `run.bat 1`, `run.bat 2`, `run.bat 3`.
+Every project serves three things: its dashboard at `/`, its **input and output proof** at
+`/io`, and its own counters at `/api/metrics`. The proof page is built by running the
+engine when the page is requested, so it cannot disagree with the code serving it.
 
 - **Switchboard** &mdash; Overview, Decode (either framing, worked out for itself, with the
   reasoning shown; click a field to highlight it in the raw message; DE 55 expanded tag by
@@ -218,6 +250,13 @@ On Windows, `run.bat 1`, `run.bat 2`, `run.bat 3`.
   account's own habits beside them, an inspector, the scorecard, and the hash-chained
   audit trail.
 
+### The published page
+
+<https://hammasbuilds.github.io/fintech-lab/> &mdash; generated from the projects' own
+results files by `make pages`, never typed, and CI fails if the committed copy drifts from
+a fresh build. It is static, so the dashboards are not hosted there; the page says so and
+gives the command instead of pretending otherwise.
+
 Chart colours are the validated categorical palette, checked with the palette validator in
 both light and dark mode. The two slots that fall below 3:1 on the light surface carry
 direct value labels and a table view, which is the relief that warning requires.
@@ -226,10 +265,12 @@ direct value labels and a table view, which is the relief that warning requires.
 
 ```bash
 make install        # uv sync --extra dev
-make test           # 474 tests
+make test           # 505 tests
 make lint           # ruff check + format --check
 make demo           # the output above
 make bench          # re-measure all three and rewrite results.json
+make pages          # regenerate the published page from those results
+make observatory    # the control panel for all three
 ```
 
 ## Scope

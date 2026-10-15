@@ -41,8 +41,10 @@ exclude = ["projects/p03_guardian/numerals.py", "projects/p03_guardian/testset.p
 "projects/p03_guardian/testset.py" = ["E501"]
 "projects/p03_guardian/numerals.py" = ["E501"]
 # theme.py is a stylesheet held in a string. Its long lines are CSS rules, and breaking
-# a selector across lines to satisfy a Python line limit helps nobody.
+# a selector across lines to satisfy a Python line limit helps nobody. build_pages.py
+# holds the published page's markup and its own CSS for the same reason.
 "shared/theme.py" = ["E501"]
+"scripts/build_pages.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -37,10 +37,10 @@ jobs:
         run: uv run python scripts/check_no_runtime_deps.py
 
       - name: Lint
-        run: uv run ruff check shared projects tests demo.py
+        run: uv run ruff check shared projects observatory scripts tests demo.py
 
       - name: Format
-        run: uv run ruff format --check shared projects tests demo.py
+        run: uv run ruff format --check shared projects observatory scripts tests demo.py
 
       - name: Tests
         run: uv run pytest -q
@@ -51,12 +51,16 @@ jobs:
           uv run python -m projects.p02_policy_bench.benchmark
           uv run python -m projects.p03_guardian.benchmark
 
-      - name: The committed results did not change
+      - name: Rebuild the published page
+        run: uv run python scripts/build_pages.py
+
+      - name: The committed results and the published page did not change
         shell: bash
         run: |
-          # results.json is committed and the dashboards read it. If re-running a
-          # benchmark changes it, the published numbers were stale.
-          git diff --exit-code -- projects/*/results.json
+          # results.json is committed and the dashboards read it; docs/ is the published
+          # page and is generated from those same files. If re-running either changes
+          # what is committed, the published numbers were stale.
+          git diff --exit-code -- projects/*/results.json docs/
 
       - name: Demo
         run: uv run python demo.py

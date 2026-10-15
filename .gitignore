@@ -9,3 +9,6 @@ dist/
 build/
 .guardian_ledger/
 *.local.json
+
+# Runtime state of the control panel: which servers are up, and what they printed.
+observatory/state/

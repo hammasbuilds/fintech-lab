@@ -13,8 +13,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from shared.iopage import Page, Row, Section, attach_io
 from shared.theme import attach_theme
-from shared.webkit import App, BadRequest, Request, Response, run
+from shared.webkit import App, BadRequest, Request, Response, attach_metrics, run
 
 from . import binary, emv, lifecycle, mutations, narrate, scenarios
 from . import fields as F
@@ -25,6 +26,7 @@ RESULTS = Path(__file__).with_name("results.json")
 
 app = App("switchboard", static_dir=STATIC)
 attach_theme(app)
+attach_metrics(app)
 
 
 # ------------------------------------------------------------------- endpoints
@@ -292,6 +294,144 @@ def main(port: int = 8101) -> None:
     run(app, port=port)
 
 
+# ------------------------------------------------------------- input / output
+
+
+def io_page() -> Page:
+    """The proof, built by running the engine, served at ``/io``."""
+    from . import binary, emv, mutations
+    from .codec import check_values
+
+    flow = scenarios.build("atm_partial_approval")
+    request_message, response_message = flow.steps[0].message, flow.steps[1].message
+    results = _results() or {}
+
+    lines = []
+    for index, step in enumerate(flow.steps, start=1):
+        lines.append(f"step {index}  {step.direction}  ({step.label})")
+        lines.append(f"  raw     {step.raw}")
+        lines.append(f"  reads   {narrate.narrate(step.message)}")
+        lines.append("")
+    generated = Section(
+        title="Generate a transaction lifecycle, then read it back in English",
+        note="A partial approval: the one response allowed to carry a different amount.",
+        given="scenario 'atm_partial_approval', amount 10,000.00 PKR",
+        output="\n".join(lines).rstrip(),
+        rows=[
+            Row(
+                "requested",
+                narrate.format_amount(request_message.fields[4], request_message.get(49)),
+            ),
+            Row(
+                "approved",
+                narrate.format_amount(response_message.fields[4], response_message.get(49)),
+            ),
+            Row("response code", f"{response_message.fields[39]} - partial approval"),
+        ],
+    )
+
+    data = binary.pack_binary(request_message)
+    verdict = binary.detect(data.hex())
+    reparsed, _ = binary.parse_any(data.hex())
+    framing = Section(
+        title="The same message as a live switch would send it",
+        note="Packed bitmap, BCD numeric fields, a 2-byte length header. The framing is "
+        "worked out by trying each candidate against the parser.",
+        given=data[:40].hex().upper() + "...",
+        rows=[
+            Row("binary, with a length header", str(len(data)), "bytes"),
+            Row("the same thing in ASCII", str(len(flow.steps[0].raw)), "characters"),
+            Row("framing detected as", str(verdict["framing"])),
+            Row(
+                "fields identical to the ASCII form",
+                "yes" if reparsed.fields == request_message.fields else "NO",
+            ),
+        ],
+        reading=" ".join(str(reason) for reason in verdict["reasons"]),
+    )
+
+    tampered = request_message.replace(de4=str(int(request_message.fields[4]) * 2).zfill(12))
+    chip = Section(
+        title="DE 4 doubled, with the chip's own 9F02 left alone",
+        note="Most decoders print DE 55 as one hex blob. Tag 9F02 is the amount the chip "
+        "authorised, and it has to equal DE 4.",
+        given="the approved withdrawal, with DE 4 multiplied by two",
+        rows=[
+            Row(
+                "every field still well-formed",
+                "yes" if check_values(tampered.fields) == [] else "no",
+            ),
+            Row(
+                "the message still parses",
+                "yes" if unpack(pack(tampered)).fields == tampered.fields else "no",
+            ),
+            Row("EMV tags in DE 55", str(len(emv.parse(request_message.fields[55])))),
+        ],
+        reading=str(emv.amount_mismatch(tampered.fields[55], tampered.fields[4])),
+    )
+
+    mutation = results.get("mutation", {})
+    fuzz = results.get("fuzz", {}).get("groups", {})
+    illegal = fuzz.get("class_violating", {})
+    framing_damage = fuzz.get("framing", {})
+    binary_fuzz = results.get("fuzz_binary", {})
+    graded = Section(
+        title="Break the valid traffic on purpose and count what is rejected",
+        note="A decoder and a rule list both look convincing while they are only ever "
+        "shown correct traffic.",
+        given="all 14 scenarios, then every injected fault",
+        rows=[
+            Row(
+                "valid flows checked",
+                str(results.get("invariants", {}).get("valid_flows_checked", "-")),
+            ),
+            Row(
+                "false positives on them",
+                str(results.get("invariants", {}).get("valid_flows_with_findings", "-")),
+            ),
+            Row("faults injected", str(mutation.get("mutants", "-"))),
+            Row(
+                "killed by the intended rule",
+                f"{mutation.get('killed_by_intended_rule', '-')}/{mutation.get('mutants', '-')}",
+            ),
+            Row(
+                "random illegal characters rejected",
+                f"{illegal.get('rejected', '-')}/{illegal.get('trials', '-')}",
+            ),
+            Row(
+                "random framing damage rejected",
+                f"{framing_damage.get('rejected', '-')}/{framing_damage.get('trials', '-')}",
+            ),
+            Row(
+                "random byte damage, binary",
+                f"{binary_fuzz.get('rejected', '-')}/{binary_fuzz.get('trials', '-')}",
+            ),
+        ],
+        reading=str(results.get("fuzz", {}).get("note", "")),
+    )
+    del mutations
+
+    return Page(
+        title="Switchboard",
+        subtitle="ISO 8583 workbench - input and output",
+        sections=[generated, framing, chip, graded],
+        links=[
+            ("Open the dashboard", "/"),
+            (
+                "Source on GitHub",
+                "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p01_switchboard",
+            ),
+            ("All three projects", "https://hammasbuilds.github.io/fintech-lab/"),
+        ],
+    )
+
+
+attach_io(app, io_page)
+
+# The __main__ block stays last on purpose. Anything registered after it never
+# runs when this module is executed as a program, because main() blocks in the server
+# loop and never returns - so a route added below here would exist on import and be
+# missing when served, which is the one mode that counts.
 if __name__ == "__main__":
     import argparse
 

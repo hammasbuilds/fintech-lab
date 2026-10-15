@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import mimetypes
 import threading
+import time
 import traceback
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -66,12 +67,90 @@ class BadRequest(Exception):
     """A client error. Carries a message meant to be shown in the UI."""
 
 
+@dataclass
+class RouteStats:
+    requests: int = 0
+    errors: int = 0
+    client_errors: int = 0
+    total_ms: float = 0.0
+    max_ms: float = 0.0
+    last_status: int = 0
+
+    @property
+    def average_ms(self) -> float:
+        return self.total_ms / self.requests if self.requests else 0.0
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "requests": self.requests,
+            "errors": self.errors,
+            "client_errors": self.client_errors,
+            "average_ms": round(self.average_ms, 2),
+            "max_ms": round(self.max_ms, 2),
+            "last_status": self.last_status,
+        }
+
+
+class Metrics:
+    """What this app has been asked to do, per route.
+
+    Counted inside ``App.handle``, which is the one place every request passes through,
+    so the numbers cannot drift from what actually ran. Timings are wall clock for the
+    handler only - they do not include the socket, because the point of them is to find
+    a slow *engine*, not a slow network.
+
+    Deliberately small: counts, error counts, mean and worst case. No percentiles, since
+    a single-user control panel reading a handful of routes does not have the sample size
+    for a p95 to mean anything, and printing one anyway would be a number that looks more
+    informative than it is.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._routes: dict[str, RouteStats] = {}
+        self.started_at = time.time()
+
+    def record(self, method: str, path: str, status: int, elapsed_ms: float) -> None:
+        key = f"{method} {path}"
+        with self._lock:
+            stats = self._routes.setdefault(key, RouteStats())
+            stats.requests += 1
+            stats.total_ms += elapsed_ms
+            stats.max_ms = max(stats.max_ms, elapsed_ms)
+            stats.last_status = status
+            if status >= 500:
+                stats.errors += 1
+            elif status >= 400:
+                stats.client_errors += 1
+
+    def snapshot(self) -> dict[str, object]:
+        with self._lock:
+            routes = {key: stats.as_dict() for key, stats in sorted(self._routes.items())}
+            requests = sum(stats.requests for stats in self._routes.values())
+            errors = sum(stats.errors for stats in self._routes.values())
+            client_errors = sum(stats.client_errors for stats in self._routes.values())
+            slowest = max(
+                (stats.max_ms for stats in self._routes.values()),
+                default=0.0,
+            )
+        uptime = time.time() - self.started_at
+        return {
+            "uptime_seconds": round(uptime, 1),
+            "requests": requests,
+            "errors": errors,
+            "client_errors": client_errors,
+            "slowest_ms": round(slowest, 2),
+            "routes": routes,
+        }
+
+
 class App:
     """Routes exact paths to handlers. No pattern matching: these UIs do not need it."""
 
     def __init__(self, name: str, static_dir: Path | None = None) -> None:
         self.name = name
         self.static_dir = static_dir
+        self.metrics = Metrics()
         self._routes: dict[tuple[str, str], Callable[[Request], Response]] = {}
 
     def route(self, method: str, path: str) -> Callable[..., Callable[[Request], Response]]:
@@ -90,6 +169,14 @@ class App:
 
     def handle(self, method: str, path: str, body: bytes = b"") -> Response:
         """The whole app as one function. The socket server only calls this."""
+        started = time.perf_counter()
+        response = self._dispatch(method, path, body)
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        raw_path = path.partition("?")[0]
+        self.metrics.record(method.upper(), raw_path, response.status, elapsed_ms)
+        return response
+
+    def _dispatch(self, method: str, path: str, body: bytes) -> Response:
         raw_path, _, raw_query = path.partition("?")
         query = _parse_query(raw_query)
         handler = self._routes.get((method.upper(), raw_path))
@@ -214,3 +301,16 @@ class BackgroundServer:
         self._server.shutdown()
         self._thread.join(timeout=5)
         self._server.server_close()
+
+
+def attach_metrics(app: App) -> None:
+    """Serve this app's own request counters at ``/api/metrics``.
+
+    The control panel polls it. It is the app reporting on itself rather than the panel
+    guessing from the outside, so a route that is slow or erroring says so even when the
+    page in front of it looks fine.
+    """
+
+    @app.route("GET", "/api/metrics")
+    def metrics(_request: Request) -> Response:
+        return Response.json({"app": app.name, **app.metrics.snapshot()})

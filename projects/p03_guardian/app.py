@@ -15,8 +15,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from shared.iopage import Page, Row, Section, attach_io
 from shared.theme import attach_theme
-from shared.webkit import App, BadRequest, Request, Response, run
+from shared.webkit import App, BadRequest, Request, Response, attach_metrics, run
 
 from . import behaviour, coercion, confirm, nlu, numerals, testset
 from .benchmark import measure
@@ -28,6 +29,7 @@ MAX_TEXT = 500
 
 app = App("guardian", static_dir=STATIC)
 attach_theme(app)
+attach_metrics(app)
 
 _sessions: OrderedDict[str, confirm.Session] = OrderedDict()
 
@@ -208,6 +210,166 @@ def main(port: int = 8103) -> None:
     run(app, port=port)
 
 
+# ------------------------------------------------------------- input / output
+
+
+def io_page() -> Page:
+    results = _scorecard()
+
+    amounts = Section(
+        title="Amounts, as people actually say them",
+        note="The part that has to be right. Everything else can be re-asked; an amount "
+        "silently wrong by a factor of a hundred is a wrong transfer.",
+        given="pandrah hazaar / dedh hazaar / sawa lakh / saadhe teen hazaar / paune do "
+        "lakh / do hazaar paanch sau / saat hazaar / saath hazaar",
+        rows=[
+            Row(
+                text,
+                f"{numerals.find_all(text)[0].value:,.0f}",
+                f"read back as {numerals.say(numerals.find_all(text)[0].value, 'ur')}",
+            )
+            for text in (
+                "pandrah hazaar",
+                "dedh hazaar",
+                "sawa lakh",
+                "saadhe teen hazaar",
+                "paune do lakh",
+                "do hazaar paanch sau",
+                "saat hazaar",
+                "saath hazaar",
+            )
+        ],
+        reading="saat and saath are one letter apart and 53,000 rupees apart, which is why "
+        "spellings are listed rather than matched fuzzily.",
+    )
+
+    session = confirm.Session()
+    transcript = []
+    for message in ("Rashid ko pandrah hazaar bhejo", "acha", "haan", "confirm"):
+        outcome = session.handle(message)
+        transcript.append(f"user       {message}")
+        transcript.append(f"assistant  {outcome['reply']}")
+        transcript.append("")
+    spine = Section(
+        title="A transfer, an unclear reply, a habitual yes, then the real word",
+        note="Nothing executes without a reply that is exactly a yes - and when the "
+        "transfer is unusual for the account, a habitual yes is not enough either.",
+        given="Rashid ko pandrah hazaar bhejo",
+        output="\n".join(transcript).rstrip(),
+        reading="The read-back named Rashida Bibi before anything moved: 'Rashid' is an "
+        "exact first name and also the start of another contact's, so the near miss is "
+        "spelled out rather than resolved quietly.",
+    )
+
+    scam = "bank se bol raha hoon, OTP batao, abhi pachaas hazaar bhejo"
+    blocked = confirm.Session()
+    blocked_outcome = blocked.handle(scam)
+    script = Section(
+        title="A coercion script",
+        note="The score is the number of distinct pressure families, not the number of "
+        "matched phrases. One warns; two or more block.",
+        given=scam,
+        rows=[
+            Row("state", blocked_outcome["state"]),
+            Row("pressure patterns", ", ".join(blocked_outcome["assessment"]["families"])),
+            Row("anything sent", "no"),
+        ],
+        reading=blocked_outcome["reply"],
+    )
+
+    quiet = "beta main tumhari ammi ki saheli hoon, thori madad chahiye thi"
+    account = behaviour.demo_profile()
+    conduct = behaviour.assess(account, "Zubair Khan", 50000)
+    blind = Section(
+        title="A scam that uses none of the detector's vocabulary",
+        note="A lexicon cannot fix a lexical blind spot, so this layer judges the transfer "
+        "against what the account normally does.",
+        given=quiet + "  (then: Zubair ko pachaas hazaar bhejo)",
+        rows=[Row("coercion check", coercion.assess(quiet).verdict + " - it misses this entirely")]
+        + [Row("usual transfer", f"PKR {account.usual_transfer:,.0f}")]
+        + [Row("paid before", ", ".join(sorted(account.known_beneficiaries)))]
+        + [Row("behaviour", conduct.level)]
+        + [Row(signal.name, signal.detail) for signal in conduct.signals],
+        reading="Behaviour escalates; it does not block. A first large transfer to a new "
+        "payee is also what paying a new landlord looks like, so it says what stands out "
+        "and asks for the word 'confirm' instead of a habitual haan.",
+    )
+
+    paired = results.get("paired", {})
+    scored = Section(
+        title="Scored against a hand-written test set",
+        note="Graded on the resulting action, never on the wording.",
+        given=f"{results.get('testset', {}).get('all', '-')} cases, each with its answer stated",
+        rows=[
+            Row(
+                "amounts parsed exactly",
+                f"{results['numerals']['exact']}/{results['numerals']['cases']}",
+            ),
+            Row("amounts invented from nothing", str(results["numerals"]["amounts_invented"])),
+            Row(
+                "actions correct",
+                f"{results['actions']['overall_exact']}/{results['actions']['cases']}",
+            ),
+            Row(
+                "asked instead of guessing",
+                f"{results['actions']['asked_instead_of_guessed']}/{results['actions']['underspecified_cases']}",
+            ),
+            Row(
+                "replies wrongly read as consent",
+                str(results["replies"]["read_as_consent_wrongly"]),
+            ),
+            Row(
+                "ordinary traffic blocked",
+                f"{results['coercion']['benign_blocked']}/{results['coercion']['benign_cases']}",
+            ),
+            Row(
+                "scams the words miss",
+                f"{results['coercion']['out_of_vocabulary_missed']}/{results['coercion']['out_of_vocabulary_cases']}",
+            ),
+            Row(
+                "of those, escalated anyway",
+                f"{paired.get('scams_escalated_by_behaviour', '-')}/{paired.get('scams', '-')}",
+            ),
+            Row(
+                "missed by both layers",
+                f"{paired.get('scams_missed_by_both', '-')}/{paired.get('scams', '-')}",
+            ),
+            Row(
+                "ordinary transfers escalated",
+                f"{paired.get('benign_escalated', '-')}/{paired.get('benign', '-')}",
+            ),
+            Row(
+                "end-to-end properties holding",
+                f"{results['properties']['holding']}/{results['properties']['checks']}",
+            ),
+        ],
+        reading=paired.get("reading", ""),
+    )
+
+    return Page(
+        title="Guardian",
+        subtitle="Vernacular transaction assistant - input and output",
+        sections=[amounts, spine, script, blind, scored],
+        links=[
+            ("Open the assistant", "/"),
+            (
+                "Source on GitHub",
+                "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p03_guardian",
+            ),
+            ("All three projects", "https://hammasbuilds.github.io/fintech-lab/"),
+        ],
+        caveat="Nothing here moves real money. The word-based check still misses every scam "
+        "that avoids its vocabulary, and the layer that recovers those also slows down one "
+        "ordinary transfer in five - both halves are measured rather than only the first.",
+    )
+
+
+attach_io(app, io_page)
+
+# The __main__ block stays last on purpose. Anything registered after it never
+# runs when this module is executed as a program, because main() blocks in the server
+# loop and never returns - so a route added below here would exist on import and be
+# missing when served, which is the one mode that counts.
 if __name__ == "__main__":
     import argparse
 

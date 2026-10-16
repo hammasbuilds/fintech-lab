@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import json
+import pathlib
 from pathlib import Path
 
+from shared.datapage import Block, Figure, dig, figures_from  # noqa: F401
+from shared.datapage import Page as DataPage
+from shared.datapage import attach as attach_datasets
 from shared.modelpage import Column, Spec, Table, attach
 from shared.theme import attach_theme
 from shared.webkit import App, attach_metrics, run
 
+from . import bank
 from .benchmark import RESULTS
 from .benchmark import run as measure
 
@@ -146,6 +152,7 @@ def spec() -> Spec:
         ],
         links=[
             ("Input and output", "/io"),
+            ("Datasets", "/datasets"),
             ("Project 01, the oracle", "http://127.0.0.1:8101/"),
             ("Source", SOURCE),
         ],
@@ -198,6 +205,97 @@ def io_page():
 from shared.iopage import attach_io  # noqa: E402
 
 attach_io(app, io_page)
+
+
+# ---------------------------------------------------------------------------- datasets
+# What this project is measured on at full size, and what came out. The figures are read
+# out of results_datasets.json and data/MANIFEST.json rather than typed, so this page
+# cannot drift from the run that produced it.
+DATASETS_RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
+
+
+def _at_scale() -> dict:
+    if DATASETS_RESULTS.is_file():
+        try:
+            return json.loads(DATASETS_RESULTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def datasets_page() -> DataPage:
+    data = _at_scale()
+    blocks = [
+        Block(
+            title="Project 01's codec, on the whole bank",
+            figures=figures_from(
+                data,
+                [
+                    ("tasks scored", "product_on_the_whole_bank.tasks_scored", ""),
+                    (
+                        "decode",
+                        "product_on_the_whole_bank.by_family.decode.accuracy",
+                        "15,000 tasks",
+                    ),
+                    (
+                        "fields",
+                        "product_on_the_whole_bank.by_family.fields.accuracy",
+                        "15,000 tasks",
+                    ),
+                    ("wire", "product_on_the_whole_bank.by_family.wire.accuracy", "15,000 tasks"),
+                    (
+                        "negative: found a fault",
+                        "product_on_the_whole_bank.by_family.negative.found_a_fault_rate",
+                        "15,000 tasks",
+                    ),
+                    (
+                        "negative: named the injected fault",
+                        "product_on_the_whole_bank.by_family.negative.named_the_injected_fault_rate",
+                        "15,000 tasks",
+                    ),
+                ],
+            ),
+            reading=str(dig(data, "product_on_the_whole_bank.how_to_read_the_negative_family", "")),
+        ),
+        Block(
+            title="The model, on a sample",
+            figures=figures_from(
+                data,
+                [
+                    ("cases answered", "model_on_a_sample.cases_the_model_answered", ""),
+                    ("tasks in the bank", "model_on_a_sample.tasks_in_the_bank", ""),
+                    ("share of the bank", "model_on_a_sample.share_of_the_bank", "the bank"),
+                    (
+                        "replies aborted by the server",
+                        "model_on_a_sample.aborted_by_the_server",
+                        "58 replies",
+                    ),
+                ],
+            ),
+            reading=str(dig(data, "model_on_a_sample.why_it_is_a_sample", "")),
+        ),
+    ]
+    if not data:
+        blocks = [
+            Block(
+                title="Not run on this machine",
+                subtitle=(
+                    "The at-scale figures come from results_datasets.json, which is "
+                    "committed. If this page is empty the file is missing: run make data "
+                    "and then make bench-datasets."
+                ),
+            )
+        ]
+    return DataPage(
+        title="04 Spec to wire",
+        subtitle="60,000 tasks for the codec, 29 of them for the model",
+        dataset_keys=[bank.KEY],
+        blocks=blocks,
+        links=[("Dashboard", "/"), ("Input and output", "/io"), ("Source", SOURCE)],
+    )
+
+
+attach_datasets(app, datasets_page)
 
 
 def main(port: int = 8104) -> None:

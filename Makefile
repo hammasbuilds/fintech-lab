@@ -1,4 +1,4 @@
-.PHONY: install test lint demo bench bench01 bench02 bench03 bench-models bench04 bench05 bench06 serve01 serve02 serve03 serve04 serve05 serve06 observatory observatory-all models pages all
+.PHONY: install test lint demo bench bench01 bench02 bench03 bench-models bench04 bench05 bench06 serve01 serve02 serve03 serve04 serve05 serve06 observatory observatory-all models pages fetch datasets data bench-datasets big01 big02 big03 big04 big05 big06 all
 
 install:
 	uv sync --extra dev
@@ -7,11 +7,49 @@ test:
 	uv run pytest -q
 
 lint:
-	uv run ruff check shared projects tests demo.py
-	uv run ruff format --check shared projects tests demo.py
+	uv run ruff check shared projects observatory scripts tests demo.py
+	uv run ruff format --check shared projects observatory scripts tests demo.py
 
 demo:
 	uv run python demo.py
+
+# ---------------------------------------------------------------------- datasets
+# Every project is measured on between 50,000 and a million rows. Two of those datasets
+# are downloaded and five are generated, and none of them is in git: the repo ships the
+# generators, the manifest (row counts and sha256) and a 200-row sample of each.
+#
+#   make fetch      downloads the four public files (needs a Kaggle token)
+#   make datasets   generates the corpora and writes data/MANIFEST.json
+#   make data       both, in that order
+fetch:
+	uv run python scripts/fetch_raw.py
+
+datasets:
+	uv run python scripts/build_datasets.py
+
+data: fetch datasets
+
+# The at-scale runs. Each writes results_datasets.json next to the project, which is
+# committed and - unlike results.json - not re-derived by CI, because CI has no data.
+bench-datasets: big01 big02 big03 big04 big05 big06
+
+big01:
+	uv run python -m projects.p01_switchboard.bigbench
+
+big02:
+	uv run python -m projects.p02_policy_bench.bigbench
+
+big03:
+	uv run python -m projects.p03_guardian.bigbench
+
+big04:
+	uv run python -m projects.p04_spec_to_wire.bigbench
+
+big05:
+	uv run python -m projects.p05_policy_from_prose.bigbench
+
+big06:
+	uv run python -m projects.p06_model_vs_lexicon.bigbench
 
 # The first three need nothing but the standard library.
 bench: bench01 bench02 bench03
@@ -52,9 +90,13 @@ observatory:
 observatory-all:
 	uv run python -m observatory --start-all
 
-# The published page is generated from the projects' own results files, never typed.
+# The published page, the READMEs' numbers and their Input / Output blocks are all
+# generated from the projects' own results files, never typed.
 pages:
 	uv run python scripts/build_pages.py
+	uv run python scripts/build_model_readmes.py
+	uv run python scripts/build_dataset_readmes.py
+	uv run python scripts/build_readme_io.py
 
 # Each UI is a single page on the standard library. Nothing starts on import; these are
 # the only commands that open a port.

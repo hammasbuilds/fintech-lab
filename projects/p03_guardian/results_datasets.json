@@ -1,0 +1,501 @@
+{
+  "generated": {
+    "amounts": {
+      "by_style": [
+        {
+          "cases": 8066,
+          "exact_rate": 0.9812,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "digit_word_scale"
+        },
+        {
+          "cases": 18963,
+          "exact_rate": 0.9833,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "word_scale"
+        },
+        {
+          "cases": 9136,
+          "exact_rate": 0.9834,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "word_two_scales"
+        },
+        {
+          "cases": 15135,
+          "exact_rate": 0.9841,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "word_fraction"
+        },
+        {
+          "cases": 10375,
+          "exact_rate": 0.9957,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "word_standalone"
+        },
+        {
+          "cases": 23772,
+          "exact_rate": 1.0,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "digits"
+        },
+        {
+          "cases": 14954,
+          "exact_rate": 1.0,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "digits_currency"
+        },
+        {
+          "cases": 20939,
+          "exact_rate": 1.0,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "digits_grouped"
+        },
+        {
+          "cases": 11766,
+          "exact_rate": 1.0,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "k_suffix"
+        },
+        {
+          "cases": 8998,
+          "exact_rate": 1.0,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "urdu_digits"
+        },
+        {
+          "cases": 7317,
+          "exact_rate": 1.0,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "digits_slash"
+        }
+      ],
+      "cases": 149421,
+      "exact": 148515,
+      "exact_rate": 0.9939,
+      "none_found": 0,
+      "off_by_ten_or_more": 0,
+      "off_by_ten_or_more_rate": 0.0,
+      "reading": "An exact rate below one is not automatically a defect - some of these sentences carry two numbers and the gold names one of them - but a style whose rate is far below the others is a phrasing the parser does not handle, and that is a bug report with an address."
+    },
+    "beneficiaries": {
+      "ask_rate": 0.9893,
+      "asked": 32430,
+      "reading": "These two have to be read together. A resolver that never asks scores 1.000 on the first and 0.000 on the second, and pays whoever it guessed.",
+      "resolve_rate": 0.9363,
+      "resolved": 74080,
+      "should_ask": 32782,
+      "should_resolve": 79119
+    },
+    "benign": {
+      "blocked": 528,
+      "cases": 25000,
+      "false_block_rate": 0.0211
+    },
+    "cases_scored": 200000,
+    "coercion": {
+      "blocked": 38435,
+      "by_family": {
+        "account_redirect": {
+          "cases": 6950,
+          "catch_rate": 0.9812,
+          "caught": 6819,
+          "named": 6785,
+          "named_the_family_rate": 0.9763
+        },
+        "lure": {
+          "cases": 6797,
+          "catch_rate": 0.9901,
+          "caught": 6730,
+          "named": 6705,
+          "named_the_family_rate": 0.9865
+        },
+        "otp_solicitation": {
+          "cases": 6988,
+          "catch_rate": 0.9828,
+          "caught": 6868,
+          "named": 6819,
+          "named_the_family_rate": 0.9758
+        },
+        "remote_access": {
+          "cases": 6911,
+          "catch_rate": 0.9806,
+          "caught": 6777,
+          "named": 6742,
+          "named_the_family_rate": 0.9755
+        },
+        "staff_impersonation": {
+          "cases": 6994,
+          "catch_rate": 0.9871,
+          "caught": 6904,
+          "named": 6843,
+          "named_the_family_rate": 0.9784
+        },
+        "threat": {
+          "cases": 6941,
+          "catch_rate": 0.9844,
+          "caught": 6833,
+          "named": 6801,
+          "named_the_family_rate": 0.9798
+        },
+        "urgency": {
+          "cases": 6935,
+          "catch_rate": 0.8672,
+          "caught": 6014,
+          "named": 5516,
+          "named_the_family_rate": 0.7954
+        }
+      },
+      "cases": 40000,
+      "catch_rate": 0.9609
+    },
+    "intents": {
+      "accuracy": 0.9746,
+      "by_intent": {
+        "balance": {
+          "accuracy": 1.0,
+          "cases": 5579,
+          "correct": 5579
+        },
+        "bill_payment": {
+          "accuracy": 0.9571,
+          "cases": 16236,
+          "correct": 15540
+        },
+        "mobile_topup": {
+          "accuracy": 1.0,
+          "cases": 9709,
+          "correct": 9709
+        },
+        "send_money": {
+          "accuracy": 0.9737,
+          "cases": 123476,
+          "correct": 120230
+        }
+      },
+      "cases": 155000,
+      "correct": 151058
+    },
+    "replies": {
+      "accuracy": 0.8992,
+      "cases": 5000,
+      "correct": 4496
+    },
+    "seconds": 66.1,
+    "worst_amount_examples": [
+      {
+        "gold": 800.0,
+        "ratio": 1.25,
+        "read_as": 1000.0,
+        "style": "word_scale",
+        "text": "please bhej do eight sau brother ko foran"
+      },
+      {
+        "gold": 6700.0,
+        "ratio": 1.3,
+        "read_as": 8700.0,
+        "style": "word_two_scales",
+        "text": "please bhej do chay hzar saat hundred Chen Wei ko ab"
+      },
+      {
+        "gold": 125000.0,
+        "ratio": 2.6,
+        "read_as": 325000.0,
+        "style": "word_fraction",
+        "text": "please bhej do sawa one lakh chaacha ko abhee"
+      },
+      {
+        "gold": 2500.0,
+        "ratio": 1.8,
+        "read_as": 4500.0,
+        "style": "word_two_scales",
+        "text": "please bhej do do hzar five sau Yara Khalil ko ab"
+      },
+      {
+        "gold": 52500000.0,
+        "ratio": 1.38,
+        "read_as": 72500000.0,
+        "style": "word_fraction",
+        "text": "please bhej do sawa paanch crore Shirin ko foran"
+      },
+      {
+        "gold": 500.0,
+        "ratio": 1.4,
+        "read_as": 700.0,
+        "style": "word_scale",
+        "text": "please bhej do five sau Hamza ko jal"
+      },
+      {
+        "gold": 2500.0,
+        "ratio": 1.08,
+        "read_as": 2700.0,
+        "style": "word_scale",
+        "text": "please bhej do pachees sau Ahmet ko foran"
+      },
+      {
+        "gold": 6300.0,
+        "ratio": 1.32,
+        "read_as": 8300.0,
+        "style": "word_two_scales",
+        "text": "please bhej do six hazar teen hundred Mariam Yusuf ko foran"
+      },
+      {
+        "gold": 6800.0,
+        "ratio": 1.29,
+        "read_as": 8800.0,
+        "style": "word_two_scales",
+        "text": "please bhej do six hazar eight sau Min-jun Park ko foran"
+      },
+      {
+        "gold": 1000.0,
+        "ratio": 1.2,
+        "read_as": 1200.0,
+        "style": "word_scale",
+        "text": "please bhej do das hundred Li ko ab"
+      },
+      {
+        "gold": 5000.0,
+        "ratio": 1.4,
+        "read_as": 7000.0,
+        "style": "word_scale",
+        "text": "please bhej do paanch thousand James Whitfield ko jaldi"
+      },
+      {
+        "gold": 500.0,
+        "ratio": 1.4,
+        "read_as": 700.0,
+        "style": "word_scale",
+        "text": "please bhe do five sau father ko fori"
+      },
+      {
+        "gold": 500.0,
+        "ratio": 1.4,
+        "read_as": 700.0,
+        "style": "digit_word_scale",
+        "text": "please bhej do 5 sau Mateo ko abhi"
+      },
+      {
+        "gold": 875000.0,
+        "ratio": 1.23,
+        "read_as": 1075000.0,
+        "style": "word_fraction",
+        "text": "please bhej do paune nau lakh Ayesha Noor ko jald"
+      },
+      {
+        "gold": 300000.0,
+        "ratio": 1.67,
+        "read_as": 500000.0,
+        "style": "word_scale",
+        "text": "please bhej do teen lakh Chidi ko abhi"
+      },
+      {
+        "gold": 300000.0,
+        "ratio": 1.67,
+        "read_as": 500000.0,
+        "style": "word_scale",
+        "text": "please bhej do teen lakh bhai ko ab"
+      },
+      {
+        "gold": 57500000.0,
+        "ratio": 1.35,
+        "read_as": 77500000.0,
+        "style": "word_fraction",
+        "text": "please bhej do paune six karor 03649186501 ko abhee"
+      },
+      {
+        "gold": 1000.0,
+        "ratio": 1.2,
+        "read_as": 1200.0,
+        "style": "word_scale",
+        "text": "please bhej do ten sau Zubair Khan ko jaldi"
+      },
+      {
+        "gold": 2500000.0,
+        "ratio": 1.08,
+        "read_as": 2700000.0,
+        "style": "word_scale",
+        "text": "please bhej do pachees lakh Hamza ko abhi"
+      },
+      {
+        "gold": 200.0,
+        "ratio": 2.0,
+        "read_as": 400.0,
+        "style": "word_scale",
+        "text": "please bhej do do sau Ayesha Siddiqa ko ab"
+      },
+      {
+        "gold": 125000.0,
+        "ratio": 1.6,
+        "read_as": 200000.0,
+        "style": "word_standalone",
+        "text": "please bhej do sawa lakh Omar Haddad ko ab"
+      },
+      {
+        "gold": 250000.0,
+        "ratio": 1.8,
+        "read_as": 450000.0,
+        "style": "word_fraction",
+        "text": "please bhej do saadhe two lakh Chidi ko jaldi"
+      },
+      {
+        "gold": 9250.0,
+        "ratio": 1.22,
+        "read_as": 11250.0,
+        "style": "word_fraction",
+        "text": "please bhej do sawa nine hazaar behan ko abhi"
+      },
+      {
+        "gold": 450.0,
+        "ratio": 1.44,
+        "read_as": 650.0,
+        "style": "word_fraction",
+        "text": "pleease bhej do saadhe four hundred Giulia Rossi ko abhi"
+      },
+      {
+        "gold": 2000.0,
+        "ratio": 1.1,
+        "read_as": 2200.0,
+        "style": "word_scale",
+        "text": "please bhej do bees sau Dilshan Perera ko abhee"
+      },
+      {
+        "gold": 5600.0,
+        "ratio": 1.36,
+        "read_as": 7600.0,
+        "style": "word_two_scales",
+        "text": "please bhej do five thousand six hundred Min-jun Park ko abhi"
+      },
+      {
+        "gold": 20000000.0,
+        "ratio": 2.0,
+        "read_as": 40000000.0,
+        "style": "digit_word_scale",
+        "text": "please bhej do 2 crore Tariq ko fori"
+      },
+      {
+        "gold": 8100.0,
+        "ratio": 1.25,
+        "read_as": 10100.0,
+        "style": "word_two_scales",
+        "text": "please bhej do aath thousand one sau Yuki ko fori"
+      },
+      {
+        "gold": 25000000.0,
+        "ratio": 1.8,
+        "read_as": 45000000.0,
+        "style": "word_fraction",
+        "text": "please bhej do sadhe do crore Seo-yeon Kim ko jaldi"
+      },
+      {
+        "gold": 2500.0,
+        "ratio": 1.08,
+        "read_as": 2700.0,
+        "style": "word_scale",
+        "text": "please bhej do pachees hundred ami ko fori"
+      },
+      {
+        "gold": 70000000.0,
+        "ratio": 1.29,
+        "read_as": 90000000.0,
+        "style": "digit_word_scale",
+        "text": "please bhej do 7 crore mamu ko abhee"
+      },
+      {
+        "gold": 5000.0,
+        "ratio": 1.4,
+        "read_as": 7000.0,
+        "style": "word_scale",
+        "text": "please bhej do panch hazaar Wei Lin ko abhee"
+      },
+      {
+        "gold": 250.0,
+        "ratio": 1.8,
+        "read_as": 450.0,
+        "style": "word_fraction",
+        "text": "please bhej do saadhe two hundred Rashid Ahmad ko abhi"
+      },
+      {
+        "gold": 2500000.0,
+        "ratio": 1.08,
+        "read_as": 2700000.0,
+        "style": "digit_word_scale",
+        "text": "please bhej do 25 lakh Niamh Murphy ko jaldi"
+      },
+      {
+        "gold": 800000.0,
+        "ratio": 1.25,
+        "read_as": 1000000.0,
+        "style": "digit_word_scale",
+        "text": "please bhej do 8 lakh Hamza ko abhi"
+      },
+      {
+        "gold": 40000000.0,
+        "ratio": 1.5,
+        "read_as": 60000000.0,
+        "style": "word_scale",
+        "text": "please bhej do four crore Aisha Mohamed ko ab"
+      },
+      {
+        "gold": 12500000.0,
+        "ratio": 1.6,
+        "read_as": 20000000.0,
+        "style": "word_standalone",
+        "text": "please bhej do sawa karor sister ko jaldi"
+      },
+      {
+        "gold": 15000.0,
+        "ratio": 1.13,
+        "read_as": 17000.0,
+        "style": "digit_word_scale",
+        "text": "please bhe do 15 thousand 03541620525 ko abhee"
+      },
+      {
+        "gold": 125.0,
+        "ratio": 1.6,
+        "read_as": 200.0,
+        "style": "word_standalone",
+        "text": "please bhej do sawa sau Elena Petrova ko abhi"
+      },
+      {
+        "gold": 500000.0,
+        "ratio": 1.4,
+        "read_as": 700000.0,
+        "style": "digit_word_scale",
+        "text": "please bhej do 5 lakh Yara Khalil ko abhee"
+      }
+    ]
+  },
+  "setup": {
+    "contacts": 60,
+    "dataset": {
+      "bytes": 73081035,
+      "note": "200,000 labelled utterances. The gold label comes from how each sentence was composed, and the spellings are the ones attested in 37,220 real Roman Urdu sentences.",
+      "role": "cohort",
+      "role_means": "rows a measurement reports a rate over; has to hold between 50,000 and 1,000,000 of them",
+      "rows": 200000,
+      "sample": "data/samples/generated_p03_utterances.jsonl",
+      "sample_rows": 200,
+      "sha256": "6adc21213622dacc6eb19b3a80c8e66f36c12dc2543a2cb200f793c4eecfe9ef",
+      "source": "generated by projects/p03_guardian/generator.py",
+      "within_the_size_policy": true
+    },
+    "plan": {
+      "action": 70000,
+      "amount": 60000,
+      "benign": 25000,
+      "coercion": 40000,
+      "reply": 5000
+    },
+    "why_this_is_a_separate_file": "The generated set is 72 MB, so CI cannot re-derive these numbers. results.json stays the 140 hand-written cases, which need no data files."
+  }
+}

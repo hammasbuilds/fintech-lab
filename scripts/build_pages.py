@@ -26,7 +26,7 @@ REPO = "https://github.com/hammasbuilds/fintech-lab"
 #: The suite size shown on the badge. A hand-written number here would be the first
 #: thing to go stale, so a test asserts it against what pytest actually collected -
 #: see test_the_published_page_quotes_the_real_test_count.
-TESTS = 585
+TESTS = 668
 
 sys.path.insert(0, str(ROOT))
 
@@ -74,7 +74,7 @@ CLAIMS = {
         "back to the same text, and back-tested before it goes live.",
         "The v1 to v2 tightening declines 1,238 more applicants: 47 would have defaulted "
         "and 1,191 would have repaid. The cutoff sweep says why - the scorecard's Gini is "
-        "0.284, so any cutoff cuts both groups at once.",
+        "0.233, so any cutoff cuts both groups at once.",
     ),
     "guardian": (
         "A transaction assistant for Roman Urdu and code-mixed speech, with no model: a "
@@ -93,7 +93,7 @@ CLAIMS = {
     "policy-from-prose": (
         "A local model asked to turn a written credit policy into project 02's language, "
         "and then judged on what it decides.",
-        "A compiled policy can be run, so the grader runs it over all 5,000 borrowers. The "
+        "A compiled policy can be run, so the grader runs it over all 50,000 borrowers. The "
         "column that matters is the one no text check can see: policies that compile, read "
         "sensibly, and approve a different set of applicants.",
     ),
@@ -105,6 +105,40 @@ CLAIMS = {
         "there is counted in false alarms on ordinary traffic.",
     ),
 }
+
+
+def dataset_rows() -> str:
+    """The manifest as table rows. Nothing here is typed; it is read off the files."""
+    from shared.datasets import load_manifest
+
+    manifest = load_manifest()
+    if not manifest:
+        return (
+            '<tr><td colspan="5">The manifest is not built on this machine. '
+            "Run <code>make data</code>.</td></tr>"
+        )
+    order = [
+        ("generated/p01_messages", "01", "ISO 8583 messages, generated"),
+        ("real/loan_book", "02", "Loan applications with real outcomes"),
+        ("real/card_applications", "02", "Card applications, outcomes mostly missing"),
+        ("real/card_credit_records", "02", "Monthly repayment status (lookup)"),
+        ("generated/p03_utterances", "03", "Wallet utterances, labelled by construction"),
+        ("generated/p04_tasks", "04", "Wire tasks drawn from the 01 corpus"),
+        ("generated/p05_policies", "05", "Policies in prose and in the DSL"),
+    ]
+    rows = []
+    for key, project, what in order:
+        entry = manifest.get(key)
+        if not entry:
+            continue
+        size = int(entry["bytes"]) / (1024 * 1024)
+        rows.append(
+            f"<tr><td>{escape(project)}</td><td>{escape(what)}</td>"
+            f'<td class="num">{entry["rows"]:,}</td>'
+            f'<td class="num">{size:,.0f} MB</td>'
+            f"<td>{escape(str(entry.get('source', '')))}</td></tr>"
+        )
+    return "\n".join(rows)
 
 
 def build() -> str:
@@ -205,6 +239,26 @@ def build() -> str:
   </div>
 
   <div class="card">
+    <h2>What each project is measured on</h2>
+    <p class="hint">Every project is scored on between 50,000 and a million rows. Two of
+       these datasets are public files that get downloaded and five are generated from a
+       seed; none of them is in the repository, which ships the generators, a 200-row
+       sample of each and a manifest of row counts and sha256 fingerprints. The numbers
+       below are read out of that manifest.</p>
+    <div class="scroll"><table><thead><tr>
+      <th>Project</th><th>Dataset</th><th>Rows</th><th>Size</th><th>Source</th>
+    </tr></thead><tbody>
+{dataset_rows()}
+    </tbody></table></div>
+    <p class="hint">The model arms answer a <em>sample</em> of their bank &mdash; 29 tasks
+       of 60,000, five policies of 60,000, 65 utterances of 200,000 &mdash; because each
+       reply is a local model call measured in seconds. Every project's dataset page prints
+       the sample size next to the figure, so a count is never read as a rate.</p>
+    <pre class="out">make data            # download the public files, generate the rest, write the manifest
+make bench-datasets  # score every project on all of it</pre>
+  </div>
+
+  <div class="card">
     <h2>The dashboards run locally, and that is not a limitation being hidden</h2>
     <p class="hint">
       Each project serves a single-page dashboard, an input/output proof at <code
@@ -218,8 +272,8 @@ uv run python -m observatory --start-all      # then open http://127.0.0.1:8100<
     <p class="hint">
       The Observatory starts and stops each project, shows whether it is actually answering
       on its port rather than merely spawned, reads each one's own counters, and links
-      through to every project's dashboard, proof page, source and README &mdash; so there is
-      one place to open them from instead of a shortcut per project.
+      through to every project's dashboard, proof page, dataset page, source and README
+      &mdash; so there is one place to open them from instead of a shortcut per project.
     </p>
     <p class="hint">
       Or run one on its own: <code class="cmd">make serve01</code>,
@@ -239,7 +293,7 @@ uv run python -m observatory --start-all      # then open http://127.0.0.1:8100<
           bitmap carries no redundancy, so one flipped bit can swap a field for another of the
           same width and produce a different valid message. No parser can catch that, which is
           why the invariant layer exists.</li>
-      <li><strong>Policy Bench</strong> reports a Gini of 0.284 and calls it weak separation in
+      <li><strong>Policy Bench</strong> reports a Gini of 0.233 and calls it weak separation in
           those words. Its cohort is synthetic and its generator is written out in full, so every
           figure is a statement about that generator rather than about a market.</li>
       <li><strong>Guardian</strong> misses every scam that avoids its vocabulary, and the layer

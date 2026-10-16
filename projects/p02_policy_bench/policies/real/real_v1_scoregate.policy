@@ -1,0 +1,29 @@
+# Written against the real loan book, not the synthetic cohort: the columns are the ones
+# in loanbook.py, which documents every rename and the one derived field.
+#
+# The source names no currency, so this uses XXX - the ISO 4217 code for "no currency
+# involved". Printing PKR or USD over data that does not say would be inventing a fact.
+#
+# interest_rate is in here on purpose, and it is the uncomfortable rule. It is the
+# strongest single predictor in the book (6.0% default at the cheapest pricing against
+# 17.8% at the dearest), but it is the lender's own price for this applicant - a decision
+# the lender already made, not a fact about the borrower. A policy that scores on it is
+# partly scoring its own earlier judgement. real_v2 drops it, and the backtest says what
+# that costs.
+policy "Real book v1 - score gate"
+version 1
+currency XXX
+
+decline if age < 18 because "below the legal age to contract"
+decline if credit_score < 450 because "credit score below the floor of 450"
+decline if dti_ratio > 0.8 because "debt service above 80 percent of income"
+
+score +25 if credit_score >= 600 because "credit score comfortably above the floor"
+score +20 if months_employed >= 48 because "four years with the same employer"
+score +15 if annual_income >= 80000 because "income in the upper half of the book"
+score +10 if has_cosigner == 1 because "a co-signer is on the application"
+score -20 if interest_rate > 15 because "priced at the dear end of the book"
+
+approve if score >= 40
+limit min(0.25 * monthly_income, 20000)
+fee 2% of limit

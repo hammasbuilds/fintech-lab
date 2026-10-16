@@ -1,0 +1,32 @@
+# v2 of the real-book policy. One change of substance: the interest_rate rule is gone.
+#
+# v1 scored -20 for being priced above 15 percent, which is the strongest signal in the
+# book - and is the lender's own pricing decision rather than anything the applicant did.
+# Scoring on it means the policy inherits whatever the pricing model already believed,
+# including its mistakes, and it cannot be explained to an applicant: "you were declined
+# because we quoted you a high rate" is circular.
+#
+# To keep the two comparable, the points that rule carried are redistributed over things
+# the applicant brings with them: a longer employment record, fewer open credit lines,
+# and a lower debt-service ratio. The approval threshold is unchanged, so the cutoff
+# sweep compares like with like.
+policy "Real book v2 - no price signal"
+version 2
+currency XXX
+
+decline if age < 18 because "below the legal age to contract"
+decline if credit_score < 450 because "credit score below the floor of 450"
+decline if dti_ratio > 0.8 because "debt service above 80 percent of income"
+refer if loan_amount > 200000 because "a large principal needs an officer to size it"
+
+score +25 if credit_score >= 600 because "credit score comfortably above the floor"
+score +20 if months_employed >= 48 because "four years with the same employer"
+score +10 if months_employed >= 96 because "eight years with the same employer"
+score +15 if annual_income >= 80000 because "income in the upper half of the book"
+score +10 if has_cosigner == 1 because "a co-signer is on the application"
+score +10 if dti_ratio <= 0.4 because "debt service under 40 percent of income"
+score -10 if credit_lines >= 4 because "four or more credit lines already open"
+
+approve if score >= 40
+limit min(0.25 * monthly_income, 20000)
+fee 2% of limit

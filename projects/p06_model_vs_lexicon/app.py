@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 
+from shared.datapage import Block, Figure, dig, figures_from  # noqa: F401
+from shared.datapage import Page as DataPage
+from shared.datapage import attach as attach_datasets
 from shared.iopage import Page, Row, Section, attach_io
 from shared.modelpage import Column, Spec, Table, attach
 from shared.theme import attach_theme
 from shared.webkit import App, attach_metrics, run
 
+from ..p03_guardian import generator
 from . import tasks
 from .benchmark import RESULTS
 from .benchmark import run as measure
@@ -136,6 +141,7 @@ def spec() -> Spec:
         ],
         links=[
             ("Input and output", "/io"),
+            ("Datasets", "/datasets"),
             ("Project 03, the baseline", "http://127.0.0.1:8103/"),
             ("Source", SOURCE),
         ],
@@ -226,6 +232,99 @@ def io_page() -> Page:
 
 
 attach_io(app, io_page)
+
+
+# ---------------------------------------------------------------------------- datasets
+# What this project is measured on at full size, and what came out. The figures are read
+# out of results_datasets.json and data/MANIFEST.json rather than typed, so this page
+# cannot drift from the run that produced it.
+DATASETS_RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
+
+
+def _at_scale() -> dict:
+    if DATASETS_RESULTS.is_file():
+        try:
+            return json.loads(DATASETS_RESULTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def datasets_page() -> DataPage:
+    data = _at_scale()
+    blocks = [
+        Block(
+            title="Project 03's rules, on the whole set",
+            figures=figures_from(
+                data,
+                [
+                    ("cases", "rules_on_the_whole_set.cases", ""),
+                    (
+                        "amounts exact",
+                        "rules_on_the_whole_set.amount_exact_rate",
+                        "the cases with an amount",
+                    ),
+                    (
+                        "intent accuracy",
+                        "rules_on_the_whole_set.intent_accuracy",
+                        "the cases with an intent",
+                    ),
+                    (
+                        "payees resolved",
+                        "rules_on_the_whole_set.payee_resolve_rate",
+                        "cases naming one contact",
+                    ),
+                    (
+                        "coercion caught",
+                        "rules_on_the_whole_set.coercion_catch_rate",
+                        "40,000 scripts",
+                    ),
+                    (
+                        "ordinary traffic blocked",
+                        "rules_on_the_whole_set.false_block_rate_on_ordinary_traffic",
+                        "25,000 messages",
+                    ),
+                ],
+            ),
+        ),
+        Block(
+            title="The model, on a sample",
+            figures=figures_from(
+                data,
+                [
+                    ("cases answered", "model_on_a_sample.cases", ""),
+                    ("share of the set", "model_on_a_sample.share_of_the_set", "200,000 cases"),
+                    (
+                        "blind-spot cases in the sample",
+                        "model_on_a_sample.blind_spot_cases_in_the_sample",
+                        "",
+                    ),
+                ],
+            ),
+            reading=str(dig(data, "model_on_a_sample.why_four_cases_cannot_rank_the_arms", "")),
+        ),
+    ]
+    if not data:
+        blocks = [
+            Block(
+                title="Not run on this machine",
+                subtitle=(
+                    "The at-scale figures come from results_datasets.json, which is "
+                    "committed. If this page is empty the file is missing: run make data "
+                    "and then make bench-datasets."
+                ),
+            )
+        ]
+    return DataPage(
+        title="06 Model against lexicon",
+        subtitle="The rules on 200,000 cases, the model on 65 of them",
+        dataset_keys=[generator.KEY],
+        blocks=blocks,
+        links=[("Dashboard", "/"), ("Input and output", "/io"), ("Source", SOURCE)],
+    )
+
+
+attach_datasets(app, datasets_page)
 
 
 def main(port: int = 8106) -> None:

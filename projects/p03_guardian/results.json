@@ -212,12 +212,12 @@
   },
   "lexicon": {
     "number_words": 114,
-    "scales": 20,
+    "scales": 21,
     "modifiers": 21,
     "intents": 7,
-    "intent_phrases": 63,
+    "intent_phrases": 66,
     "coercion_families": 7,
-    "coercion_phrases": 98,
+    "coercion_phrases": 122,
     "coercion_proximity_patterns": 4,
     "behaviour_signals": 6,
     "contacts": 7

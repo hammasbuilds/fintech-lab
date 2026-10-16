@@ -25,16 +25,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .cohort import LOSS_GIVEN_DEFAULT, Borrower
+from .cohort import LOSS_GIVEN_DEFAULT
 from .dsl import Policy
 from .engine import Decision, evaluate
+from .records import Record
 
 
 @dataclass
 class Scored:
     """One borrower, scored once. Re-deciding at a new threshold needs nothing else."""
 
-    borrower: Borrower
+    borrower: Record
     decision: Decision
     gated: bool
 
@@ -43,7 +44,7 @@ class Scored:
         return self.decision.score
 
 
-def score_all(policy: Policy, borrowers: list[Borrower]) -> list[Scored]:
+def score_all(policy: Policy, borrowers: list[Record]) -> list[Scored]:
     out: list[Scored] = []
     for borrower in borrowers:
         decision = evaluate(policy, borrower.record())
@@ -172,7 +173,7 @@ class Point:
         }
 
 
-def sweep(policy: Policy, borrowers: list[Borrower], step: float = 5.0) -> dict[str, object]:
+def sweep(policy: Policy, borrowers: list[Record], step: float = 5.0) -> dict[str, object]:
     """Re-decide at every threshold from the lowest score to the highest."""
     scored = score_all(policy, borrowers)
     pool = [item for item in scored if not item.gated]
@@ -203,11 +204,19 @@ def sweep(policy: Policy, borrowers: list[Borrower], step: float = 5.0) -> dict[
                 limit = limits[id(item)] or _limit_at(policy, item, threshold)
                 disbursed += limit
                 for charge in charges:
-                    if charge.period is None:
-                        amount = (
-                            charge.flat if charge.flat is not None else (charge.rate or 0.0) * limit
-                        )
-                        fee_revenue += amount
+                    if charge.kind == "late_fee":
+                        # Contingent on someone being late, which this cohort cannot say.
+                        continue
+                    amount = (
+                        charge.flat if charge.flat is not None else (charge.rate or 0.0) * limit
+                    )
+                    if charge.kind == "interest":
+                        # Same default-timing assumption as the backtest: half the term
+                        # for a borrower who goes on to default.
+                        amount *= _term_months(policy, item)
+                        if item.borrower.would_default:
+                            amount *= 0.5
+                    fee_revenue += amount
                 if item.borrower.would_default:
                     defaults += 1
                     expected_loss += limit * LOSS_GIVEN_DEFAULT
@@ -243,6 +252,16 @@ def sweep(policy: Policy, borrowers: list[Borrower], step: float = 5.0) -> dict[
         "current": current.as_dict(),
         "net_maximising": best.as_dict(),
         "net_gain_available": round(best.net - current.net, 2),
+        "best_approves_nobody": best.approvals == 0,
+        "what_the_best_threshold_means": (
+            "The best net on this book is reached by approving nobody: at every "
+            "threshold that lends at all, expected loss exceeds contracted revenue. "
+            "That is a statement about the price, not about the cutoff - no threshold "
+            "can fix a margin thinner than the loss rate. Re-price, then sweep again."
+            if best.approvals == 0
+            else f"The sweep lends at the best threshold ({best.threshold:g}), so the "
+            f"comparison with the policy's own cutoff is meaningful."
+        ),
         "in_sample_warning": (
             f"The net-maximising threshold of {best.threshold:g} is chosen on the same "
             f"{len(pool):,} borrowers it is scored against. It is the best cutoff for this "
@@ -250,6 +269,15 @@ def sweep(policy: Policy, borrowers: list[Borrower], step: float = 5.0) -> dict[
             f"the shape of the curve as the finding, not the argmax."
         ),
     }
+
+
+def _term_months(policy: Policy, item: Scored) -> float:
+    """How many months this applicant's money is out, for an interest charge."""
+    from .engine import _expr
+
+    if policy.term_months is None:
+        return 1.0
+    return _expr(policy.term_months, item.borrower.record(), item.score)
 
 
 def _limit_at(policy: Policy, item: Scored, threshold: float) -> float:

@@ -1,0 +1,33 @@
+# Written against the card book (cardbook.py): 438,557 real applications, of which 8.3%
+# have any repayment history. The whole book is scored with this policy and every
+# outcome-dependent figure is withheld, because for 401,000 of these applicants nobody
+# knows what happened next.
+#
+# The source names no currency, so XXX - "no currency involved" - is used rather than
+# printing a symbol over data that does not say.
+#
+# The retired rule is here because of a data trap rather than a credit opinion:
+# DAYS_EMPLOYED carries the sentinel 365243 for pensioners, which divided into months
+# becomes minus twelve thousand months of employment. The loader flags them instead, and
+# this policy refers them to an officer rather than scoring an employment record that
+# does not exist for them. Declining them silently on a months_employed rule is the
+# failure this makes impossible.
+policy "Card book v1 - thin file"
+version 1
+currency XXX
+
+decline if age < 21 because "under twenty-one"
+decline if monthly_income < 1000 because "monthly income below the floor of 1,000"
+refer if retired == 1 because "a pensioner has no employment record to score"
+refer if occupation == "not stated" because "no occupation was given on the application"
+
+score +25 if months_employed >= 24 because "two years with the same employer"
+score +15 if months_employed >= 60 because "five years with the same employer"
+score +20 if monthly_income >= 1500 because "income above the median of the book"
+score +10 if owns_realty == 1 because "owns the property they live in"
+score +10 if has_phone == 1 because "a landline or work number was given"
+score -10 if dependants >= 3 because "three or more children in the household"
+
+approve if score >= 45
+limit min(0.2 * monthly_income, 5000)
+fee 2% of limit

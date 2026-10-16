@@ -97,6 +97,7 @@
   "fuzz_binary": {
     "trials": 1000,
     "messages_in_pool": 20,
+    "contexts_in_pool": 1,
     "rejected": 659,
     "accepted": 341,
     "rejection_rate": 0.659,
@@ -167,6 +168,7 @@
   "fuzz": {
     "trials": 2000,
     "messages_in_pool": 10,
+    "contexts_in_pool": 1,
     "scenarios": [
       "atm_withdrawal_approved",
       "pos_purchase_approved",

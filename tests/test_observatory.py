@@ -106,7 +106,14 @@ def test_every_project_offers_the_same_set_of_openers() -> None:
     # project missing one of these would send the reader back to a shortcut.
     for project in PROJECTS:
         labels = [link["label"] for link in project.links()]
-        expected = ["Dashboard", "Input and output", "Source", "README", "Published page"]
+        expected = [
+            "Dashboard",
+            "Input and output",
+            "Datasets",
+            "Source",
+            "README",
+            "Published page",
+        ]
         if project.needs_model:
             expected = ["Its baseline", *expected]
         assert labels == expected, project.key

@@ -9,17 +9,21 @@ transfer sits around.
 from __future__ import annotations
 
 import json
+import pathlib
 import secrets
 from collections import OrderedDict
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from shared.datapage import Block, Figure, dig, figures_from  # noqa: F401
+from shared.datapage import Page as DataPage
+from shared.datapage import attach as attach_datasets
 from shared.iopage import Page, Row, Section, attach_io
 from shared.theme import attach_theme
 from shared.webkit import App, BadRequest, Request, Response, attach_metrics, run
 
-from . import behaviour, coercion, confirm, nlu, numerals, testset
+from . import behaviour, coercion, confirm, generator, nlu, numerals, testset
 from .benchmark import measure
 
 STATIC = Path(__file__).with_name("static")
@@ -30,6 +34,8 @@ MAX_TEXT = 500
 app = App("guardian", static_dir=STATIC)
 attach_theme(app)
 attach_metrics(app)
+
+SOURCE = "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p03_guardian"
 
 _sessions: OrderedDict[str, confirm.Session] = OrderedDict()
 
@@ -206,6 +212,122 @@ def case_counts() -> dict[str, int]:
     return testset.totals()
 
 
+# ---------------------------------------------------------------------------- datasets
+# What this project is measured on at full size, and what came out. The figures are read
+# out of results_datasets.json and data/MANIFEST.json rather than typed, so this page
+# cannot drift from the run that produced it.
+DATASETS_RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
+
+
+def _at_scale() -> dict:
+    if DATASETS_RESULTS.is_file():
+        try:
+            return json.loads(DATASETS_RESULTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def datasets_page() -> DataPage:
+    data = _at_scale()
+    blocks = [
+        Block(
+            title="Amounts",
+            subtitle="The gold value is known before the sentence exists.",
+            figures=figures_from(
+                data,
+                [
+                    ("cases with an amount", "generated.amounts.cases", "200,000 utterances"),
+                    ("exact", "generated.amounts.exact", "cases with an amount"),
+                    ("exact rate", "generated.amounts.exact_rate", "cases with an amount"),
+                    ("no amount found", "generated.amounts.none_found", "cases with an amount"),
+                    (
+                        "wrong by ten times or more",
+                        "generated.amounts.off_by_ten_or_more",
+                        "cases with an amount",
+                    ),
+                ],
+            ),
+            reading=(
+                "Three defects came out of this column: an amount written before a mobile "
+                "number was swallowed by the phone-number guard, the word scanner read the "
+                "phone number as a continuation of the amount and produced 3.1 billion, and "
+                "an attested spelling of 'thousand' was missing from the table."
+            ),
+        ),
+        Block(
+            title="Intent and payee",
+            figures=figures_from(
+                data,
+                [
+                    ("intent accuracy", "generated.intents.accuracy", "the cases with an intent"),
+                    (
+                        "payees resolved",
+                        "generated.beneficiaries.resolve_rate",
+                        "cases naming one contact",
+                    ),
+                    (
+                        "asked instead of guessing",
+                        "generated.beneficiaries.ask_rate",
+                        "ambiguous cases",
+                    ),
+                    ("confirmations read correctly", "generated.replies.accuracy", "5,000 replies"),
+                ],
+            ),
+            reading=str(dig(data, "generated.beneficiaries.reading", "")),
+        ),
+        Block(
+            title="Coercion, and what catching it costs",
+            subtitle="40,000 scam scripts over seven families, and 25,000 ordinary messages.",
+            figures=figures_from(
+                data,
+                [
+                    ("scripts caught", "generated.coercion.catch_rate", "40,000 scripts"),
+                    (
+                        "account redirect",
+                        "generated.coercion.by_family.account_redirect.catch_rate",
+                        "6,950 scripts",
+                    ),
+                    ("urgency", "generated.coercion.by_family.urgency.catch_rate", "6,935 scripts"),
+                    ("threat", "generated.coercion.by_family.threat.catch_rate", "6,941 scripts"),
+                    (
+                        "ordinary traffic blocked",
+                        "generated.benign.false_block_rate",
+                        "25,000 ordinary messages",
+                    ),
+                ],
+            ),
+            reading=(
+                "These two numbers move together and only mean anything together. Adding "
+                "the bare words for 'quickly' took the catch rate to 0.980 and the "
+                "false-block rate to 0.123 - one ordinary message in eight. Requiring a "
+                "verb with them gives 0.961 at 0.021, which is the version that shipped."
+            ),
+        ),
+    ]
+    if not data:
+        blocks = [
+            Block(
+                title="Not run on this machine",
+                subtitle=(
+                    "The at-scale figures come from results_datasets.json, which is "
+                    "committed. If this page is empty the file is missing: run make data "
+                    "and then make bench-datasets."
+                ),
+            )
+        ]
+    return DataPage(
+        title="03 Guardian",
+        subtitle="200,000 generated utterances, scored by the shipped layers",
+        dataset_keys=[generator.KEY],
+        blocks=blocks,
+        links=[("Dashboard", "/"), ("Input and output", "/io"), ("Source", SOURCE)],
+    )
+
+
+attach_datasets(app, datasets_page)
+
+
 def main(port: int = 8103) -> None:
     run(app, port=port)
 
@@ -354,7 +476,7 @@ def io_page() -> Page:
             ("Open the assistant", "/"),
             (
                 "Source on GitHub",
-                "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p03_guardian",
+                SOURCE,
             ),
             ("All three projects", "https://hammasbuilds.github.io/fintech-lab/"),
         ],

@@ -1,0 +1,147 @@
+{
+  "model_on_a_sample": {
+    "aborted_by_the_server": 18,
+    "arms": [
+      "bare",
+      "spec"
+    ],
+    "by_model_and_arm": {
+      "qwen2.5:14b-instruct / bare": {
+        "decode": {
+          "cases": 8,
+          "invariants_hold": 0,
+          "mean_score": 0.325,
+          "packs": 0,
+          "parsed": 8,
+          "perfect": 0
+        },
+        "fields": {
+          "cases": 8,
+          "invariants_hold": 0,
+          "mean_score": 0.0296,
+          "packs": 0,
+          "parsed": 7,
+          "perfect": 0
+        },
+        "negative": {
+          "cases": 5,
+          "invariants_hold": 0,
+          "mean_score": 0.1,
+          "packs": 2,
+          "parsed": 4,
+          "perfect": 0
+        },
+        "wire": {
+          "cases": 8,
+          "invariants_hold": 0,
+          "mean_score": 0.0,
+          "packs": 0,
+          "parsed": 0,
+          "perfect": 0
+        }
+      },
+      "qwen2.5:14b-instruct / spec": {
+        "decode": {
+          "cases": 8,
+          "invariants_hold": 0,
+          "mean_score": 0.45,
+          "packs": 0,
+          "parsed": 8,
+          "perfect": 0
+        },
+        "fields": {
+          "cases": 8,
+          "invariants_hold": 3,
+          "mean_score": 0.2522,
+          "packs": 5,
+          "parsed": 7,
+          "perfect": 0
+        },
+        "negative": {
+          "cases": 5,
+          "invariants_hold": 1,
+          "mean_score": 0.4,
+          "packs": 5,
+          "parsed": 5,
+          "perfect": 0
+        },
+        "wire": {
+          "cases": 8,
+          "invariants_hold": 0,
+          "mean_score": 0.0,
+          "packs": 0,
+          "parsed": 0,
+          "perfect": 0
+        }
+      }
+    },
+    "cases_the_model_answered": 29,
+    "models": [
+      "qwen2.5:14b-instruct"
+    ],
+    "replies_generated": 9,
+    "share_of_the_bank": null,
+    "tasks_in_the_bank": null,
+    "why_it_is_a_sample": "Each reply is a local model call measured in seconds, and on the wire family most of them end in a server-side abort. 29 cases is what was run; the bank is the population it was drawn from, and the share above is how much of it the model has actually seen."
+  },
+  "product_on_the_whole_bank": {
+    "by_family": {
+      "decode": {
+        "accuracy": 1.0,
+        "cases": 15000,
+        "correct": 15000,
+        "errored": 0,
+        "found_a_fault": 0,
+        "found_a_fault_rate": null,
+        "named_the_injected_fault": 0,
+        "named_the_injected_fault_rate": null
+      },
+      "fields": {
+        "accuracy": 1.0,
+        "cases": 15000,
+        "correct": 15000,
+        "errored": 0,
+        "found_a_fault": 0,
+        "found_a_fault_rate": null,
+        "named_the_injected_fault": 0,
+        "named_the_injected_fault_rate": null
+      },
+      "negative": {
+        "accuracy": 1.0,
+        "cases": 15000,
+        "correct": 15000,
+        "errored": 0,
+        "found_a_fault": 15000,
+        "found_a_fault_rate": 1.0,
+        "named_the_injected_fault": 12023,
+        "named_the_injected_fault_rate": 0.8015
+      },
+      "wire": {
+        "accuracy": 1.0,
+        "cases": 15000,
+        "correct": 15000,
+        "errored": 0,
+        "found_a_fault": 0,
+        "found_a_fault_rate": null,
+        "named_the_injected_fault": 0,
+        "named_the_injected_fault_rate": null
+      }
+    },
+    "how_to_read_the_negative_family": "accuracy counts an answer right when it names any description that is true of the damaged message; named_the_injected_fault_rate counts only the exact fault that was injected. The gap between them is the bitmap family, where nothing downstream can tell which bit moved - see project 01's fuzz finding.",
+    "reading": "These are the product's own answers to questions whose answers the product generated, so anything below 1.000 is a round trip that does not round trip - a real defect, not a hard case.",
+    "seconds": 9.6,
+    "tasks_scored": 60000,
+    "wrong_answers": []
+  },
+  "setup": {
+    "bank": {
+      "note": "not in the manifest"
+    },
+    "plan": {
+      "decode": 15000,
+      "fields": 15000,
+      "negative": 15000,
+      "wire": 15000
+    }
+  }
+}

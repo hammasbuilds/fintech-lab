@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 
+from shared.datapage import Block, Figure, dig, figures_from  # noqa: F401
+from shared.datapage import Page as DataPage
+from shared.datapage import attach as attach_datasets
 from shared.iopage import Page, Row, Section, attach_io
 from shared.modelpage import Column, Spec, Table, attach
 from shared.theme import attach_theme
 from shared.webkit import App, attach_metrics, run
 
+from . import bank
 from .benchmark import RESULTS
 from .benchmark import run as measure
 
@@ -115,7 +120,7 @@ def spec() -> Spec:
         ],
         notes=[
             "A compiled policy can be run, so the grader runs it. The score is agreement "
-            "with the hand-written reference over all 5,000 borrowers - decision for "
+            "with the hand-written reference over all 50,000 borrowers - decision for "
             "decision and limit for limit - not similarity of the text.",
             "The column to read first is 'different': policies that compiled, ran, and "
             "decided a different set of applicants than the document they came from. That "
@@ -177,6 +182,7 @@ def spec() -> Spec:
         ],
         links=[
             ("Input and output", "/io"),
+            ("Datasets", "/datasets"),
             ("Project 02, the reference", "http://127.0.0.1:8102/"),
             ("Source", SOURCE),
         ],
@@ -223,6 +229,94 @@ def io_page() -> Page:
 
 
 attach_io(app, io_page)
+
+
+# ---------------------------------------------------------------------------- datasets
+# What this project is measured on at full size, and what came out. The figures are read
+# out of results_datasets.json and data/MANIFEST.json rather than typed, so this page
+# cannot drift from the run that produced it.
+DATASETS_RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
+
+
+def _at_scale() -> dict:
+    if DATASETS_RESULTS.is_file():
+        try:
+            return json.loads(DATASETS_RESULTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def datasets_page() -> DataPage:
+    data = _at_scale()
+    blocks = [
+        Block(
+            title="The language, on every policy in the bank",
+            subtitle="Each one compiled, printed back from its tree, compiled again, then run.",
+            figures=figures_from(
+                data,
+                [
+                    ("policies", "language_on_the_whole_bank.policies", ""),
+                    ("compiled", "language_on_the_whole_bank.compile_rate", "policies"),
+                    ("round-tripped", "language_on_the_whole_bank.round_trip_rate", "policies"),
+                    (
+                        "evaluated without error",
+                        "language_on_the_whole_bank.evaluate_rate",
+                        "policies",
+                    ),
+                    (
+                        "decisions stable across a reprint",
+                        "language_on_the_whole_bank.stable_decision_rate",
+                        "policies",
+                    ),
+                    ("decisions made", "language_on_the_whole_bank.decisions_made", ""),
+                ],
+            ),
+            reading=str(dig(data, "language_on_the_whole_bank.reading", "")),
+        ),
+        Block(
+            title="The model, on a sample",
+            figures=figures_from(
+                data,
+                [
+                    (
+                        "policies compiled by the model",
+                        "model_on_a_sample.policies_the_model_compiled",
+                        "",
+                    ),
+                    ("policies in the bank", "model_on_a_sample.policies_in_the_bank", ""),
+                    ("share of the bank", "model_on_a_sample.share_of_the_bank", "the bank"),
+                    (
+                        "borrowers each was run over",
+                        "model_on_a_sample.borrowers_each_policy_was_run_over",
+                        "",
+                    ),
+                ],
+            ),
+            reading=str(dig(data, "model_on_a_sample.why_it_is_a_sample", "")),
+        ),
+    ]
+    if not data:
+        blocks = [
+            Block(
+                title="Not run on this machine",
+                subtitle=(
+                    "The at-scale figures come from results_datasets.json, which is "
+                    "committed. If this page is empty the file is missing: run make data "
+                    "and then make bench-datasets."
+                ),
+            )
+        ]
+    return DataPage(
+        title="05 Policy from prose",
+        subtitle="60,000 policies through the language, 5 through the model",
+        dataset_keys=[bank.KEY],
+        blocks=blocks,
+        links=[("Dashboard", "/"), ("Input and output", "/io"), ("Source", SOURCE)],
+    )
+
+
+attach_datasets(app, datasets_page)
 
 
 def main(port: int = 8105) -> None:

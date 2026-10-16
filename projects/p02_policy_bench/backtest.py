@@ -14,16 +14,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .cohort import LOSS_GIVEN_DEFAULT, Borrower
+from .cohort import LOSS_GIVEN_DEFAULT
 from .dsl import Policy
 from .engine import Decision, evaluate
+from .records import Record
 
 SEGMENTS = ("region", "employment")
 
 
 @dataclass
 class Outcome:
-    borrower: Borrower
+    borrower: Record
     decision: Decision
 
 
@@ -43,6 +44,15 @@ class Backtest:
     declines: int = 0
     disbursed: float = 0.0
     fee_revenue: float = 0.0
+    #: Interest actually expected to be collected over the policy's stated term, after
+    #: the default-timing assumption below. Counted in ``net``.
+    interest_revenue: float = 0.0
+    #: Interest the policy would have contracted but is not expected to collect, because
+    #: the borrower defaults part-way through the term.
+    interest_lost_to_default: float = 0.0
+    #: Penalty charges that are priced per unit of time - a late fee. Never counted in
+    #: ``net``: nobody in a backtest has been late yet, so treating it as earned would
+    #: book revenue that depends on an event this cohort has no data about.
     time_priced_revenue: float = 0.0
     expected_loss: float = 0.0
     defaults_among_approved: int = 0
@@ -71,7 +81,16 @@ class Backtest:
 
     @property
     def net(self) -> float:
-        return self.fee_revenue - self.expected_loss
+        """Contracted revenue less expected loss.
+
+        Contracted means the one-off fee plus the interest expected to be collected.
+        Late fees
+        are excluded on purpose - see :attr:`time_priced_revenue`. An earlier version
+        split revenue by whether a charge had a period at all, which put contracted
+        interest in the same bucket as a penalty and reported a policy that earns 82
+        million as making less than one that earns 3.
+        """
+        return self.fee_revenue + self.interest_revenue - self.expected_loss
 
     @property
     def average_limit(self) -> float:
@@ -111,6 +130,8 @@ class Backtest:
             "disbursed": round(self.disbursed, 2),
             "average_limit": round(self.average_limit, 2),
             "fee_revenue": round(self.fee_revenue, 2),
+            "interest_revenue": round(self.interest_revenue, 2),
+            "interest_lost_to_default": round(self.interest_lost_to_default, 2),
             "time_priced_revenue": round(self.time_priced_revenue, 2),
             **outcome_figures,
             "decline_reasons": self.decline_reasons,
@@ -121,13 +142,29 @@ class Backtest:
 
 
 def run(
-    policy: Policy, borrowers: list[Borrower], *, labelled: bool = True
+    policy: Policy,
+    borrowers: list[Record],
+    *,
+    labelled: bool = True,
+    segments: tuple[str, ...] = SEGMENTS,
 ) -> tuple[Backtest, list[Outcome]]:
     """Score every borrower and aggregate. Returns the report and the per-borrower rows.
 
     ``labelled`` is False for a supplied cohort with no outcome column; see
     :class:`Backtest`.
+
+    ``segments`` names the attributes to break approvals down by. It is a parameter and
+    not a constant because the synthetic cohort and the real books have different
+    columns - the real loan book has no region - and a hard-coded pair of names is how
+    this function used to refuse to run on anything but the cohort it was written for.
+    Each name must be an attribute of the records, or this raises.
     """
+    for name in segments:
+        if borrowers and not hasattr(borrowers[0], name):
+            raise AttributeError(
+                f"cannot segment by {name!r}: these records have "
+                f"{', '.join(sorted(vars(borrowers[0])))}"
+            )
     outcomes = [Outcome(borrower, evaluate(policy, borrower.record())) for borrower in borrowers]
     report = Backtest(
         policy_name=policy.name,
@@ -145,7 +182,18 @@ def run(
             report.disbursed += decision.limit
             for charge in decision.charges:
                 amount = float(charge["amount"])  # type: ignore[arg-type]
-                if charge["period"]:
+                if charge["kind"] == "interest":
+                    # A borrower who defaults stops paying, so booking the whole term's
+                    # interest against them would be revenue nobody collects. The
+                    # assumption - stated here because it moves the answer - is that a
+                    # default lands halfway through the term, so half the interest is
+                    # collected and half is lost. It is a single number and it is
+                    # arguable; what is not arguable is that the figure is not the full
+                    # term, which is what this used to book.
+                    collected = amount * (0.5 if outcome.borrower.would_default else 1.0)
+                    report.interest_revenue += collected
+                    report.interest_lost_to_default += amount - collected
+                elif charge["period"]:
                     report.time_priced_revenue += amount
                 else:
                     report.fee_revenue += amount
@@ -166,7 +214,7 @@ def run(
 
     report.decline_reasons = dict(sorted(reasons.items(), key=lambda kv: -kv[1]))
     report.score_histogram = _score_histogram(outcomes, policy)
-    report.segments = {name: _segment(outcomes, name) for name in SEGMENTS}
+    report.segments = {name: _segment(outcomes, name) for name in segments}
     report.income_bands = _income_bands(outcomes)
     return report, outcomes
 
@@ -328,7 +376,7 @@ class Comparison:
 
 
 def compare(
-    base: Policy, candidate: Policy, borrowers: list[Borrower], *, labelled: bool = True
+    base: Policy, candidate: Policy, borrowers: list[Record], *, labelled: bool = True
 ) -> Comparison:
     """What changing from ``base`` to ``candidate`` does, borrower by borrower."""
     base_report, base_outcomes = run(base, borrowers, labelled=labelled)

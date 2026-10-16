@@ -1,0 +1,106 @@
+{
+  "model_on_a_sample": {
+    "arms": [
+      "bare",
+      "taught"
+    ],
+    "blind_spot_cases_in_the_sample": 4,
+    "by_model_and_arm": {
+      "qwen2.5:14b-instruct / bare": {
+        "action": {
+          "accuracy": 0.7333,
+          "asked_instead_of_guessing": 6,
+          "cases": 30,
+          "correct": 22,
+          "determined_cases": 20,
+          "parsed": 30,
+          "resolved_correctly": 16,
+          "underspecified_cases": 10
+        },
+        "amount": {
+          "accuracy": 1.0,
+          "cases": 12,
+          "correct": 12,
+          "off_by_a_factor_of_ten_or_more": 0,
+          "parsed": 12
+        },
+        "coercion": {
+          "accuracy": 0.5652,
+          "cases": 23,
+          "cases_the_lexicon_misses": 4,
+          "caught_of_those": 2,
+          "correct": 13,
+          "ordinary_traffic": 5,
+          "ordinary_traffic_blocked": 0,
+          "parsed": 23
+        }
+      },
+      "qwen2.5:14b-instruct / taught": {
+        "action": {
+          "accuracy": 0.8,
+          "asked_instead_of_guessing": 7,
+          "cases": 30,
+          "correct": 24,
+          "determined_cases": 20,
+          "parsed": 30,
+          "resolved_correctly": 17,
+          "underspecified_cases": 10
+        },
+        "amount": {
+          "accuracy": 1.0,
+          "cases": 12,
+          "correct": 12,
+          "off_by_a_factor_of_ten_or_more": 0,
+          "parsed": 12
+        },
+        "coercion": {
+          "accuracy": 0.5652,
+          "cases": 23,
+          "cases_the_lexicon_misses": 4,
+          "caught_of_those": 1,
+          "correct": 13,
+          "ordinary_traffic": 5,
+          "ordinary_traffic_blocked": 0,
+          "parsed": 23
+        }
+      }
+    },
+    "cases": 65,
+    "models": [
+      "qwen2.5:14b-instruct"
+    ],
+    "share_of_the_set": 0.000325,
+    "why_four_cases_cannot_rank_the_arms": "The blind-spot family is the four scams phrased in words the lexicon does not have. With four cases, one case is 25 points, so 2 against 1 is a difference of one sentence. Scaling that family up needs new hand-written scams, not more generated ones: a generator that could write them would have to know which words the lexicon is missing, and then it would be writing the answer key."
+  },
+  "rules_on_the_whole_set": {
+    "amount_exact_rate": 0.9939,
+    "amount_off_by_ten_or_more": 0,
+    "cases": 200000,
+    "coercion_by_family": {
+      "account_redirect": 0.9812,
+      "lure": 0.9901,
+      "otp_solicitation": 0.9828,
+      "remote_access": 0.9806,
+      "staff_impersonation": 0.9871,
+      "threat": 0.9844,
+      "urgency": 0.8672
+    },
+    "coercion_catch_rate": 0.9609,
+    "confirmation_accuracy": 0.8992,
+    "false_block_rate_on_ordinary_traffic": 0.0211,
+    "intent_accuracy": 0.9746,
+    "payee_ask_rate": 0.9893,
+    "payee_resolve_rate": 0.9363
+  },
+  "the_same_dataset": {
+    "key": "generated/p03_utterances",
+    "note": "Project 03's generated set, unchanged. Both columns are scored on it, which is the only reason they can be put side by side.",
+    "rows": 200000,
+    "sha256": "c89958269db4ad5cbdca619d96d0a23bb94f5767ad4f27c8bf76ef11aa3bfe08"
+  },
+  "what_this_comparison_can_and_cannot_say": [
+    "It can say the rules answer 200,000 cases at a measured rate, with the false-block rate on ordinary traffic beside it.",
+    "It can say what the model did on 65 of those cases.",
+    "It cannot say the model is better or worse at the blind spot, because the blind spot is four cases and the confidence interval on four cases covers almost everything."
+  ]
+}

@@ -1,0 +1,39 @@
+# v3 keeps v2's credit rules exactly and changes only how the loan is priced.
+#
+# Why it exists: on this book, v1 and v2 lose money at every cutoff. A one-off 2% service
+# fee earns 0.02 per unit lent, while 6.8% of approvals default at a loss given default of
+# 0.75 - a loss of about 0.051 per unit. No threshold fixes that, which is why the cutoff
+# sweep for both ends up recommending the threshold that approves nobody.
+#
+# So this one prices the money for as long as it is outstanding, using the book's own term
+# column, which is what the lender in the source data actually did.
+#
+# That makes the arithmetic work and the compliance lint fail: rule C1 flags a charge
+# priced per unit of time as critical, because a charge that grows while the money is out
+# is a return on lending rather than a payment for a service. Both of those statements are
+# in the report at the same time on purpose. The number says this is the only version that
+# earns anything; the lint says it is the version an Islamic-finance product cannot ship.
+# Deciding between them is a product decision, and this repo's job is to put both facts in
+# front of whoever makes it rather than to quietly pick one.
+policy "Real book v3 - priced over the term"
+version 3
+currency XXX
+
+decline if age < 18 because "below the legal age to contract"
+decline if credit_score < 450 because "credit score below the floor of 450"
+decline if dti_ratio > 0.8 because "debt service above 80 percent of income"
+refer if loan_amount > 200000 because "a large principal needs an officer to size it"
+
+score +25 if credit_score >= 600 because "credit score comfortably above the floor"
+score +20 if months_employed >= 48 because "four years with the same employer"
+score +10 if months_employed >= 96 because "eight years with the same employer"
+score +15 if annual_income >= 80000 because "income in the upper half of the book"
+score +10 if has_cosigner == 1 because "a co-signer is on the application"
+score +10 if dti_ratio <= 0.4 because "debt service under 40 percent of income"
+score -10 if credit_lines >= 4 because "four or more credit lines already open"
+
+approve if score >= 40
+limit min(0.25 * monthly_income, 20000)
+term loan_term_months months
+fee 1% of limit
+interest 1.5% of limit per month

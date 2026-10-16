@@ -1,0 +1,237 @@
+{
+  "codec": {
+    "ascii_round_trip_stable": 120120,
+    "binary_round_trip_stable": 120120,
+    "character_class_violations": 0,
+    "examples_of_violations": [],
+    "examples_that_failed": [],
+    "framing_detected_on_a_sample": {
+      "ascii": 120
+    },
+    "messages_checked": 120120,
+    "messages_that_failed_to_pack": 0,
+    "reading": "Every one of these messages was built by the packer, so a round-trip that is not stable is a defect in the codec and not in the corpus. The count to look at is messages_that_failed_to_pack, which has to be zero.",
+    "reparse_equal": 120120
+  },
+  "fuzz_ascii": {
+    "accepted": 23329,
+    "accepted_by_field": {
+      "DE 102 (Account identification 1), class ans": 3475,
+      "DE 103 (Account identification 2), class ans": 81,
+      "DE 11 (System trace audit number), class n": 603,
+      "DE 12 (Local transaction time), class n": 354,
+      "DE 13 (Local transaction date), class n": 238,
+      "DE 14 (Expiration date), class n": 58,
+      "DE 18 (Merchant category code), class n": 71,
+      "DE 2 (Primary account number), class n": 945,
+      "DE 22 (Point of service entry mode), class n": 60,
+      "DE 25 (Point of service condition code), class n": 42,
+      "DE 3 (Processing code), class n": 398,
+      "DE 32 (Acquiring institution identification code), class n": 415,
+      "DE 33 (Forwarding institution identification code), class n": 395,
+      "DE 37 (Retrieval reference number), class an": 2902,
+      "DE 38 (Authorization identification response), class an": 503,
+      "DE 39 (Response code), class an": 486,
+      "DE 4 (Amount, transaction), class n": 712,
+      "DE 41 (Card acceptor terminal identification), class ans": 1938,
+      "DE 42 (Card acceptor identification code), class ans": 975,
+      "DE 43 (Card acceptor name and location), class ans": 2528,
+      "DE 49 (Currency code, transaction), class n": 197,
+      "DE 52 (Personal identification number data), class b": 388,
+      "DE 54 (Additional amounts), class an": 330,
+      "DE 55 (Integrated circuit card data), class b": 3349,
+      "DE 7 (Transmission date and time), class n": 1036,
+      "DE 70 (Network management information code), class n": 38,
+      "DE 90 (Original data elements), class n": 163,
+      "DE 95 (Replacement amounts), class an": 347,
+      "framing (MTI, bitmap or a length prefix)": 302
+    },
+    "contexts_in_pool": 50,
+    "groups": {
+      "class_legal": {
+        "rejected": 0,
+        "rejection_rate": 0.0,
+        "trials": 23027
+      },
+      "class_violating": {
+        "rejected": 22354,
+        "rejection_rate": 1.0,
+        "trials": 22354
+      },
+      "framing": {
+        "rejected": 14317,
+        "rejection_rate": 0.9793,
+        "trials": 14619
+      }
+    },
+    "illegal_characters_accepted": [],
+    "messages_in_pool": 1650,
+    "rejected": 36671,
+    "rejection_rate": 0.6112,
+    "scenarios": [
+      "atm_withdrawal_approved",
+      "atm_partial_approval",
+      "atm_insufficient_funds",
+      "atm_reversal_after_timeout",
+      "atm_partial_reversal",
+      "atm_pin_tries_exceeded",
+      "atm_incorrect_pin_then_approved",
+      "pos_purchase_approved",
+      "pos_refund",
+      "pos_chip_fallback_declined",
+      "balance_inquiry",
+      "cardholder_transfer",
+      "network_echo_test",
+      "network_sign_on"
+    ],
+    "trials": 60000
+  },
+  "fuzz_binary": {
+    "accepted": 10521,
+    "accepted_examples": [
+      {
+        "byte": 23,
+        "framed": true,
+        "in_header": false,
+        "scenario": "atm_partial_reversal"
+      },
+      {
+        "byte": 68,
+        "framed": true,
+        "in_header": false,
+        "scenario": "atm_partial_approval"
+      },
+      {
+        "byte": 25,
+        "framed": true,
+        "in_header": false,
+        "scenario": "network_sign_on"
+      },
+      {
+        "byte": 217,
+        "framed": false,
+        "in_header": false,
+        "scenario": "atm_pin_tries_exceeded"
+      },
+      {
+        "byte": 80,
+        "framed": false,
+        "in_header": false,
+        "scenario": "balance_inquiry"
+      },
+      {
+        "byte": 209,
+        "framed": false,
+        "in_header": false,
+        "scenario": "atm_pin_tries_exceeded"
+      },
+      {
+        "byte": 57,
+        "framed": true,
+        "in_header": false,
+        "scenario": "cardholder_transfer"
+      },
+      {
+        "byte": 22,
+        "framed": false,
+        "in_header": false,
+        "scenario": "pos_refund"
+      },
+      {
+        "byte": 60,
+        "framed": true,
+        "in_header": false,
+        "scenario": "pos_refund"
+      },
+      {
+        "byte": 46,
+        "framed": true,
+        "in_header": false,
+        "scenario": "atm_reversal_after_timeout"
+      }
+    ],
+    "caught_by_the_length_header": 299,
+    "contexts_in_pool": 50,
+    "messages_in_pool": 3300,
+    "rejected": 19479,
+    "rejection_rate": 0.6493,
+    "trials": 30000
+  },
+  "invariants": {
+    "examples": [],
+    "false_positive_rate": 0.0,
+    "findings_by_rule": {},
+    "flows_checked": 50960,
+    "flows_with_findings": 0,
+    "flows_with_findings_by_scenario": {},
+    "reading": "Every flow here is valid by construction, so flows_with_findings is a count of false positives and has to be zero. The shipped benchmark checks 14 flows; this checks 50,960.",
+    "rules": 22
+  },
+  "mutation": {
+    "by_intended_rate": 1.0,
+    "contexts": 200,
+    "kill_rate": 1.0,
+    "killed": 7600,
+    "killed_by_the_intended_rule": 7600,
+    "mutants": 7600,
+    "reading": "The shipped benchmark applies each of these 38 faults once, to a flow built from one context. Here each is applied 200 times at different amounts, currencies, PANs and terminals. A detector that depended on the default amount shows up as a kill rate below 1.0 for its own mutator.",
+    "survivors": [],
+    "weakest_detectors": [
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 400,
+        "mutator": "drop_response_code"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 200,
+        "mutator": "alter_response_stan"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 200,
+        "mutator": "echo_request_mti"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 400,
+        "mutator": "change_response_amount"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 200,
+        "mutator": "full_partial_approval"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 200,
+        "mutator": "zero_partial_approval"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 400,
+        "mutator": "drop_original_data_elements"
+      },
+      {
+        "by_intended_rate": 1.0,
+        "kill_rate": 1.0,
+        "mutants": 200,
+        "mutator": "point_reversal_at_unknown_trace"
+      }
+    ]
+  },
+  "setup": {
+    "corpus": {
+      "note": "not in the manifest yet"
+    },
+    "seconds": 161.5,
+    "why_this_is_a_separate_file": "The corpus is 128 MB of generated JSON lines, so CI cannot re-derive these numbers in a checkout. results.json stays small and reproducible."
+  }
+}

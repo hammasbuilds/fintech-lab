@@ -8,17 +8,32 @@ every backtest in the UI slower for no change in the answer.
 from __future__ import annotations
 
 import json
+import pathlib
 import secrets
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from shared.datapage import Block, Figure, dig, figures_from  # noqa: F401
+from shared.datapage import Page as DataPage
+from shared.datapage import attach as attach_datasets
 from shared.iopage import Page, Row, Section, attach_io
 from shared.theme import attach_theme
 from shared.webkit import App, BadRequest, Request, Response, attach_metrics, run
 
-from . import backtest, cohort, compliance, dsl, engine, explain, fairness, sweep
+from . import (
+    backtest,
+    cardbook,
+    cohort,
+    compliance,
+    dsl,
+    engine,
+    explain,
+    fairness,
+    loanbook,
+    sweep,
+)
 
 STATIC = Path(__file__).with_name("static")
 POLICIES = Path(__file__).with_name("policies")
@@ -27,6 +42,8 @@ RESULTS = Path(__file__).with_name("results.json")
 app = App("policy-bench", static_dir=STATIC)
 attach_theme(app)
 attach_metrics(app)
+
+SOURCE = "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p02_policy_bench"
 
 
 @lru_cache(maxsize=1)
@@ -297,6 +314,178 @@ def _results() -> dict[str, Any] | None:
         return None
 
 
+# ---------------------------------------------------------------------------- datasets
+# What this project is measured on at full size, and what came out. The figures are read
+# out of results_datasets.json and data/MANIFEST.json rather than typed, so this page
+# cannot drift from the run that produced it.
+DATASETS_RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
+
+
+def _at_scale() -> dict:
+    if DATASETS_RESULTS.is_file():
+        try:
+            return json.loads(DATASETS_RESULTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def datasets_page() -> DataPage:
+    data = _at_scale()
+    blocks = [
+        Block(
+            title="The real loan book",
+            subtitle="255,347 applications with the outcome that happened.",
+            figures=figures_from(
+                data,
+                [
+                    ("applications", "loan_book.cohort.rows", ""),
+                    ("defaults", "loan_book.cohort.defaults", "applications"),
+                    ("base default rate", "loan_book.cohort.base_default_rate", "applications"),
+                    (
+                        "v1 approvals",
+                        "loan_book.policies.real_v1_scoregate.backtest.approvals",
+                        "applications",
+                    ),
+                    (
+                        "v1 bad rate among approvals",
+                        "loan_book.policies.real_v1_scoregate.backtest.bad_rate",
+                        "approvals",
+                    ),
+                    (
+                        "v1 Gini",
+                        "loan_book.policies.real_v1_scoregate.discrimination.gini",
+                        "the scored population",
+                    ),
+                    (
+                        "v2 Gini, with the price signal removed",
+                        "loan_book.policies.real_v2_no_price.discrimination.gini",
+                        "the scored population",
+                    ),
+                    ("v1 net", "loan_book.policies.real_v1_scoregate.backtest.net", "applications"),
+                    (
+                        "v3 net, priced over the term",
+                        "loan_book.policies.real_v3_priced.backtest.net",
+                        "applications",
+                    ),
+                ],
+            ),
+            reading=(
+                "Dropping interest_rate - the lender's own price - costs a third of the "
+                "separation, which is the uncomfortable finding: the strongest feature in "
+                "the book was a decision the lender had already made. And a one-off 2% fee "
+                "loses money at every cutoff, so the sweep's answer for v1 and v2 is to "
+                "approve nobody; only v3, priced over the term, earns anything - and v3 is "
+                "the one the compliance lint flags as critical."
+            ),
+        ),
+        Block(
+            title="The real card book",
+            subtitle=("438,557 applications, 8.3% of which have any repayment history."),
+            figures=figures_from(
+                data,
+                [
+                    ("applications", "card_book.cohort.applications", ""),
+                    (
+                        "joined to a repayment history",
+                        "card_book.cohort.joined_with_history",
+                        "applications",
+                    ),
+                    ("join rate", "card_book.cohort.join_rate", "applications"),
+                    (
+                        "pensioners flagged by the sentinel",
+                        "card_book.cohort.pensioners_flagged",
+                        "applications",
+                    ),
+                    (
+                        "occupation not stated",
+                        "card_book.cohort.occupation_not_stated",
+                        "applications",
+                    ),
+                    (
+                        "approval rate, whole book",
+                        "card_book.whole_book.backtest.approval_rate",
+                        "applications",
+                    ),
+                    (
+                        "bad rate, ever 30+ dpd slice",
+                        "card_book.definitions.ever_30_plus_dpd.backtest.bad_rate",
+                        "the labelled slice",
+                    ),
+                    (
+                        "Gini, ever 30+ dpd",
+                        "card_book.definitions.ever_30_plus_dpd.discrimination.gini",
+                        "the labelled slice",
+                    ),
+                    (
+                        "Gini, ever 60+ dpd",
+                        "card_book.definitions.ever_60_plus_dpd.discrimination.gini",
+                        "the labelled slice",
+                    ),
+                ],
+            ),
+            reading=(
+                "Same 36,457 rows, same policy, two defensible definitions of bad - and the "
+                "separation differs by more than three times. Whoever picks the definition "
+                "picks the result, which is why both are printed."
+            ),
+        ),
+        Block(
+            title="The synthetic cohort at 250,000",
+            subtitle="The same generator the dashboard runs at 50,000.",
+            figures=figures_from(
+                data,
+                [
+                    ("borrowers", "synthetic_at_scale.cohort.size", ""),
+                    (
+                        "v1 approval rate",
+                        "synthetic_at_scale.policies.nano_v1.backtest.approval_rate",
+                        "borrowers",
+                    ),
+                    (
+                        "v2 approval rate",
+                        "synthetic_at_scale.policies.nano_v2.backtest.approval_rate",
+                        "borrowers",
+                    ),
+                    (
+                        "v2 Gini",
+                        "synthetic_at_scale.policies.nano_v2.discrimination.gini",
+                        "the scored population",
+                    ),
+                ],
+            ),
+            reading=(
+                "At 5,000 borrowers this cohort reported a Gini of 0.284 and a best cutoff "
+                "of 40. At 50,000 it is 0.233 and 35, and at 250,000 it stays there. The "
+                "first number was sampling noise, which is the argument for the floor."
+            ),
+        ),
+    ]
+    if not data:
+        blocks = [
+            Block(
+                title="Not run on this machine",
+                subtitle=(
+                    "The at-scale figures come from results_datasets.json, which is "
+                    "committed. If this page is empty the file is missing: run make data "
+                    "and then make bench-datasets."
+                ),
+            )
+        ]
+    return DataPage(
+        title="02 Policy Bench",
+        subtitle=(
+            "Two real books, three real policies, and the synthetic cohort five times larger"
+        ),
+        dataset_keys=[loanbook.KEY, cardbook.KEY_APPLICATIONS, cardbook.KEY_RECORDS],
+        blocks=blocks,
+        links=[("Dashboard", "/"), ("Input and output", "/io"), ("Source", SOURCE)],
+    )
+
+
+attach_datasets(app, datasets_page)
+
+
 def main(port: int = 8102) -> None:
     run(app, port=port)
 
@@ -346,7 +535,7 @@ def io_page() -> Page:
         )
     tested = Section(
         title="Back-test every bundled policy on the same borrowers",
-        note="5,000 synthetic borrowers from a seeded generator written out in full in cohort.py.",
+        note="50,000 synthetic borrowers from a seeded generator written out in full in cohort.py.",
         given="three policy files and 5,000 borrowers",
         rows=rows,
     )
@@ -424,7 +613,7 @@ def io_page() -> Page:
             ("Open the dashboard", "/"),
             (
                 "Source on GitHub",
-                "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p02_policy_bench",
+                SOURCE,
             ),
             ("All three projects", "https://hammasbuilds.github.io/fintech-lab/"),
         ],

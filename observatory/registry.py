@@ -43,6 +43,10 @@ class Project:
     #: The headline figures to pull out of the project's ``results.json``, as
     #: (label, dotted path, formatter name).
     headline: tuple[tuple[str, str, str], ...] = field(default_factory=tuple)
+    #: Manifest keys for the datasets this project is measured on at full size. The
+    #: panel reads the row counts out of data/MANIFEST.json rather than holding its own
+    #: copy of them, so a rebuilt dataset cannot leave the panel quoting the old size.
+    dataset_keys: tuple[str, ...] = field(default_factory=tuple)
 
     @property
     def base_url(self) -> str:
@@ -51,6 +55,30 @@ class Project:
     @property
     def results_path(self) -> Path:
         return ROOT / "projects" / self.folder / "results.json"
+
+    @property
+    def datasets_path(self) -> Path:
+        return ROOT / "projects" / self.folder / "results_datasets.json"
+
+    def datasets(self) -> list[dict[str, object]]:
+        """Row counts and fingerprints for this project's datasets, from the manifest."""
+        from shared.datasets import load_manifest
+
+        manifest = load_manifest()
+        out: list[dict[str, object]] = []
+        for key in self.dataset_keys:
+            entry = manifest.get(key)
+            out.append(
+                {
+                    "key": key,
+                    "rows": entry.get("rows") if entry else None,
+                    "bytes": entry.get("bytes") if entry else None,
+                    "role": entry.get("role") if entry else None,
+                    "source": entry.get("source") if entry else None,
+                    "built": entry is not None,
+                }
+            )
+        return out
 
     @property
     def readme_url(self) -> str:
@@ -78,6 +106,7 @@ class Project:
         return paired + [
             {"label": "Dashboard", "href": self.base_url + "/", "kind": "local"},
             {"label": "Input and output", "href": self.base_url + "/io", "kind": "local"},
+            {"label": "Datasets", "href": self.base_url + "/datasets", "kind": "local"},
             {"label": "Source", "href": self.source_url, "kind": "external"},
             {"label": "README", "href": self.readme_url, "kind": "external"},
             {"label": "Published page", "href": PAGES, "kind": "external"},
@@ -95,6 +124,7 @@ PROJECTS: tuple[Project, ...] = (
         module="projects.p01_switchboard.app",
         port=8101,
         folder="p01_switchboard",
+        dataset_keys=("generated/p01_messages",),
         headline=(
             ("Invariants", "invariants.rules", "int"),
             (
@@ -120,6 +150,11 @@ PROJECTS: tuple[Project, ...] = (
         module="projects.p02_policy_bench.app",
         port=8102,
         folder="p02_policy_bench",
+        dataset_keys=(
+            "real/loan_book",
+            "real/card_applications",
+            "real/card_credit_records",
+        ),
         headline=(
             ("Borrowers", "cohort.size", "int"),
             ("Scorecard Gini", "discrimination.gini", "float"),
@@ -141,6 +176,7 @@ PROJECTS: tuple[Project, ...] = (
         module="projects.p03_guardian.app",
         port=8103,
         folder="p03_guardian",
+        dataset_keys=("generated/p03_utterances",),
         headline=(
             ("Test cases", "testset.all", "int"),
             ("Actions correct", "actions.overall_exact", "over:actions.cases"),
@@ -166,6 +202,7 @@ PROJECTS: tuple[Project, ...] = (
         module="projects.p04_spec_to_wire.app",
         port=8104,
         folder="p04_spec_to_wire",
+        dataset_keys=("generated/p04_tasks",),
         needs_model=True,
         pairs_with="switchboard",
         headline=(
@@ -186,6 +223,7 @@ PROJECTS: tuple[Project, ...] = (
         module="projects.p05_policy_from_prose.app",
         port=8105,
         folder="p05_policy_from_prose",
+        dataset_keys=("generated/p05_policies",),
         needs_model=True,
         pairs_with="policy-bench",
         headline=(
@@ -206,6 +244,7 @@ PROJECTS: tuple[Project, ...] = (
         module="projects.p06_model_vs_lexicon.app",
         port=8106,
         folder="p06_model_vs_lexicon",
+        dataset_keys=("generated/p03_utterances",),
         needs_model=True,
         pairs_with="guardian",
         headline=(

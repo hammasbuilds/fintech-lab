@@ -1,45 +1,45 @@
 {
   "cohort": {
-    "size": 5000,
-    "median_income": 26698,
-    "income_p10": 10854,
-    "income_p90": 55437,
-    "base_default_rate": 0.0586,
+    "size": 50000,
+    "median_income": 26981,
+    "income_p10": 11154,
+    "income_p90": 55950,
+    "base_default_rate": 0.0536,
     "loss_given_default": 0.75,
     "by_region": {
       "central-urban": {
-        "count": 1906,
-        "share": 0.3812,
-        "median_income": 34408,
-        "median_wallet_months": 14,
+        "count": 19066,
+        "share": 0.3813,
+        "median_income": 34593,
+        "median_wallet_months": 13,
         "base_default_rate": 0.0409
       },
       "north-urban": {
-        "count": 1138,
-        "share": 0.2276,
-        "median_income": 34343,
+        "count": 11945,
+        "share": 0.2389,
+        "median_income": 34493,
         "median_wallet_months": 14,
-        "base_default_rate": 0.0589
+        "base_default_rate": 0.046
       },
       "south-rural": {
-        "count": 1247,
-        "share": 0.2494,
-        "median_income": 16509,
+        "count": 12037,
+        "share": 0.2407,
+        "median_income": 16799,
         "median_wallet_months": 7,
-        "base_default_rate": 0.0842
+        "base_default_rate": 0.0719
       },
       "east-rural": {
-        "count": 709,
-        "share": 0.1418,
-        "median_income": 16116,
-        "median_wallet_months": 8,
-        "base_default_rate": 0.0606
+        "count": 6952,
+        "share": 0.139,
+        "median_income": 16971,
+        "median_wallet_months": 7,
+        "base_default_rate": 0.0702
       }
     },
     "by_employment": {
-      "salaried": 0.0426,
-      "self-employed": 0.0522,
-      "daily-wage": 0.085
+      "salaried": 0.042,
+      "self-employed": 0.0512,
+      "daily-wage": 0.071
     }
   },
   "policies": {
@@ -107,108 +107,110 @@
         "version": "1",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 2835,
+      "applications": 50000,
+      "approvals": 28486,
       "refers": 0,
-      "declines": 2165,
-      "approval_rate": 0.567,
+      "declines": 21514,
+      "approval_rate": 0.5697,
       "refer_rate": 0.0,
-      "disbursed": 26984871.25,
-      "average_limit": 9518.47,
-      "fee_revenue": 674623.01,
+      "disbursed": 273009043.25,
+      "average_limit": 9583.97,
+      "fee_revenue": 6825238.63,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
       "time_priced_revenue": 0.0,
-      "bad_rate": 0.0261,
-      "loss_rate": 0.0168,
-      "expected_loss": 453091.88,
-      "net": 221531.13,
-      "defaults_among_approved": 74,
-      "declined_who_would_repay": 1946,
-      "declined_who_would_default": 219,
+      "bad_rate": 0.0262,
+      "loss_rate": 0.0184,
+      "expected_loss": 5027567.25,
+      "net": 1797671.38,
+      "defaults_among_approved": 746,
+      "declined_who_would_repay": 19579,
+      "declined_who_would_default": 1935,
       "decline_reasons": {
-        "score below the threshold": 1305,
-        "monthly income below the floor of 12,000": 665,
-        "two or more defaults already on file": 195
+        "score below the threshold": 13294,
+        "monthly income below the floor of 12,000": 6039,
+        "two or more defaults already on file": 2181
       },
       "score_histogram": [
         {
           "from": 0,
           "to": 9,
-          "count": 246,
-          "defaults": 19,
+          "count": 2262,
+          "defaults": 180,
           "approved": 0,
-          "default_rate": 0.0772,
+          "default_rate": 0.0796,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 272,
-          "defaults": 14,
+          "count": 2836,
+          "defaults": 154,
           "approved": 0,
-          "default_rate": 0.0515,
+          "default_rate": 0.0543,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 583,
-          "defaults": 41,
+          "count": 5898,
+          "defaults": 313,
           "approved": 0,
-          "default_rate": 0.0703,
+          "default_rate": 0.0531,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 875,
-          "defaults": 38,
-          "approved": 671,
-          "default_rate": 0.0434,
+          "count": 9014,
+          "defaults": 305,
+          "approved": 6716,
+          "default_rate": 0.0338,
           "standing": "split by the threshold"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 510,
-          "defaults": 11,
-          "approved": 510,
-          "default_rate": 0.0216,
+          "count": 5026,
+          "defaults": 166,
+          "approved": 5026,
+          "default_rate": 0.033,
           "standing": "all approved"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 842,
-          "defaults": 21,
-          "approved": 842,
-          "default_rate": 0.0249,
+          "count": 8417,
+          "defaults": 229,
+          "approved": 8417,
+          "default_rate": 0.0272,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 537,
-          "defaults": 13,
-          "approved": 537,
-          "default_rate": 0.0242,
+          "count": 5767,
+          "defaults": 117,
+          "approved": 5767,
+          "default_rate": 0.0203,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 97,
-          "defaults": 1,
-          "approved": 97,
-          "default_rate": 0.0103,
+          "count": 962,
+          "defaults": 18,
+          "approved": 962,
+          "default_rate": 0.0187,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 178,
-          "defaults": 1,
-          "approved": 178,
-          "default_rate": 0.0056,
+          "count": 1598,
+          "defaults": 13,
+          "approved": 1598,
+          "default_rate": 0.0081,
           "standing": "all approved"
         }
       ],
@@ -216,68 +218,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 1435,
-            "approval_rate": 0.7529,
-            "bad_rate": 0.023,
-            "median_income": 34408,
-            "average_limit": 10295.96
+            "applications": 19066,
+            "approvals": 14106,
+            "approval_rate": 0.7399,
+            "bad_rate": 0.0242,
+            "median_income": 34593,
+            "average_limit": 10270.59
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 216,
-            "approval_rate": 0.3047,
-            "bad_rate": 0.0324,
-            "median_income": 16116,
-            "average_limit": 6356.5
+            "applications": 6952,
+            "approvals": 2075,
+            "approval_rate": 0.2985,
+            "bad_rate": 0.0323,
+            "median_income": 16971,
+            "average_limit": 6673.42
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 848,
-            "approval_rate": 0.7452,
-            "bad_rate": 0.0271,
-            "median_income": 34343,
-            "average_limit": 10063.55
+            "applications": 11945,
+            "approvals": 8829,
+            "approval_rate": 0.7391,
+            "bad_rate": 0.0261,
+            "median_income": 34493,
+            "average_limit": 10260.8
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 336,
-            "approval_rate": 0.2694,
-            "bad_rate": 0.0327,
-            "median_income": 16509,
-            "average_limit": 6854.98
+            "applications": 12037,
+            "approvals": 3476,
+            "approval_rate": 0.2888,
+            "bad_rate": 0.0308,
+            "median_income": 16799,
+            "average_limit": 6815.93
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 415,
-            "approval_rate": 0.2821,
-            "bad_rate": 0.0506,
-            "median_income": 13985,
-            "average_limit": 5738.58
+            "applications": 14315,
+            "approvals": 4296,
+            "approval_rate": 0.3001,
+            "bad_rate": 0.0305,
+            "median_income": 14179,
+            "average_limit": 5505.9
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 1287,
-            "approval_rate": 0.7611,
-            "bad_rate": 0.021,
-            "median_income": 38538,
-            "average_limit": 11192.48
+            "applications": 17564,
+            "approvals": 13016,
+            "approval_rate": 0.7411,
+            "bad_rate": 0.0241,
+            "median_income": 38343,
+            "average_limit": 11232.15
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 1133,
-            "approval_rate": 0.6164,
-            "bad_rate": 0.0229,
-            "median_income": 28690,
-            "average_limit": 9001.45
+            "applications": 18121,
+            "approvals": 11174,
+            "approval_rate": 0.6166,
+            "bad_rate": 0.0269,
+            "median_income": 28968,
+            "average_limit": 9231.97
           }
         ]
       },
@@ -285,42 +287,42 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
-          "approval_rate": 0.126,
-          "bad_rate": 0.0397
+          "income_to": 15029,
+          "applications": 10000,
+          "approval_rate": 0.1466,
+          "bad_rate": 0.028
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.419,
-          "bad_rate": 0.043
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.4265,
+          "bad_rate": 0.0309
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.526,
-          "bad_rate": 0.0304
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.5278,
+          "bad_rate": 0.0252
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.872,
-          "bad_rate": 0.0218
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.8674,
+          "bad_rate": 0.0288
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.892,
-          "bad_rate": 0.0179
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.8803,
+          "bad_rate": 0.0216
         }
       ]
     },
@@ -332,35 +334,46 @@
         "version": "2",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 1597,
-      "refers": 265,
-      "declines": 3138,
-      "approval_rate": 0.3194,
-      "refer_rate": 0.053,
-      "disbursed": 17167845.75,
-      "average_limit": 10750.06,
-      "fee_revenue": 429196.82,
+      "applications": 50000,
+      "approvals": 16027,
+      "refers": 2402,
+      "declines": 31571,
+      "approval_rate": 0.3205,
+      "refer_rate": 0.048,
+      "disbursed": 174939629.0,
+      "average_limit": 10915.31,
+      "fee_revenue": 4373497.66,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
       "time_priced_revenue": 0.0,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
-      "expected_loss": 199272.19,
-      "net": 229924.63,
-      "defaults_among_approved": 27,
-      "declined_who_would_repay": 3137,
-      "declined_who_would_default": 266,
+      "bad_rate": 0.0184,
+      "loss_rate": 0.0132,
+      "expected_loss": 2303471.62,
+      "net": 2070026.04,
+      "defaults_among_approved": 295,
+      "declined_who_would_repay": 31587,
+      "declined_who_would_default": 2386,
       "decline_reasons": {
-        "monthly income below the floor of 18,000": 1417,
-        "score below the threshold": 934,
-        "a default already on file": 530,
-        "a large household needs an officer to size the limit": 265,
-        "wallet turnover too high to read as income": 257
+        "monthly income below the floor of 18,000": 13931,
+        "score below the threshold": 9557,
+        "a default already on file": 5809,
+        "a large household needs an officer to size the limit": 2402,
+        "wallet turnover too high to read as income": 2274
       },
       "score_histogram": [
         {
           "from": -20,
           "to": -11,
-          "count": 3,
+          "count": 8,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": -10,
+          "to": -1,
+          "count": 7,
           "defaults": 0,
           "approved": 0,
           "default_rate": 0.0,
@@ -369,91 +382,91 @@
         {
           "from": 0,
           "to": 9,
-          "count": 69,
-          "defaults": 5,
+          "count": 639,
+          "defaults": 41,
           "approved": 0,
-          "default_rate": 0.0725,
+          "default_rate": 0.0642,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 107,
-          "defaults": 8,
+          "count": 1107,
+          "defaults": 54,
           "approved": 0,
-          "default_rate": 0.0748,
+          "default_rate": 0.0488,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 228,
-          "defaults": 9,
+          "count": 2319,
+          "defaults": 96,
           "approved": 0,
-          "default_rate": 0.0395,
+          "default_rate": 0.0414,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 391,
-          "defaults": 16,
+          "count": 3994,
+          "defaults": 109,
           "approved": 0,
-          "default_rate": 0.0409,
+          "default_rate": 0.0273,
           "standing": "all declined"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 364,
-          "defaults": 5,
-          "approved": 228,
-          "default_rate": 0.0137,
+          "count": 3634,
+          "defaults": 85,
+          "approved": 2151,
+          "default_rate": 0.0234,
           "standing": "split by the threshold"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 457,
-          "defaults": 7,
-          "approved": 457,
-          "default_rate": 0.0153,
+          "count": 4533,
+          "defaults": 103,
+          "approved": 4533,
+          "default_rate": 0.0227,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 461,
-          "defaults": 11,
-          "approved": 461,
-          "default_rate": 0.0239,
+          "count": 4984,
+          "defaults": 98,
+          "approved": 4984,
+          "default_rate": 0.0197,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 286,
-          "defaults": 6,
-          "approved": 286,
-          "default_rate": 0.021,
+          "count": 2817,
+          "defaults": 42,
+          "approved": 2817,
+          "default_rate": 0.0149,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 83,
-          "defaults": 0,
-          "approved": 83,
-          "default_rate": 0.0,
+          "count": 856,
+          "defaults": 7,
+          "approved": 856,
+          "default_rate": 0.0082,
           "standing": "all approved"
         },
         {
           "from": 90,
           "to": 99,
-          "count": 82,
-          "defaults": 0,
-          "approved": 82,
-          "default_rate": 0.0,
+          "count": 686,
+          "defaults": 6,
+          "approved": 686,
+          "default_rate": 0.0087,
           "standing": "all approved"
         }
       ],
@@ -461,68 +474,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 909,
-            "approval_rate": 0.4769,
-            "bad_rate": 0.0176,
-            "median_income": 34408,
-            "average_limit": 11072.77
+            "applications": 19066,
+            "approvals": 8755,
+            "approval_rate": 0.4592,
+            "bad_rate": 0.018,
+            "median_income": 34593,
+            "average_limit": 11206.04
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 62,
-            "approval_rate": 0.0874,
-            "bad_rate": 0.0323,
-            "median_income": 16116,
-            "average_limit": 8015.63
+            "applications": 6952,
+            "approvals": 661,
+            "approval_rate": 0.0951,
+            "bad_rate": 0.0212,
+            "median_income": 16971,
+            "average_limit": 8366.73
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 512,
-            "approval_rate": 0.4499,
-            "bad_rate": 0.0098,
-            "median_income": 34343,
-            "average_limit": 11035.66
+            "applications": 11945,
+            "approvals": 5444,
+            "approval_rate": 0.4558,
+            "bad_rate": 0.0171,
+            "median_income": 34493,
+            "average_limit": 11255.67
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 114,
-            "approval_rate": 0.0914,
-            "bad_rate": 0.0351,
-            "median_income": 16509,
-            "average_limit": 8381.3
+            "applications": 12037,
+            "approvals": 1167,
+            "approval_rate": 0.097,
+            "bad_rate": 0.0257,
+            "median_income": 16799,
+            "average_limit": 8589.96
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 98,
-            "approval_rate": 0.0666,
-            "bad_rate": 0.0306,
-            "median_income": 13985,
-            "average_limit": 7645.73
+            "applications": 14315,
+            "approvals": 952,
+            "approval_rate": 0.0665,
+            "bad_rate": 0.0221,
+            "median_income": 14179,
+            "average_limit": 7617.28
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 952,
-            "approval_rate": 0.563,
-            "bad_rate": 0.0168,
-            "median_income": 38538,
-            "average_limit": 11455.3
+            "applications": 17564,
+            "approvals": 9527,
+            "approval_rate": 0.5424,
+            "bad_rate": 0.0176,
+            "median_income": 38343,
+            "average_limit": 11476.78
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 547,
-            "approval_rate": 0.2976,
-            "bad_rate": 0.0146,
-            "median_income": 28690,
-            "average_limit": 10078.82
+            "applications": 18121,
+            "approvals": 5548,
+            "approval_rate": 0.3062,
+            "bad_rate": 0.0191,
+            "median_income": 28968,
+            "average_limit": 10517.07
           }
         ]
       },
@@ -530,42 +543,42 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
+          "income_to": 15029,
+          "applications": 10000,
           "approval_rate": 0.0,
           "bad_rate": null
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.105,
-          "bad_rate": 0.0381
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.0991,
+          "bad_rate": 0.0222
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.276,
-          "bad_rate": 0.0217
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.2772,
+          "bad_rate": 0.0188
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.574,
-          "bad_rate": 0.0122
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.582,
+          "bad_rate": 0.0201
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.642,
-          "bad_rate": 0.0156
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.6444,
+          "bad_rate": 0.0161
         }
       ]
     },
@@ -577,35 +590,46 @@
         "version": "3",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 1597,
-      "refers": 265,
-      "declines": 3138,
-      "approval_rate": 0.3194,
-      "refer_rate": 0.053,
-      "disbursed": 17167845.75,
-      "average_limit": 10750.06,
-      "fee_revenue": 429196.82,
-      "time_priced_revenue": 171679.08,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
-      "expected_loss": 199272.19,
-      "net": 229924.63,
-      "defaults_among_approved": 27,
-      "declined_who_would_repay": 3137,
-      "declined_who_would_default": 266,
+      "applications": 50000,
+      "approvals": 16027,
+      "refers": 2402,
+      "declines": 31571,
+      "approval_rate": 0.3205,
+      "refer_rate": 0.048,
+      "disbursed": 174939629.0,
+      "average_limit": 10915.31,
+      "fee_revenue": 4373497.66,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
+      "time_priced_revenue": 1749401.36,
+      "bad_rate": 0.0184,
+      "loss_rate": 0.0132,
+      "expected_loss": 2303471.62,
+      "net": 2070026.04,
+      "defaults_among_approved": 295,
+      "declined_who_would_repay": 31587,
+      "declined_who_would_default": 2386,
       "decline_reasons": {
-        "monthly income below the floor of 18,000": 1417,
-        "score below the threshold": 934,
-        "a default already on file": 530,
-        "a large household needs an officer to size the limit": 265,
-        "wallet turnover too high to read as income": 257
+        "monthly income below the floor of 18,000": 13931,
+        "score below the threshold": 9557,
+        "a default already on file": 5809,
+        "a large household needs an officer to size the limit": 2402,
+        "wallet turnover too high to read as income": 2274
       },
       "score_histogram": [
         {
           "from": -20,
           "to": -11,
-          "count": 3,
+          "count": 8,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": -10,
+          "to": -1,
+          "count": 7,
           "defaults": 0,
           "approved": 0,
           "default_rate": 0.0,
@@ -614,91 +638,91 @@
         {
           "from": 0,
           "to": 9,
-          "count": 69,
-          "defaults": 5,
+          "count": 639,
+          "defaults": 41,
           "approved": 0,
-          "default_rate": 0.0725,
+          "default_rate": 0.0642,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 107,
-          "defaults": 8,
+          "count": 1107,
+          "defaults": 54,
           "approved": 0,
-          "default_rate": 0.0748,
+          "default_rate": 0.0488,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 228,
-          "defaults": 9,
+          "count": 2319,
+          "defaults": 96,
           "approved": 0,
-          "default_rate": 0.0395,
+          "default_rate": 0.0414,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 391,
-          "defaults": 16,
+          "count": 3994,
+          "defaults": 109,
           "approved": 0,
-          "default_rate": 0.0409,
+          "default_rate": 0.0273,
           "standing": "all declined"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 364,
-          "defaults": 5,
-          "approved": 228,
-          "default_rate": 0.0137,
+          "count": 3634,
+          "defaults": 85,
+          "approved": 2151,
+          "default_rate": 0.0234,
           "standing": "split by the threshold"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 457,
-          "defaults": 7,
-          "approved": 457,
-          "default_rate": 0.0153,
+          "count": 4533,
+          "defaults": 103,
+          "approved": 4533,
+          "default_rate": 0.0227,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 461,
-          "defaults": 11,
-          "approved": 461,
-          "default_rate": 0.0239,
+          "count": 4984,
+          "defaults": 98,
+          "approved": 4984,
+          "default_rate": 0.0197,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 286,
-          "defaults": 6,
-          "approved": 286,
-          "default_rate": 0.021,
+          "count": 2817,
+          "defaults": 42,
+          "approved": 2817,
+          "default_rate": 0.0149,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 83,
-          "defaults": 0,
-          "approved": 83,
-          "default_rate": 0.0,
+          "count": 856,
+          "defaults": 7,
+          "approved": 856,
+          "default_rate": 0.0082,
           "standing": "all approved"
         },
         {
           "from": 90,
           "to": 99,
-          "count": 82,
-          "defaults": 0,
-          "approved": 82,
-          "default_rate": 0.0,
+          "count": 686,
+          "defaults": 6,
+          "approved": 686,
+          "default_rate": 0.0087,
           "standing": "all approved"
         }
       ],
@@ -706,68 +730,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 909,
-            "approval_rate": 0.4769,
-            "bad_rate": 0.0176,
-            "median_income": 34408,
-            "average_limit": 11072.77
+            "applications": 19066,
+            "approvals": 8755,
+            "approval_rate": 0.4592,
+            "bad_rate": 0.018,
+            "median_income": 34593,
+            "average_limit": 11206.04
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 62,
-            "approval_rate": 0.0874,
-            "bad_rate": 0.0323,
-            "median_income": 16116,
-            "average_limit": 8015.63
+            "applications": 6952,
+            "approvals": 661,
+            "approval_rate": 0.0951,
+            "bad_rate": 0.0212,
+            "median_income": 16971,
+            "average_limit": 8366.73
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 512,
-            "approval_rate": 0.4499,
-            "bad_rate": 0.0098,
-            "median_income": 34343,
-            "average_limit": 11035.66
+            "applications": 11945,
+            "approvals": 5444,
+            "approval_rate": 0.4558,
+            "bad_rate": 0.0171,
+            "median_income": 34493,
+            "average_limit": 11255.67
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 114,
-            "approval_rate": 0.0914,
-            "bad_rate": 0.0351,
-            "median_income": 16509,
-            "average_limit": 8381.3
+            "applications": 12037,
+            "approvals": 1167,
+            "approval_rate": 0.097,
+            "bad_rate": 0.0257,
+            "median_income": 16799,
+            "average_limit": 8589.96
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 98,
-            "approval_rate": 0.0666,
-            "bad_rate": 0.0306,
-            "median_income": 13985,
-            "average_limit": 7645.73
+            "applications": 14315,
+            "approvals": 952,
+            "approval_rate": 0.0665,
+            "bad_rate": 0.0221,
+            "median_income": 14179,
+            "average_limit": 7617.28
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 952,
-            "approval_rate": 0.563,
-            "bad_rate": 0.0168,
-            "median_income": 38538,
-            "average_limit": 11455.3
+            "applications": 17564,
+            "approvals": 9527,
+            "approval_rate": 0.5424,
+            "bad_rate": 0.0176,
+            "median_income": 38343,
+            "average_limit": 11476.78
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 547,
-            "approval_rate": 0.2976,
-            "bad_rate": 0.0146,
-            "median_income": 28690,
-            "average_limit": 10078.82
+            "applications": 18121,
+            "approvals": 5548,
+            "approval_rate": 0.3062,
+            "bad_rate": 0.0191,
+            "median_income": 28968,
+            "average_limit": 10517.07
           }
         ]
       },
@@ -775,42 +799,42 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
+          "income_to": 15029,
+          "applications": 10000,
           "approval_rate": 0.0,
           "bad_rate": null
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.105,
-          "bad_rate": 0.0381
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.0991,
+          "bad_rate": 0.0222
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.276,
-          "bad_rate": 0.0217
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.2772,
+          "bad_rate": 0.0188
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.574,
-          "bad_rate": 0.0122
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.582,
+          "bad_rate": 0.0201
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.642,
-          "bad_rate": 0.0156
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.6444,
+          "bad_rate": 0.0161
         }
       ]
     }
@@ -867,108 +891,110 @@
         "version": "1",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 2835,
+      "applications": 50000,
+      "approvals": 28486,
       "refers": 0,
-      "declines": 2165,
-      "approval_rate": 0.567,
+      "declines": 21514,
+      "approval_rate": 0.5697,
       "refer_rate": 0.0,
-      "disbursed": 26984871.25,
-      "average_limit": 9518.47,
-      "fee_revenue": 674623.01,
+      "disbursed": 273009043.25,
+      "average_limit": 9583.97,
+      "fee_revenue": 6825238.63,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
       "time_priced_revenue": 0.0,
-      "bad_rate": 0.0261,
-      "loss_rate": 0.0168,
-      "expected_loss": 453091.88,
-      "net": 221531.13,
-      "defaults_among_approved": 74,
-      "declined_who_would_repay": 1946,
-      "declined_who_would_default": 219,
+      "bad_rate": 0.0262,
+      "loss_rate": 0.0184,
+      "expected_loss": 5027567.25,
+      "net": 1797671.38,
+      "defaults_among_approved": 746,
+      "declined_who_would_repay": 19579,
+      "declined_who_would_default": 1935,
       "decline_reasons": {
-        "score below the threshold": 1305,
-        "monthly income below the floor of 12,000": 665,
-        "two or more defaults already on file": 195
+        "score below the threshold": 13294,
+        "monthly income below the floor of 12,000": 6039,
+        "two or more defaults already on file": 2181
       },
       "score_histogram": [
         {
           "from": 0,
           "to": 9,
-          "count": 246,
-          "defaults": 19,
+          "count": 2262,
+          "defaults": 180,
           "approved": 0,
-          "default_rate": 0.0772,
+          "default_rate": 0.0796,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 272,
-          "defaults": 14,
+          "count": 2836,
+          "defaults": 154,
           "approved": 0,
-          "default_rate": 0.0515,
+          "default_rate": 0.0543,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 583,
-          "defaults": 41,
+          "count": 5898,
+          "defaults": 313,
           "approved": 0,
-          "default_rate": 0.0703,
+          "default_rate": 0.0531,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 875,
-          "defaults": 38,
-          "approved": 671,
-          "default_rate": 0.0434,
+          "count": 9014,
+          "defaults": 305,
+          "approved": 6716,
+          "default_rate": 0.0338,
           "standing": "split by the threshold"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 510,
-          "defaults": 11,
-          "approved": 510,
-          "default_rate": 0.0216,
+          "count": 5026,
+          "defaults": 166,
+          "approved": 5026,
+          "default_rate": 0.033,
           "standing": "all approved"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 842,
-          "defaults": 21,
-          "approved": 842,
-          "default_rate": 0.0249,
+          "count": 8417,
+          "defaults": 229,
+          "approved": 8417,
+          "default_rate": 0.0272,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 537,
-          "defaults": 13,
-          "approved": 537,
-          "default_rate": 0.0242,
+          "count": 5767,
+          "defaults": 117,
+          "approved": 5767,
+          "default_rate": 0.0203,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 97,
-          "defaults": 1,
-          "approved": 97,
-          "default_rate": 0.0103,
+          "count": 962,
+          "defaults": 18,
+          "approved": 962,
+          "default_rate": 0.0187,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 178,
-          "defaults": 1,
-          "approved": 178,
-          "default_rate": 0.0056,
+          "count": 1598,
+          "defaults": 13,
+          "approved": 1598,
+          "default_rate": 0.0081,
           "standing": "all approved"
         }
       ],
@@ -976,68 +1002,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 1435,
-            "approval_rate": 0.7529,
-            "bad_rate": 0.023,
-            "median_income": 34408,
-            "average_limit": 10295.96
+            "applications": 19066,
+            "approvals": 14106,
+            "approval_rate": 0.7399,
+            "bad_rate": 0.0242,
+            "median_income": 34593,
+            "average_limit": 10270.59
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 216,
-            "approval_rate": 0.3047,
-            "bad_rate": 0.0324,
-            "median_income": 16116,
-            "average_limit": 6356.5
+            "applications": 6952,
+            "approvals": 2075,
+            "approval_rate": 0.2985,
+            "bad_rate": 0.0323,
+            "median_income": 16971,
+            "average_limit": 6673.42
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 848,
-            "approval_rate": 0.7452,
-            "bad_rate": 0.0271,
-            "median_income": 34343,
-            "average_limit": 10063.55
+            "applications": 11945,
+            "approvals": 8829,
+            "approval_rate": 0.7391,
+            "bad_rate": 0.0261,
+            "median_income": 34493,
+            "average_limit": 10260.8
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 336,
-            "approval_rate": 0.2694,
-            "bad_rate": 0.0327,
-            "median_income": 16509,
-            "average_limit": 6854.98
+            "applications": 12037,
+            "approvals": 3476,
+            "approval_rate": 0.2888,
+            "bad_rate": 0.0308,
+            "median_income": 16799,
+            "average_limit": 6815.93
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 415,
-            "approval_rate": 0.2821,
-            "bad_rate": 0.0506,
-            "median_income": 13985,
-            "average_limit": 5738.58
+            "applications": 14315,
+            "approvals": 4296,
+            "approval_rate": 0.3001,
+            "bad_rate": 0.0305,
+            "median_income": 14179,
+            "average_limit": 5505.9
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 1287,
-            "approval_rate": 0.7611,
-            "bad_rate": 0.021,
-            "median_income": 38538,
-            "average_limit": 11192.48
+            "applications": 17564,
+            "approvals": 13016,
+            "approval_rate": 0.7411,
+            "bad_rate": 0.0241,
+            "median_income": 38343,
+            "average_limit": 11232.15
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 1133,
-            "approval_rate": 0.6164,
-            "bad_rate": 0.0229,
-            "median_income": 28690,
-            "average_limit": 9001.45
+            "applications": 18121,
+            "approvals": 11174,
+            "approval_rate": 0.6166,
+            "bad_rate": 0.0269,
+            "median_income": 28968,
+            "average_limit": 9231.97
           }
         ]
       },
@@ -1045,42 +1071,42 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
-          "approval_rate": 0.126,
-          "bad_rate": 0.0397
+          "income_to": 15029,
+          "applications": 10000,
+          "approval_rate": 0.1466,
+          "bad_rate": 0.028
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.419,
-          "bad_rate": 0.043
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.4265,
+          "bad_rate": 0.0309
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.526,
-          "bad_rate": 0.0304
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.5278,
+          "bad_rate": 0.0252
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.872,
-          "bad_rate": 0.0218
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.8674,
+          "bad_rate": 0.0288
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.892,
-          "bad_rate": 0.0179
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.8803,
+          "bad_rate": 0.0216
         }
       ]
     },
@@ -1092,35 +1118,46 @@
         "version": "2",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 1597,
-      "refers": 265,
-      "declines": 3138,
-      "approval_rate": 0.3194,
-      "refer_rate": 0.053,
-      "disbursed": 17167845.75,
-      "average_limit": 10750.06,
-      "fee_revenue": 429196.82,
+      "applications": 50000,
+      "approvals": 16027,
+      "refers": 2402,
+      "declines": 31571,
+      "approval_rate": 0.3205,
+      "refer_rate": 0.048,
+      "disbursed": 174939629.0,
+      "average_limit": 10915.31,
+      "fee_revenue": 4373497.66,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
       "time_priced_revenue": 0.0,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
-      "expected_loss": 199272.19,
-      "net": 229924.63,
-      "defaults_among_approved": 27,
-      "declined_who_would_repay": 3137,
-      "declined_who_would_default": 266,
+      "bad_rate": 0.0184,
+      "loss_rate": 0.0132,
+      "expected_loss": 2303471.62,
+      "net": 2070026.04,
+      "defaults_among_approved": 295,
+      "declined_who_would_repay": 31587,
+      "declined_who_would_default": 2386,
       "decline_reasons": {
-        "monthly income below the floor of 18,000": 1417,
-        "score below the threshold": 934,
-        "a default already on file": 530,
-        "a large household needs an officer to size the limit": 265,
-        "wallet turnover too high to read as income": 257
+        "monthly income below the floor of 18,000": 13931,
+        "score below the threshold": 9557,
+        "a default already on file": 5809,
+        "a large household needs an officer to size the limit": 2402,
+        "wallet turnover too high to read as income": 2274
       },
       "score_histogram": [
         {
           "from": -20,
           "to": -11,
-          "count": 3,
+          "count": 8,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": -10,
+          "to": -1,
+          "count": 7,
           "defaults": 0,
           "approved": 0,
           "default_rate": 0.0,
@@ -1129,91 +1166,91 @@
         {
           "from": 0,
           "to": 9,
-          "count": 69,
-          "defaults": 5,
+          "count": 639,
+          "defaults": 41,
           "approved": 0,
-          "default_rate": 0.0725,
+          "default_rate": 0.0642,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 107,
-          "defaults": 8,
+          "count": 1107,
+          "defaults": 54,
           "approved": 0,
-          "default_rate": 0.0748,
+          "default_rate": 0.0488,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 228,
-          "defaults": 9,
+          "count": 2319,
+          "defaults": 96,
           "approved": 0,
-          "default_rate": 0.0395,
+          "default_rate": 0.0414,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 391,
-          "defaults": 16,
+          "count": 3994,
+          "defaults": 109,
           "approved": 0,
-          "default_rate": 0.0409,
+          "default_rate": 0.0273,
           "standing": "all declined"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 364,
-          "defaults": 5,
-          "approved": 228,
-          "default_rate": 0.0137,
+          "count": 3634,
+          "defaults": 85,
+          "approved": 2151,
+          "default_rate": 0.0234,
           "standing": "split by the threshold"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 457,
-          "defaults": 7,
-          "approved": 457,
-          "default_rate": 0.0153,
+          "count": 4533,
+          "defaults": 103,
+          "approved": 4533,
+          "default_rate": 0.0227,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 461,
-          "defaults": 11,
-          "approved": 461,
-          "default_rate": 0.0239,
+          "count": 4984,
+          "defaults": 98,
+          "approved": 4984,
+          "default_rate": 0.0197,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 286,
-          "defaults": 6,
-          "approved": 286,
-          "default_rate": 0.021,
+          "count": 2817,
+          "defaults": 42,
+          "approved": 2817,
+          "default_rate": 0.0149,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 83,
-          "defaults": 0,
-          "approved": 83,
-          "default_rate": 0.0,
+          "count": 856,
+          "defaults": 7,
+          "approved": 856,
+          "default_rate": 0.0082,
           "standing": "all approved"
         },
         {
           "from": 90,
           "to": 99,
-          "count": 82,
-          "defaults": 0,
-          "approved": 82,
-          "default_rate": 0.0,
+          "count": 686,
+          "defaults": 6,
+          "approved": 686,
+          "default_rate": 0.0087,
           "standing": "all approved"
         }
       ],
@@ -1221,68 +1258,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 909,
-            "approval_rate": 0.4769,
-            "bad_rate": 0.0176,
-            "median_income": 34408,
-            "average_limit": 11072.77
+            "applications": 19066,
+            "approvals": 8755,
+            "approval_rate": 0.4592,
+            "bad_rate": 0.018,
+            "median_income": 34593,
+            "average_limit": 11206.04
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 62,
-            "approval_rate": 0.0874,
-            "bad_rate": 0.0323,
-            "median_income": 16116,
-            "average_limit": 8015.63
+            "applications": 6952,
+            "approvals": 661,
+            "approval_rate": 0.0951,
+            "bad_rate": 0.0212,
+            "median_income": 16971,
+            "average_limit": 8366.73
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 512,
-            "approval_rate": 0.4499,
-            "bad_rate": 0.0098,
-            "median_income": 34343,
-            "average_limit": 11035.66
+            "applications": 11945,
+            "approvals": 5444,
+            "approval_rate": 0.4558,
+            "bad_rate": 0.0171,
+            "median_income": 34493,
+            "average_limit": 11255.67
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 114,
-            "approval_rate": 0.0914,
-            "bad_rate": 0.0351,
-            "median_income": 16509,
-            "average_limit": 8381.3
+            "applications": 12037,
+            "approvals": 1167,
+            "approval_rate": 0.097,
+            "bad_rate": 0.0257,
+            "median_income": 16799,
+            "average_limit": 8589.96
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 98,
-            "approval_rate": 0.0666,
-            "bad_rate": 0.0306,
-            "median_income": 13985,
-            "average_limit": 7645.73
+            "applications": 14315,
+            "approvals": 952,
+            "approval_rate": 0.0665,
+            "bad_rate": 0.0221,
+            "median_income": 14179,
+            "average_limit": 7617.28
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 952,
-            "approval_rate": 0.563,
-            "bad_rate": 0.0168,
-            "median_income": 38538,
-            "average_limit": 11455.3
+            "applications": 17564,
+            "approvals": 9527,
+            "approval_rate": 0.5424,
+            "bad_rate": 0.0176,
+            "median_income": 38343,
+            "average_limit": 11476.78
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 547,
-            "approval_rate": 0.2976,
-            "bad_rate": 0.0146,
-            "median_income": 28690,
-            "average_limit": 10078.82
+            "applications": 18121,
+            "approvals": 5548,
+            "approval_rate": 0.3062,
+            "bad_rate": 0.0191,
+            "median_income": 28968,
+            "average_limit": 10517.07
           }
         ]
       },
@@ -1290,59 +1327,59 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
+          "income_to": 15029,
+          "applications": 10000,
           "approval_rate": 0.0,
           "bad_rate": null
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.105,
-          "bad_rate": 0.0381
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.0991,
+          "bad_rate": 0.0222
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.276,
-          "bad_rate": 0.0217
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.2772,
+          "bad_rate": 0.0188
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.574,
-          "bad_rate": 0.0122
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.582,
+          "bad_rate": 0.0201
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.642,
-          "bad_rate": 0.0156
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.6444,
+          "bad_rate": 0.0161
         }
       ]
     },
     "newly_approved": 0,
-    "newly_declined": 1238,
-    "unchanged": 3762,
+    "newly_declined": 12459,
+    "unchanged": 37541,
     "newly_declined_by_segment": {
       "region": {
-        "central-urban": 526,
-        "east-rural": 154,
-        "north-urban": 336,
-        "south-rural": 222
+        "central-urban": 5351,
+        "east-rural": 1414,
+        "north-urban": 3385,
+        "south-rural": 2309
       },
       "employment": {
-        "daily-wage": 317,
-        "salaried": 335,
-        "self-employed": 586
+        "daily-wage": 3344,
+        "salaried": 3489,
+        "self-employed": 5626
       }
     },
     "examples": [
@@ -1445,14 +1482,14 @@
     ],
     "labelled": true,
     "delta": {
-      "approval_rate_points": -24.76,
-      "bad_rate_points": -0.92,
-      "net": 8393.5,
-      "disbursed": -9817025.5
+      "approval_rate_points": -24.92,
+      "bad_rate_points": -0.78,
+      "net": 272354.66,
+      "disbursed": -98069414.25
     },
-    "precision_of_the_tightening": 0.038,
-    "newly_declined_who_would_repay": 1191,
-    "newly_declined_who_would_default": 47
+    "precision_of_the_tightening": 0.0362,
+    "newly_declined_who_would_repay": 12008,
+    "newly_declined_who_would_default": 451
   },
   "comparison_v2_to_v3": {
     "base": {
@@ -1463,35 +1500,46 @@
         "version": "2",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 1597,
-      "refers": 265,
-      "declines": 3138,
-      "approval_rate": 0.3194,
-      "refer_rate": 0.053,
-      "disbursed": 17167845.75,
-      "average_limit": 10750.06,
-      "fee_revenue": 429196.82,
+      "applications": 50000,
+      "approvals": 16027,
+      "refers": 2402,
+      "declines": 31571,
+      "approval_rate": 0.3205,
+      "refer_rate": 0.048,
+      "disbursed": 174939629.0,
+      "average_limit": 10915.31,
+      "fee_revenue": 4373497.66,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
       "time_priced_revenue": 0.0,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
-      "expected_loss": 199272.19,
-      "net": 229924.63,
-      "defaults_among_approved": 27,
-      "declined_who_would_repay": 3137,
-      "declined_who_would_default": 266,
+      "bad_rate": 0.0184,
+      "loss_rate": 0.0132,
+      "expected_loss": 2303471.62,
+      "net": 2070026.04,
+      "defaults_among_approved": 295,
+      "declined_who_would_repay": 31587,
+      "declined_who_would_default": 2386,
       "decline_reasons": {
-        "monthly income below the floor of 18,000": 1417,
-        "score below the threshold": 934,
-        "a default already on file": 530,
-        "a large household needs an officer to size the limit": 265,
-        "wallet turnover too high to read as income": 257
+        "monthly income below the floor of 18,000": 13931,
+        "score below the threshold": 9557,
+        "a default already on file": 5809,
+        "a large household needs an officer to size the limit": 2402,
+        "wallet turnover too high to read as income": 2274
       },
       "score_histogram": [
         {
           "from": -20,
           "to": -11,
-          "count": 3,
+          "count": 8,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": -10,
+          "to": -1,
+          "count": 7,
           "defaults": 0,
           "approved": 0,
           "default_rate": 0.0,
@@ -1500,91 +1548,91 @@
         {
           "from": 0,
           "to": 9,
-          "count": 69,
-          "defaults": 5,
+          "count": 639,
+          "defaults": 41,
           "approved": 0,
-          "default_rate": 0.0725,
+          "default_rate": 0.0642,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 107,
-          "defaults": 8,
+          "count": 1107,
+          "defaults": 54,
           "approved": 0,
-          "default_rate": 0.0748,
+          "default_rate": 0.0488,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 228,
-          "defaults": 9,
+          "count": 2319,
+          "defaults": 96,
           "approved": 0,
-          "default_rate": 0.0395,
+          "default_rate": 0.0414,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 391,
-          "defaults": 16,
+          "count": 3994,
+          "defaults": 109,
           "approved": 0,
-          "default_rate": 0.0409,
+          "default_rate": 0.0273,
           "standing": "all declined"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 364,
-          "defaults": 5,
-          "approved": 228,
-          "default_rate": 0.0137,
+          "count": 3634,
+          "defaults": 85,
+          "approved": 2151,
+          "default_rate": 0.0234,
           "standing": "split by the threshold"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 457,
-          "defaults": 7,
-          "approved": 457,
-          "default_rate": 0.0153,
+          "count": 4533,
+          "defaults": 103,
+          "approved": 4533,
+          "default_rate": 0.0227,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 461,
-          "defaults": 11,
-          "approved": 461,
-          "default_rate": 0.0239,
+          "count": 4984,
+          "defaults": 98,
+          "approved": 4984,
+          "default_rate": 0.0197,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 286,
-          "defaults": 6,
-          "approved": 286,
-          "default_rate": 0.021,
+          "count": 2817,
+          "defaults": 42,
+          "approved": 2817,
+          "default_rate": 0.0149,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 83,
-          "defaults": 0,
-          "approved": 83,
-          "default_rate": 0.0,
+          "count": 856,
+          "defaults": 7,
+          "approved": 856,
+          "default_rate": 0.0082,
           "standing": "all approved"
         },
         {
           "from": 90,
           "to": 99,
-          "count": 82,
-          "defaults": 0,
-          "approved": 82,
-          "default_rate": 0.0,
+          "count": 686,
+          "defaults": 6,
+          "approved": 686,
+          "default_rate": 0.0087,
           "standing": "all approved"
         }
       ],
@@ -1592,68 +1640,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 909,
-            "approval_rate": 0.4769,
-            "bad_rate": 0.0176,
-            "median_income": 34408,
-            "average_limit": 11072.77
+            "applications": 19066,
+            "approvals": 8755,
+            "approval_rate": 0.4592,
+            "bad_rate": 0.018,
+            "median_income": 34593,
+            "average_limit": 11206.04
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 62,
-            "approval_rate": 0.0874,
-            "bad_rate": 0.0323,
-            "median_income": 16116,
-            "average_limit": 8015.63
+            "applications": 6952,
+            "approvals": 661,
+            "approval_rate": 0.0951,
+            "bad_rate": 0.0212,
+            "median_income": 16971,
+            "average_limit": 8366.73
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 512,
-            "approval_rate": 0.4499,
-            "bad_rate": 0.0098,
-            "median_income": 34343,
-            "average_limit": 11035.66
+            "applications": 11945,
+            "approvals": 5444,
+            "approval_rate": 0.4558,
+            "bad_rate": 0.0171,
+            "median_income": 34493,
+            "average_limit": 11255.67
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 114,
-            "approval_rate": 0.0914,
-            "bad_rate": 0.0351,
-            "median_income": 16509,
-            "average_limit": 8381.3
+            "applications": 12037,
+            "approvals": 1167,
+            "approval_rate": 0.097,
+            "bad_rate": 0.0257,
+            "median_income": 16799,
+            "average_limit": 8589.96
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 98,
-            "approval_rate": 0.0666,
-            "bad_rate": 0.0306,
-            "median_income": 13985,
-            "average_limit": 7645.73
+            "applications": 14315,
+            "approvals": 952,
+            "approval_rate": 0.0665,
+            "bad_rate": 0.0221,
+            "median_income": 14179,
+            "average_limit": 7617.28
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 952,
-            "approval_rate": 0.563,
-            "bad_rate": 0.0168,
-            "median_income": 38538,
-            "average_limit": 11455.3
+            "applications": 17564,
+            "approvals": 9527,
+            "approval_rate": 0.5424,
+            "bad_rate": 0.0176,
+            "median_income": 38343,
+            "average_limit": 11476.78
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 547,
-            "approval_rate": 0.2976,
-            "bad_rate": 0.0146,
-            "median_income": 28690,
-            "average_limit": 10078.82
+            "applications": 18121,
+            "approvals": 5548,
+            "approval_rate": 0.3062,
+            "bad_rate": 0.0191,
+            "median_income": 28968,
+            "average_limit": 10517.07
           }
         ]
       },
@@ -1661,42 +1709,42 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
+          "income_to": 15029,
+          "applications": 10000,
           "approval_rate": 0.0,
           "bad_rate": null
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.105,
-          "bad_rate": 0.0381
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.0991,
+          "bad_rate": 0.0222
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.276,
-          "bad_rate": 0.0217
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.2772,
+          "bad_rate": 0.0188
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.574,
-          "bad_rate": 0.0122
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.582,
+          "bad_rate": 0.0201
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.642,
-          "bad_rate": 0.0156
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.6444,
+          "bad_rate": 0.0161
         }
       ]
     },
@@ -1708,35 +1756,46 @@
         "version": "3",
         "currency": "PKR"
       },
-      "applications": 5000,
-      "approvals": 1597,
-      "refers": 265,
-      "declines": 3138,
-      "approval_rate": 0.3194,
-      "refer_rate": 0.053,
-      "disbursed": 17167845.75,
-      "average_limit": 10750.06,
-      "fee_revenue": 429196.82,
-      "time_priced_revenue": 171679.08,
-      "bad_rate": 0.0169,
-      "loss_rate": 0.0116,
-      "expected_loss": 199272.19,
-      "net": 229924.63,
-      "defaults_among_approved": 27,
-      "declined_who_would_repay": 3137,
-      "declined_who_would_default": 266,
+      "applications": 50000,
+      "approvals": 16027,
+      "refers": 2402,
+      "declines": 31571,
+      "approval_rate": 0.3205,
+      "refer_rate": 0.048,
+      "disbursed": 174939629.0,
+      "average_limit": 10915.31,
+      "fee_revenue": 4373497.66,
+      "interest_revenue": 0.0,
+      "interest_lost_to_default": 0.0,
+      "time_priced_revenue": 1749401.36,
+      "bad_rate": 0.0184,
+      "loss_rate": 0.0132,
+      "expected_loss": 2303471.62,
+      "net": 2070026.04,
+      "defaults_among_approved": 295,
+      "declined_who_would_repay": 31587,
+      "declined_who_would_default": 2386,
       "decline_reasons": {
-        "monthly income below the floor of 18,000": 1417,
-        "score below the threshold": 934,
-        "a default already on file": 530,
-        "a large household needs an officer to size the limit": 265,
-        "wallet turnover too high to read as income": 257
+        "monthly income below the floor of 18,000": 13931,
+        "score below the threshold": 9557,
+        "a default already on file": 5809,
+        "a large household needs an officer to size the limit": 2402,
+        "wallet turnover too high to read as income": 2274
       },
       "score_histogram": [
         {
           "from": -20,
           "to": -11,
-          "count": 3,
+          "count": 8,
+          "defaults": 0,
+          "approved": 0,
+          "default_rate": 0.0,
+          "standing": "all declined"
+        },
+        {
+          "from": -10,
+          "to": -1,
+          "count": 7,
           "defaults": 0,
           "approved": 0,
           "default_rate": 0.0,
@@ -1745,91 +1804,91 @@
         {
           "from": 0,
           "to": 9,
-          "count": 69,
-          "defaults": 5,
+          "count": 639,
+          "defaults": 41,
           "approved": 0,
-          "default_rate": 0.0725,
+          "default_rate": 0.0642,
           "standing": "all declined"
         },
         {
           "from": 10,
           "to": 19,
-          "count": 107,
-          "defaults": 8,
+          "count": 1107,
+          "defaults": 54,
           "approved": 0,
-          "default_rate": 0.0748,
+          "default_rate": 0.0488,
           "standing": "all declined"
         },
         {
           "from": 20,
           "to": 29,
-          "count": 228,
-          "defaults": 9,
+          "count": 2319,
+          "defaults": 96,
           "approved": 0,
-          "default_rate": 0.0395,
+          "default_rate": 0.0414,
           "standing": "all declined"
         },
         {
           "from": 30,
           "to": 39,
-          "count": 391,
-          "defaults": 16,
+          "count": 3994,
+          "defaults": 109,
           "approved": 0,
-          "default_rate": 0.0409,
+          "default_rate": 0.0273,
           "standing": "all declined"
         },
         {
           "from": 40,
           "to": 49,
-          "count": 364,
-          "defaults": 5,
-          "approved": 228,
-          "default_rate": 0.0137,
+          "count": 3634,
+          "defaults": 85,
+          "approved": 2151,
+          "default_rate": 0.0234,
           "standing": "split by the threshold"
         },
         {
           "from": 50,
           "to": 59,
-          "count": 457,
-          "defaults": 7,
-          "approved": 457,
-          "default_rate": 0.0153,
+          "count": 4533,
+          "defaults": 103,
+          "approved": 4533,
+          "default_rate": 0.0227,
           "standing": "all approved"
         },
         {
           "from": 60,
           "to": 69,
-          "count": 461,
-          "defaults": 11,
-          "approved": 461,
-          "default_rate": 0.0239,
+          "count": 4984,
+          "defaults": 98,
+          "approved": 4984,
+          "default_rate": 0.0197,
           "standing": "all approved"
         },
         {
           "from": 70,
           "to": 79,
-          "count": 286,
-          "defaults": 6,
-          "approved": 286,
-          "default_rate": 0.021,
+          "count": 2817,
+          "defaults": 42,
+          "approved": 2817,
+          "default_rate": 0.0149,
           "standing": "all approved"
         },
         {
           "from": 80,
           "to": 89,
-          "count": 83,
-          "defaults": 0,
-          "approved": 83,
-          "default_rate": 0.0,
+          "count": 856,
+          "defaults": 7,
+          "approved": 856,
+          "default_rate": 0.0082,
           "standing": "all approved"
         },
         {
           "from": 90,
           "to": 99,
-          "count": 82,
-          "defaults": 0,
-          "approved": 82,
-          "default_rate": 0.0,
+          "count": 686,
+          "defaults": 6,
+          "approved": 686,
+          "default_rate": 0.0087,
           "standing": "all approved"
         }
       ],
@@ -1837,68 +1896,68 @@
         "region": [
           {
             "key": "central-urban",
-            "applications": 1906,
-            "approvals": 909,
-            "approval_rate": 0.4769,
-            "bad_rate": 0.0176,
-            "median_income": 34408,
-            "average_limit": 11072.77
+            "applications": 19066,
+            "approvals": 8755,
+            "approval_rate": 0.4592,
+            "bad_rate": 0.018,
+            "median_income": 34593,
+            "average_limit": 11206.04
           },
           {
             "key": "east-rural",
-            "applications": 709,
-            "approvals": 62,
-            "approval_rate": 0.0874,
-            "bad_rate": 0.0323,
-            "median_income": 16116,
-            "average_limit": 8015.63
+            "applications": 6952,
+            "approvals": 661,
+            "approval_rate": 0.0951,
+            "bad_rate": 0.0212,
+            "median_income": 16971,
+            "average_limit": 8366.73
           },
           {
             "key": "north-urban",
-            "applications": 1138,
-            "approvals": 512,
-            "approval_rate": 0.4499,
-            "bad_rate": 0.0098,
-            "median_income": 34343,
-            "average_limit": 11035.66
+            "applications": 11945,
+            "approvals": 5444,
+            "approval_rate": 0.4558,
+            "bad_rate": 0.0171,
+            "median_income": 34493,
+            "average_limit": 11255.67
           },
           {
             "key": "south-rural",
-            "applications": 1247,
-            "approvals": 114,
-            "approval_rate": 0.0914,
-            "bad_rate": 0.0351,
-            "median_income": 16509,
-            "average_limit": 8381.3
+            "applications": 12037,
+            "approvals": 1167,
+            "approval_rate": 0.097,
+            "bad_rate": 0.0257,
+            "median_income": 16799,
+            "average_limit": 8589.96
           }
         ],
         "employment": [
           {
             "key": "daily-wage",
-            "applications": 1471,
-            "approvals": 98,
-            "approval_rate": 0.0666,
-            "bad_rate": 0.0306,
-            "median_income": 13985,
-            "average_limit": 7645.73
+            "applications": 14315,
+            "approvals": 952,
+            "approval_rate": 0.0665,
+            "bad_rate": 0.0221,
+            "median_income": 14179,
+            "average_limit": 7617.28
           },
           {
             "key": "salaried",
-            "applications": 1691,
-            "approvals": 952,
-            "approval_rate": 0.563,
-            "bad_rate": 0.0168,
-            "median_income": 38538,
-            "average_limit": 11455.3
+            "applications": 17564,
+            "approvals": 9527,
+            "approval_rate": 0.5424,
+            "bad_rate": 0.0176,
+            "median_income": 38343,
+            "average_limit": 11476.78
           },
           {
             "key": "self-employed",
-            "applications": 1838,
-            "approvals": 547,
-            "approval_rate": 0.2976,
-            "bad_rate": 0.0146,
-            "median_income": 28690,
-            "average_limit": 10078.82
+            "applications": 18121,
+            "approvals": 5548,
+            "approval_rate": 0.3062,
+            "bad_rate": 0.0191,
+            "median_income": 28968,
+            "average_limit": 10517.07
           }
         ]
       },
@@ -1906,48 +1965,48 @@
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 14678,
-          "applications": 1000,
+          "income_to": 15029,
+          "applications": 10000,
           "approval_rate": 0.0,
           "bad_rate": null
         },
         {
           "band": 2,
-          "income_from": 14679,
-          "income_to": 22655,
-          "applications": 1000,
-          "approval_rate": 0.105,
-          "bad_rate": 0.0381
+          "income_from": 15030,
+          "income_to": 22787,
+          "applications": 10000,
+          "approval_rate": 0.0991,
+          "bad_rate": 0.0222
         },
         {
           "band": 3,
-          "income_from": 22664,
-          "income_to": 31174,
-          "applications": 1000,
-          "approval_rate": 0.276,
-          "bad_rate": 0.0217
+          "income_from": 22788,
+          "income_to": 31642,
+          "applications": 10000,
+          "approval_rate": 0.2772,
+          "bad_rate": 0.0188
         },
         {
           "band": 4,
-          "income_from": 31180,
-          "income_to": 43817,
-          "applications": 1000,
-          "approval_rate": 0.574,
-          "bad_rate": 0.0122
+          "income_from": 31642,
+          "income_to": 44537,
+          "applications": 10000,
+          "approval_rate": 0.582,
+          "bad_rate": 0.0201
         },
         {
           "band": 5,
-          "income_from": 43835,
-          "income_to": 155223,
-          "applications": 1000,
-          "approval_rate": 0.642,
-          "bad_rate": 0.0156
+          "income_from": 44540,
+          "income_to": 191588,
+          "applications": 10000,
+          "approval_rate": 0.6444,
+          "bad_rate": 0.0161
         }
       ]
     },
     "newly_approved": 0,
     "newly_declined": 0,
-    "unchanged": 5000,
+    "unchanged": 50000,
     "newly_declined_by_segment": {
       "region": {},
       "employment": {}
@@ -1970,84 +2029,84 @@
       "segments": [
         {
           "key": "central-urban",
-          "applications": 1906,
-          "approvals": 909,
-          "approval_rate": 0.4769,
-          "median_income": 34408
+          "applications": 19066,
+          "approvals": 8755,
+          "approval_rate": 0.4592,
+          "median_income": 34593
         },
         {
           "key": "east-rural",
-          "applications": 709,
-          "approvals": 62,
-          "approval_rate": 0.0874,
-          "median_income": 16116
+          "applications": 6952,
+          "approvals": 661,
+          "approval_rate": 0.0951,
+          "median_income": 16971
         },
         {
           "key": "north-urban",
-          "applications": 1138,
-          "approvals": 512,
-          "approval_rate": 0.4499,
-          "median_income": 34343
+          "applications": 11945,
+          "approvals": 5444,
+          "approval_rate": 0.4558,
+          "median_income": 34493
         },
         {
           "key": "south-rural",
-          "applications": 1247,
-          "approvals": 114,
-          "approval_rate": 0.0914,
-          "median_income": 16509
+          "applications": 12037,
+          "approvals": 1167,
+          "approval_rate": 0.097,
+          "median_income": 16799
         }
       ],
       "best": {
         "key": "central-urban",
-        "applications": 1906,
-        "approvals": 909,
-        "approval_rate": 0.4769,
-        "median_income": 34408
+        "applications": 19066,
+        "approvals": 8755,
+        "approval_rate": 0.4592,
+        "median_income": 34593
       },
       "worst": {
         "key": "east-rural",
-        "applications": 709,
-        "approvals": 62,
-        "approval_rate": 0.0874,
-        "median_income": 16116
+        "applications": 6952,
+        "approvals": 661,
+        "approval_rate": 0.0951,
+        "median_income": 16971
       },
-      "raw_gap": 0.3895,
-      "ratio": 0.1834,
-      "within_band_gap_mean": 0.1695,
+      "raw_gap": 0.3641,
+      "ratio": 0.2071,
+      "within_band_gap_mean": 0.1566,
       "bands": [
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 16604,
-          "applications": 1250,
+          "income_to": 16889,
+          "applications": 12500,
           "segments": [
             {
               "key": "central-urban",
-              "applications": 150,
+              "applications": 1847,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 13169
+              "median_income": 13844
             },
             {
               "key": "east-rural",
-              "applications": 369,
+              "applications": 3456,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 11300
+              "median_income": 11549
             },
             {
               "key": "north-urban",
-              "applications": 102,
+              "applications": 1139,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 13653
+              "median_income": 13827
             },
             {
               "key": "south-rural",
-              "applications": 629,
+              "applications": 6058,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 11251
+              "median_income": 11539
             }
           ],
           "gap": 0.0,
@@ -2056,117 +2115,124 @@
         },
         {
           "band": 2,
-          "income_from": 16632,
-          "income_to": 26697,
-          "applications": 1250,
+          "income_from": 16889,
+          "income_to": 26981,
+          "applications": 12500,
           "segments": [
             {
               "key": "central-urban",
-              "applications": 425,
-              "approvals": 98,
-              "approval_rate": 0.2306,
-              "median_income": 21918
+              "applications": 4153,
+              "approvals": 909,
+              "approval_rate": 0.2189,
+              "median_income": 22330
             },
             {
               "key": "east-rural",
-              "applications": 224,
-              "approvals": 18,
-              "approval_rate": 0.0804,
-              "median_income": 20605
+              "applications": 2103,
+              "approvals": 197,
+              "approval_rate": 0.0937,
+              "median_income": 20986
             },
             {
               "key": "north-urban",
-              "applications": 240,
-              "approvals": 56,
-              "approval_rate": 0.2333,
-              "median_income": 22869
+              "applications": 2673,
+              "approvals": 601,
+              "approval_rate": 0.2248,
+              "median_income": 22473
             },
             {
               "key": "south-rural",
-              "applications": 361,
-              "approvals": 34,
-              "approval_rate": 0.0942,
-              "median_income": 21207
+              "applications": 3571,
+              "approvals": 321,
+              "approval_rate": 0.0899,
+              "median_income": 21048
             }
           ],
-          "gap": 0.153,
+          "gap": 0.135,
           "best": "north-urban",
-          "worst": "east-rural"
+          "worst": "south-rural"
         },
         {
           "band": 3,
-          "income_from": 26698,
-          "income_to": 39930,
-          "applications": 1250,
+          "income_from": 26981,
+          "income_to": 40712,
+          "applications": 12500,
           "segments": [
             {
               "key": "central-urban",
-              "applications": 588,
-              "approvals": 321,
-              "approval_rate": 0.5459,
-              "median_income": 32644
+              "applications": 5926,
+              "approvals": 3194,
+              "approval_rate": 0.539,
+              "median_income": 33273
             },
             {
               "key": "east-rural",
-              "applications": 89,
-              "approvals": 30,
-              "approval_rate": 0.3371,
-              "median_income": 30379
+              "applications": 1052,
+              "approvals": 328,
+              "approval_rate": 0.3118,
+              "median_income": 31476
             },
             {
               "key": "north-urban",
-              "applications": 379,
-              "approvals": 181,
-              "approval_rate": 0.4776,
-              "median_income": 33183
+              "applications": 3727,
+              "approvals": 1922,
+              "approval_rate": 0.5157,
+              "median_income": 33461
             },
             {
               "key": "south-rural",
-              "applications": 194,
-              "approvals": 55,
-              "approval_rate": 0.2835,
-              "median_income": 31421
+              "applications": 1795,
+              "approvals": 573,
+              "approval_rate": 0.3192,
+              "median_income": 31664
             }
           ],
-          "gap": 0.2624,
+          "gap": 0.2272,
           "best": "central-urban",
-          "worst": "south-rural"
+          "worst": "east-rural"
         },
         {
           "band": 4,
-          "income_from": 39931,
-          "income_to": 155223,
-          "applications": 1250,
+          "income_from": 40712,
+          "income_to": 191588,
+          "applications": 12500,
           "segments": [
             {
               "key": "central-urban",
-              "applications": 743,
-              "approvals": 490,
-              "approval_rate": 0.6595,
-              "median_income": 52230
+              "applications": 7140,
+              "approvals": 4652,
+              "approval_rate": 0.6515,
+              "median_income": 52799
+            },
+            {
+              "key": "east-rural",
+              "applications": 341,
+              "approvals": 136,
+              "approval_rate": 0.3988,
+              "median_income": 47050
             },
             {
               "key": "north-urban",
-              "applications": 417,
-              "approvals": 275,
-              "approval_rate": 0.6595,
-              "median_income": 52036
+              "applications": 4406,
+              "approvals": 2921,
+              "approval_rate": 0.663,
+              "median_income": 53176
             },
             {
               "key": "south-rural",
-              "applications": 63,
-              "approvals": 25,
-              "approval_rate": 0.3968,
-              "median_income": 48262
+              "applications": 613,
+              "approvals": 273,
+              "approval_rate": 0.4454,
+              "median_income": 47393
             }
           ],
-          "gap": 0.2627,
-          "best": "central-urban",
-          "worst": "south-rural"
+          "gap": 0.2641,
+          "best": "north-urban",
+          "worst": "east-rural"
         }
       ],
-      "thin_cells_skipped": 1,
-      "reading": "The gap falls from 38.9% to 17.0% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than region itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
+      "thin_cells_skipped": 0,
+      "reading": "The gap falls from 36.4% to 15.7% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than region itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
       "not_a_verdict": "This is a measurement, not a compliance opinion. Whether a variable is a legitimate business necessity is a legal question about the product, and nothing here can answer it."
     },
     "employment": {
@@ -2174,70 +2240,70 @@
       "segments": [
         {
           "key": "daily-wage",
-          "applications": 1471,
-          "approvals": 98,
-          "approval_rate": 0.0666,
-          "median_income": 13985
+          "applications": 14315,
+          "approvals": 952,
+          "approval_rate": 0.0665,
+          "median_income": 14179
         },
         {
           "key": "salaried",
-          "applications": 1691,
-          "approvals": 952,
-          "approval_rate": 0.563,
-          "median_income": 38538
+          "applications": 17564,
+          "approvals": 9527,
+          "approval_rate": 0.5424,
+          "median_income": 38343
         },
         {
           "key": "self-employed",
-          "applications": 1838,
-          "approvals": 547,
-          "approval_rate": 0.2976,
-          "median_income": 28690
+          "applications": 18121,
+          "approvals": 5548,
+          "approval_rate": 0.3062,
+          "median_income": 28968
         }
       ],
       "best": {
         "key": "salaried",
-        "applications": 1691,
-        "approvals": 952,
-        "approval_rate": 0.563,
-        "median_income": 38538
+        "applications": 17564,
+        "approvals": 9527,
+        "approval_rate": 0.5424,
+        "median_income": 38343
       },
       "worst": {
         "key": "daily-wage",
-        "applications": 1471,
-        "approvals": 98,
-        "approval_rate": 0.0666,
-        "median_income": 13985
+        "applications": 14315,
+        "approvals": 952,
+        "approval_rate": 0.0665,
+        "median_income": 14179
       },
-      "raw_gap": 0.4964,
-      "ratio": 0.1183,
-      "within_band_gap_mean": 0.137,
+      "raw_gap": 0.4759,
+      "ratio": 0.1226,
+      "within_band_gap_mean": 0.1275,
       "bands": [
         {
           "band": 1,
           "income_from": 6000,
-          "income_to": 16604,
-          "applications": 1250,
+          "income_to": 16889,
+          "applications": 12500,
           "segments": [
             {
               "key": "daily-wage",
-              "applications": 947,
+              "applications": 9212,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 11140
+              "median_income": 11312
             },
             {
               "key": "salaried",
-              "applications": 71,
+              "applications": 806,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 13960
+              "median_income": 14528
             },
             {
               "key": "self-employed",
-              "applications": 232,
+              "applications": 2482,
               "approvals": 0,
               "approval_rate": 0.0,
-              "median_income": 13599
+              "median_income": 13944
             }
           ],
           "gap": 0.0,
@@ -2246,402 +2312,409 @@
         },
         {
           "band": 2,
-          "income_from": 16632,
-          "income_to": 26697,
-          "applications": 1250,
+          "income_from": 16889,
+          "income_to": 26981,
+          "applications": 12500,
           "segments": [
             {
               "key": "daily-wage",
-              "applications": 371,
-              "approvals": 38,
-              "approval_rate": 0.1024,
-              "median_income": 20445
+              "applications": 3731,
+              "approvals": 388,
+              "approval_rate": 0.104,
+              "median_income": 20500
             },
             {
               "key": "salaried",
-              "applications": 302,
-              "approvals": 97,
-              "approval_rate": 0.3212,
-              "median_income": 22309
+              "applications": 3227,
+              "approvals": 973,
+              "approval_rate": 0.3015,
+              "median_income": 22776
             },
             {
               "key": "self-employed",
-              "applications": 577,
-              "approvals": 71,
-              "approval_rate": 0.1231,
-              "median_income": 22033
+              "applications": 5542,
+              "approvals": 667,
+              "approval_rate": 0.1204,
+              "median_income": 21995
             }
           ],
-          "gap": 0.2188,
+          "gap": 0.1975,
           "best": "salaried",
           "worst": "daily-wage"
         },
         {
           "band": 3,
-          "income_from": 26698,
-          "income_to": 39930,
-          "applications": 1250,
+          "income_from": 26981,
+          "income_to": 40712,
+          "applications": 12500,
           "segments": [
             {
               "key": "daily-wage",
-              "applications": 126,
-              "approvals": 48,
-              "approval_rate": 0.381,
-              "median_income": 30719
+              "applications": 1153,
+              "approvals": 443,
+              "approval_rate": 0.3842,
+              "median_income": 31216
             },
             {
               "key": "salaried",
-              "applications": 525,
-              "approvals": 306,
-              "approval_rate": 0.5829,
-              "median_income": 33163
+              "applications": 5607,
+              "approvals": 3255,
+              "approval_rate": 0.5805,
+              "median_income": 33620
             },
             {
               "key": "self-employed",
-              "applications": 599,
-              "approvals": 233,
-              "approval_rate": 0.389,
-              "median_income": 32119
+              "applications": 5740,
+              "approvals": 2319,
+              "approval_rate": 0.404,
+              "median_income": 32650
             }
           ],
-          "gap": 0.2019,
+          "gap": 0.1963,
           "best": "salaried",
           "worst": "daily-wage"
         },
         {
           "band": 4,
-          "income_from": 39931,
-          "income_to": 155223,
-          "applications": 1250,
+          "income_from": 40712,
+          "income_to": 191588,
+          "applications": 12500,
           "segments": [
             {
+              "key": "daily-wage",
+              "applications": 219,
+              "approvals": 121,
+              "approval_rate": 0.5525,
+              "median_income": 45352
+            },
+            {
               "key": "salaried",
-              "applications": 793,
-              "approvals": 549,
-              "approval_rate": 0.6923,
-              "median_income": 54061
+              "applications": 7924,
+              "approvals": 5299,
+              "approval_rate": 0.6687,
+              "median_income": 54190
             },
             {
               "key": "self-employed",
-              "applications": 430,
-              "approvals": 243,
-              "approval_rate": 0.5651,
-              "median_income": 48875
+              "applications": 4357,
+              "approvals": 2562,
+              "approval_rate": 0.588,
+              "median_income": 50330
             }
           ],
-          "gap": 0.1272,
+          "gap": 0.1162,
           "best": "salaried",
-          "worst": "self-employed"
+          "worst": "daily-wage"
         }
       ],
-      "thin_cells_skipped": 1,
-      "reading": "The gap falls from 49.6% to 13.7% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than employment itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
+      "thin_cells_skipped": 0,
+      "reading": "The gap falls from 47.6% to 12.8% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than employment itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.",
       "not_a_verdict": "This is a measurement, not a compliance opinion. Whether a variable is a legitimate business necessity is a legal question about the product, and nothing here can answer it."
     }
   },
   "discrimination": {
-    "scored": 2531,
-    "gated_out": 2469,
-    "bads": 67,
-    "goods": 2464,
-    "auc": 0.6421,
-    "gini": 0.2842,
-    "ks": 0.2587,
-    "ks_at_score": 35.0,
+    "scored": 25584,
+    "gated_out": 24416,
+    "bads": 641,
+    "goods": 24943,
+    "auc": 0.6164,
+    "gini": 0.2329,
+    "ks": 0.1705,
+    "ks_at_score": 40.0,
     "reading": "Weak separation. A cutoff on this score will cut good and bad alike.",
-    "caveat": "Measured on the 2,531 borrowers who reached the scorecard. The 2,469 stopped by a gate are excluded, which flatters the figure whenever the gates are removing bad borrowers."
+    "caveat": "Measured on the 25,584 borrowers who reached the scorecard. The 24,416 stopped by a gate are excluded, which flatters the figure whenever the gates are removing bad borrowers."
   },
   "cutoff_sweep": {
     "step": 5.0,
-    "applications": 5000,
-    "scored_population": 2531,
-    "gated_out": 2469,
+    "applications": 50000,
+    "scored_population": 25584,
+    "gated_out": 24416,
     "points": [
       {
         "threshold": -15.0,
-        "approvals": 2531,
+        "approvals": 25584,
         "approval_rate_of_scored": 1.0,
-        "approval_rate_of_all": 0.5062,
-        "bad_rate": 0.0265,
-        "disbursed": 23816153.75,
-        "fee_revenue": 595403.84,
-        "expected_loss": 396288.56,
-        "net": 199115.28,
+        "approval_rate_of_all": 0.5117,
+        "bad_rate": 0.0251,
+        "disbursed": 243057973.25,
+        "fee_revenue": 6076449.33,
+        "expected_loss": 4109071.31,
+        "net": 1967378.02,
         "good_declined": 0,
         "bad_declined": 0
       },
       {
         "threshold": -10.0,
-        "approvals": 2528,
-        "approval_rate_of_scored": 0.9988,
-        "approval_rate_of_all": 0.5056,
-        "bad_rate": 0.0265,
-        "disbursed": 23799812.75,
-        "fee_revenue": 594995.32,
-        "expected_loss": 396288.56,
-        "net": 198706.76,
-        "good_declined": 3,
+        "approvals": 25576,
+        "approval_rate_of_scored": 0.9997,
+        "approval_rate_of_all": 0.5115,
+        "bad_rate": 0.0251,
+        "disbursed": 243013838.0,
+        "fee_revenue": 6075345.95,
+        "expected_loss": 4109071.31,
+        "net": 1966274.64,
+        "good_declined": 8,
         "bad_declined": 0
       },
       {
         "threshold": -5.0,
-        "approvals": 2528,
-        "approval_rate_of_scored": 0.9988,
-        "approval_rate_of_all": 0.5056,
-        "bad_rate": 0.0265,
-        "disbursed": 23799812.75,
-        "fee_revenue": 594995.32,
-        "expected_loss": 396288.56,
-        "net": 198706.76,
-        "good_declined": 3,
+        "approvals": 25576,
+        "approval_rate_of_scored": 0.9997,
+        "approval_rate_of_all": 0.5115,
+        "bad_rate": 0.0251,
+        "disbursed": 243013838.0,
+        "fee_revenue": 6075345.95,
+        "expected_loss": 4109071.31,
+        "net": 1966274.64,
+        "good_declined": 8,
         "bad_declined": 0
       },
       {
         "threshold": 0.0,
-        "approvals": 2528,
-        "approval_rate_of_scored": 0.9988,
-        "approval_rate_of_all": 0.5056,
-        "bad_rate": 0.0265,
-        "disbursed": 23799812.75,
-        "fee_revenue": 594995.32,
-        "expected_loss": 396288.56,
-        "net": 198706.76,
-        "good_declined": 3,
+        "approvals": 25569,
+        "approval_rate_of_scored": 0.9994,
+        "approval_rate_of_all": 0.5114,
+        "bad_rate": 0.0251,
+        "disbursed": 242969763.0,
+        "fee_revenue": 6074244.08,
+        "expected_loss": 4109071.31,
+        "net": 1965172.76,
+        "good_declined": 15,
         "bad_declined": 0
       },
       {
         "threshold": 5.0,
-        "approvals": 2461,
-        "approval_rate_of_scored": 0.9723,
-        "approval_rate_of_all": 0.4922,
-        "bad_rate": 0.0252,
-        "disbursed": 23415473.25,
-        "fee_revenue": 585386.83,
-        "expected_loss": 375216.0,
-        "net": 210170.83,
-        "good_declined": 65,
-        "bad_declined": 5
-      },
-      {
-        "threshold": 10.0,
-        "approvals": 2459,
-        "approval_rate_of_scored": 0.9716,
-        "approval_rate_of_all": 0.4918,
-        "bad_rate": 0.0252,
-        "disbursed": 23404201.0,
-        "fee_revenue": 585105.03,
-        "expected_loss": 375216.0,
-        "net": 209889.03,
-        "good_declined": 67,
-        "bad_declined": 5
-      },
-      {
-        "threshold": 15.0,
-        "approvals": 2414,
-        "approval_rate_of_scored": 0.9538,
-        "approval_rate_of_all": 0.4828,
-        "bad_rate": 0.024,
-        "disbursed": 23141725.5,
-        "fee_revenue": 578543.14,
-        "expected_loss": 356473.31,
-        "net": 222069.83,
-        "good_declined": 108,
-        "bad_declined": 9
-      },
-      {
-        "threshold": 20.0,
-        "approvals": 2352,
-        "approval_rate_of_scored": 0.9293,
-        "approval_rate_of_all": 0.4704,
-        "bad_rate": 0.023,
-        "disbursed": 22763306.5,
-        "fee_revenue": 569082.66,
-        "expected_loss": 341149.5,
-        "net": 227933.16,
-        "good_declined": 166,
-        "bad_declined": 13
-      },
-      {
-        "threshold": 25.0,
-        "approvals": 2165,
-        "approval_rate_of_scored": 0.8554,
-        "approval_rate_of_all": 0.433,
-        "bad_rate": 0.0208,
-        "disbursed": 21544066.75,
-        "fee_revenue": 538601.67,
-        "expected_loss": 296052.56,
-        "net": 242549.11,
-        "good_declined": 344,
-        "bad_declined": 22
-      },
-      {
-        "threshold": 30.0,
-        "approvals": 2124,
-        "approval_rate_of_scored": 0.8392,
-        "approval_rate_of_all": 0.4248,
-        "bad_rate": 0.0212,
-        "disbursed": 21292665.25,
-        "fee_revenue": 532316.63,
-        "expected_loss": 296052.56,
-        "net": 236264.07,
-        "good_declined": 385,
-        "bad_declined": 22
-      },
-      {
-        "threshold": 35.0,
-        "approvals": 1965,
-        "approval_rate_of_scored": 0.7764,
-        "approval_rate_of_all": 0.393,
-        "bad_rate": 0.0193,
-        "disbursed": 20078151.5,
-        "fee_revenue": 501953.79,
-        "expected_loss": 253047.75,
-        "net": 248906.04,
-        "good_declined": 537,
-        "bad_declined": 29
-      },
-      {
-        "threshold": 40.0,
-        "approvals": 1733,
-        "approval_rate_of_scored": 0.6847,
-        "approval_rate_of_all": 0.3466,
-        "bad_rate": 0.0167,
-        "disbursed": 18605634.0,
-        "fee_revenue": 465140.85,
-        "expected_loss": 210033.19,
-        "net": 255107.66,
-        "good_declined": 760,
-        "bad_declined": 38
-      },
-      {
-        "threshold": 45.0,
-        "approvals": 1597,
-        "approval_rate_of_scored": 0.631,
-        "approval_rate_of_all": 0.3194,
-        "bad_rate": 0.0169,
-        "disbursed": 17167845.75,
-        "fee_revenue": 429196.14,
-        "expected_loss": 199272.19,
-        "net": 229923.96,
-        "good_declined": 894,
+        "approvals": 24957,
+        "approval_rate_of_scored": 0.9755,
+        "approval_rate_of_all": 0.4991,
+        "bad_rate": 0.0241,
+        "disbursed": 239460404.25,
+        "fee_revenue": 5986510.11,
+        "expected_loss": 3936271.5,
+        "net": 2050238.61,
+        "good_declined": 587,
         "bad_declined": 40
       },
       {
+        "threshold": 10.0,
+        "approvals": 24930,
+        "approval_rate_of_scored": 0.9744,
+        "approval_rate_of_all": 0.4986,
+        "bad_rate": 0.0241,
+        "disbursed": 239293572.0,
+        "fee_revenue": 5982339.3,
+        "expected_loss": 3932287.12,
+        "net": 2050052.18,
+        "good_declined": 613,
+        "bad_declined": 41
+      },
+      {
+        "threshold": 15.0,
+        "approvals": 24457,
+        "approval_rate_of_scored": 0.9559,
+        "approval_rate_of_all": 0.4891,
+        "bad_rate": 0.0233,
+        "disbursed": 236443566.5,
+        "fee_revenue": 5911089.16,
+        "expected_loss": 3797925.75,
+        "net": 2113163.41,
+        "good_declined": 1056,
+        "bad_declined": 71
+      },
+      {
+        "threshold": 20.0,
+        "approvals": 23823,
+        "approval_rate_of_scored": 0.9312,
+        "approval_rate_of_all": 0.4765,
+        "bad_rate": 0.0229,
+        "disbursed": 232729050.75,
+        "fee_revenue": 5818226.27,
+        "expected_loss": 3694576.12,
+        "net": 2123650.14,
+        "good_declined": 1666,
+        "bad_declined": 95
+      },
+      {
+        "threshold": 25.0,
+        "approvals": 21947,
+        "approval_rate_of_scored": 0.8578,
+        "approval_rate_of_all": 0.4389,
+        "bad_rate": 0.0213,
+        "disbursed": 220788580.25,
+        "fee_revenue": 5519714.51,
+        "expected_loss": 3300339.38,
+        "net": 2219375.13,
+        "good_declined": 3463,
+        "bad_declined": 174
+      },
+      {
+        "threshold": 30.0,
+        "approvals": 21504,
+        "approval_rate_of_scored": 0.8405,
+        "approval_rate_of_all": 0.4301,
+        "bad_rate": 0.0209,
+        "disbursed": 217921040.5,
+        "fee_revenue": 5448026.01,
+        "expected_loss": 3206787.38,
+        "net": 2241238.64,
+        "good_declined": 3889,
+        "bad_declined": 191
+      },
+      {
+        "threshold": 35.0,
+        "approvals": 19771,
+        "approval_rate_of_scored": 0.7728,
+        "approval_rate_of_all": 0.3954,
+        "bad_rate": 0.0198,
+        "disbursed": 204463552.5,
+        "fee_revenue": 5111588.81,
+        "expected_loss": 2856853.5,
+        "net": 2254735.31,
+        "good_declined": 5563,
+        "bad_declined": 250
+      },
+      {
+        "threshold": 40.0,
+        "approvals": 17510,
+        "approval_rate_of_scored": 0.6844,
+        "approval_rate_of_all": 0.3502,
+        "bad_rate": 0.0195,
+        "disbursed": 190111312.0,
+        "fee_revenue": 4752782.8,
+        "expected_loss": 2629683.56,
+        "net": 2123099.24,
+        "good_declined": 7774,
+        "bad_declined": 300
+      },
+      {
+        "threshold": 45.0,
+        "approvals": 16027,
+        "approval_rate_of_scored": 0.6264,
+        "approval_rate_of_all": 0.3205,
+        "bad_rate": 0.0184,
+        "disbursed": 174939629.0,
+        "fee_revenue": 4373490.72,
+        "expected_loss": 2303471.62,
+        "net": 2070019.1,
+        "good_declined": 9211,
+        "bad_declined": 346
+      },
+      {
         "threshold": 50.0,
-        "approvals": 1369,
-        "approval_rate_of_scored": 0.5409,
-        "approval_rate_of_all": 0.2738,
-        "bad_rate": 0.0175,
-        "disbursed": 15450057.75,
-        "fee_revenue": 386251.44,
-        "expected_loss": 185047.88,
-        "net": 201203.57,
-        "good_declined": 1119,
-        "bad_declined": 43
+        "approvals": 13876,
+        "approval_rate_of_scored": 0.5424,
+        "approval_rate_of_all": 0.2775,
+        "bad_rate": 0.0184,
+        "disbursed": 158401067.0,
+        "fee_revenue": 3960026.67,
+        "expected_loss": 2088908.44,
+        "net": 1871118.24,
+        "good_declined": 11323,
+        "bad_declined": 385
       },
       {
         "threshold": 55.0,
-        "approvals": 1108,
-        "approval_rate_of_scored": 0.4378,
-        "approval_rate_of_all": 0.2216,
-        "bad_rate": 0.019,
-        "disbursed": 12810643.25,
-        "fee_revenue": 320266.08,
-        "expected_loss": 166358.25,
-        "net": 153907.83,
-        "good_declined": 1377,
-        "bad_declined": 46
+        "approvals": 11232,
+        "approval_rate_of_scored": 0.439,
+        "approval_rate_of_all": 0.2246,
+        "bad_rate": 0.0165,
+        "disbursed": 130984679.5,
+        "fee_revenue": 3274616.99,
+        "expected_loss": 1545352.12,
+        "net": 1729264.86,
+        "good_declined": 13896,
+        "bad_declined": 456
       },
       {
         "threshold": 60.0,
-        "approvals": 912,
-        "approval_rate_of_scored": 0.3603,
-        "approval_rate_of_all": 0.1824,
-        "bad_rate": 0.0186,
-        "disbursed": 10932906.0,
-        "fee_revenue": 273322.65,
-        "expected_loss": 142291.88,
-        "net": 131030.78,
-        "good_declined": 1569,
-        "bad_declined": 50
+        "approvals": 9343,
+        "approval_rate_of_scored": 0.3652,
+        "approval_rate_of_all": 0.1869,
+        "bad_rate": 0.0164,
+        "disbursed": 112121994.75,
+        "fee_revenue": 2803049.87,
+        "expected_loss": 1324549.88,
+        "net": 1478499.99,
+        "good_declined": 15753,
+        "bad_declined": 488
       },
       {
         "threshold": 65.0,
-        "approvals": 722,
-        "approval_rate_of_scored": 0.2853,
-        "approval_rate_of_all": 0.1444,
-        "bad_rate": 0.0152,
-        "disbursed": 8724438.75,
-        "fee_revenue": 218110.97,
-        "expected_loss": 93773.25,
-        "net": 124337.72,
-        "good_declined": 1753,
-        "bad_declined": 56
+        "approvals": 7256,
+        "approval_rate_of_scored": 0.2836,
+        "approval_rate_of_all": 0.1451,
+        "bad_rate": 0.0153,
+        "disbursed": 87382104.25,
+        "fee_revenue": 2184552.61,
+        "expected_loss": 949192.31,
+        "net": 1235360.29,
+        "good_declined": 17798,
+        "bad_declined": 530
       },
       {
         "threshold": 70.0,
-        "approvals": 451,
-        "approval_rate_of_scored": 0.1782,
-        "approval_rate_of_all": 0.0902,
-        "bad_rate": 0.0133,
-        "disbursed": 5673373.0,
-        "fee_revenue": 141834.33,
-        "expected_loss": 50568.75,
-        "net": 91265.58,
-        "good_declined": 2019,
-        "bad_declined": 61
+        "approvals": 4359,
+        "approval_rate_of_scored": 0.1704,
+        "approval_rate_of_all": 0.0872,
+        "bad_rate": 0.0126,
+        "disbursed": 54386346.75,
+        "fee_revenue": 1359658.67,
+        "expected_loss": 492770.06,
+        "net": 866888.61,
+        "good_declined": 20639,
+        "bad_declined": 586
       },
       {
         "threshold": 75.0,
-        "approvals": 403,
-        "approval_rate_of_scored": 0.1592,
-        "approval_rate_of_all": 0.0806,
-        "bad_rate": 0.0124,
-        "disbursed": 5196574.0,
-        "fee_revenue": 129914.35,
-        "expected_loss": 44802.56,
-        "net": 85111.79,
-        "good_declined": 2066,
-        "bad_declined": 62
+        "approvals": 3921,
+        "approval_rate_of_scored": 0.1533,
+        "approval_rate_of_all": 0.0784,
+        "bad_rate": 0.013,
+        "disbursed": 50226840.25,
+        "fee_revenue": 1255671.01,
+        "expected_loss": 472001.06,
+        "net": 783669.94,
+        "good_declined": 21073,
+        "bad_declined": 590
       },
       {
         "threshold": 80.0,
-        "approvals": 165,
-        "approval_rate_of_scored": 0.0652,
-        "approval_rate_of_all": 0.033,
-        "bad_rate": 0.0,
-        "disbursed": 2071982.75,
-        "fee_revenue": 51799.57,
-        "expected_loss": 0.0,
-        "net": 51799.57,
-        "good_declined": 2299,
-        "bad_declined": 67
+        "approvals": 1542,
+        "approval_rate_of_scored": 0.0603,
+        "approval_rate_of_all": 0.0308,
+        "bad_rate": 0.0084,
+        "disbursed": 18984219.75,
+        "fee_revenue": 474605.49,
+        "expected_loss": 115598.44,
+        "net": 359007.06,
+        "good_declined": 23414,
+        "bad_declined": 628
       },
       {
         "threshold": 85.0,
-        "approvals": 82,
-        "approval_rate_of_scored": 0.0324,
-        "approval_rate_of_all": 0.0164,
-        "bad_rate": 0.0,
-        "disbursed": 1111320.0,
-        "fee_revenue": 27783.0,
-        "expected_loss": 0.0,
-        "net": 27783.0,
-        "good_declined": 2382,
-        "bad_declined": 67
+        "approvals": 686,
+        "approval_rate_of_scored": 0.0268,
+        "approval_rate_of_all": 0.0137,
+        "bad_rate": 0.0087,
+        "disbursed": 9083318.5,
+        "fee_revenue": 227082.96,
+        "expected_loss": 60892.31,
+        "net": 166190.65,
+        "good_declined": 24263,
+        "bad_declined": 635
       },
       {
         "threshold": 90.0,
-        "approvals": 82,
-        "approval_rate_of_scored": 0.0324,
-        "approval_rate_of_all": 0.0164,
-        "bad_rate": 0.0,
-        "disbursed": 1111320.0,
-        "fee_revenue": 27783.0,
-        "expected_loss": 0.0,
-        "net": 27783.0,
-        "good_declined": 2382,
-        "bad_declined": 67
+        "approvals": 686,
+        "approval_rate_of_scored": 0.0268,
+        "approval_rate_of_all": 0.0137,
+        "bad_rate": 0.0087,
+        "disbursed": 9083318.5,
+        "fee_revenue": 227082.96,
+        "expected_loss": 60892.31,
+        "net": 166190.65,
+        "good_declined": 24263,
+        "bad_declined": 635
       },
       {
         "threshold": 95.0,
@@ -2653,39 +2726,41 @@
         "fee_revenue": 0.0,
         "expected_loss": 0.0,
         "net": 0.0,
-        "good_declined": 2464,
-        "bad_declined": 67
+        "good_declined": 24943,
+        "bad_declined": 641
       }
     ],
     "current_threshold": 45.0,
     "current": {
       "threshold": 45.0,
-      "approvals": 1597,
-      "approval_rate_of_scored": 0.631,
-      "approval_rate_of_all": 0.3194,
-      "bad_rate": 0.0169,
-      "disbursed": 17167845.75,
-      "fee_revenue": 429196.14,
-      "expected_loss": 199272.19,
-      "net": 229923.96,
-      "good_declined": 894,
-      "bad_declined": 40
+      "approvals": 16027,
+      "approval_rate_of_scored": 0.6264,
+      "approval_rate_of_all": 0.3205,
+      "bad_rate": 0.0184,
+      "disbursed": 174939629.0,
+      "fee_revenue": 4373490.72,
+      "expected_loss": 2303471.62,
+      "net": 2070019.1,
+      "good_declined": 9211,
+      "bad_declined": 346
     },
     "net_maximising": {
-      "threshold": 40.0,
-      "approvals": 1733,
-      "approval_rate_of_scored": 0.6847,
-      "approval_rate_of_all": 0.3466,
-      "bad_rate": 0.0167,
-      "disbursed": 18605634.0,
-      "fee_revenue": 465140.85,
-      "expected_loss": 210033.19,
-      "net": 255107.66,
-      "good_declined": 760,
-      "bad_declined": 38
+      "threshold": 35.0,
+      "approvals": 19771,
+      "approval_rate_of_scored": 0.7728,
+      "approval_rate_of_all": 0.3954,
+      "bad_rate": 0.0198,
+      "disbursed": 204463552.5,
+      "fee_revenue": 5111588.81,
+      "expected_loss": 2856853.5,
+      "net": 2254735.31,
+      "good_declined": 5563,
+      "bad_declined": 250
     },
-    "net_gain_available": 25183.71,
-    "in_sample_warning": "The net-maximising threshold of 40 is chosen on the same 2,531 borrowers it is scored against. It is the best cutoff for this cohort's past, and an optimistic estimate for anyone it has not seen. Treat the shape of the curve as the finding, not the argmax."
+    "net_gain_available": 184716.21,
+    "best_approves_nobody": false,
+    "what_the_best_threshold_means": "The sweep lends at the best threshold (35), so the comparison with the policy's own cutoff is meaningful.",
+    "in_sample_warning": "The net-maximising threshold of 35 is chosen on the same 25,584 borrowers it is scored against. It is the best cutoff for this cohort's past, and an optimistic estimate for anyone it has not seen. Treat the shape of the curve as the finding, not the argmax."
   },
   "supplied_cohorts": {
     "csv_round_trip": true,

@@ -204,9 +204,23 @@ def _authorise_a_decline(flow: Flow) -> Flow:
     return flow
 
 
+def _other_currency(current: str | None) -> str:
+    """A currency code that is not ``current``.
+
+    Both currency mutators used to write a literal 840. That is a real fault when the
+    transaction is in PKR and *no fault at all* when it is already in dollars - the
+    message comes out byte-identical and the detector is then marked as having missed
+    something that was never there. With the shipped scenarios, all of which are in 586,
+    it never showed; over a corpus of random currencies it scored one of these two
+    detectors at 0.18 when the detector was right every time.
+    """
+    return "978" if current == "840" else "840"
+
+
 def _switch_response_currency(flow: Flow) -> Flow:
     i = _first_response(flow)
-    flow.steps[i].message = flow.steps[i].message.replace(de49="840")
+    message = flow.steps[i].message
+    flow.steps[i].message = message.replace(de49=_other_currency(message.get(49)))
     return flow
 
 
@@ -271,10 +285,22 @@ def _rewrite_chip_amount(flow: Flow) -> Flow:
 
 
 def _switch_chip_currency(flow: Flow) -> Flow:
+    """Make chip tag 5F2A disagree with DE 49.
+
+    The tag is found by reading it out of the chip data rather than by searching for a
+    hard-coded ``5F2A020586``, which only ever matched a transaction in rupees.
+    """
     index = _first(flow, ACQ_TO_ISS)
     message = flow.steps[index].message
     chip = message.fields[55]
-    flow.steps[index].message = message.replace(de55=chip.replace("5F2A020586", "5F2A020840"))
+    marker = "5F2A02"
+    at = chip.find(marker)
+    if at < 0:
+        raise AssertionError("this scenario carries no chip currency to switch")
+    start = at + len(marker)
+    present = chip[start : start + 4]
+    replacement = f"0{_other_currency(present.lstrip('0'))}"
+    flow.steps[index].message = message.replace(de55=chip[:start] + replacement + chip[start + 4 :])
     return flow
 
 
@@ -577,12 +603,19 @@ CODEC_MUTATORS: tuple[CodecMutator, ...] = (
 )
 
 
-def generate() -> list[Mutant]:
-    """Every mutator applied to every scenario it targets."""
+def generate(context: Context | None = None) -> list[Mutant]:
+    """Every mutator applied to every scenario it targets.
+
+    ``context`` is the transaction the faults are injected into. It defaults to the
+    standard one so the shipped benchmark is reproducible; the large-corpus run passes
+    random ones, which is how a detector that only works at the default amount or in the
+    default currency gets found.
+    """
+    base = context or Context()
     mutants: list[Mutant] = []
     for mutator in FLOW_MUTATORS:
         for scenario in mutator.scenarios:
-            flow = mutator.apply(_clone(build(scenario, Context())))
+            flow = mutator.apply(_clone(build(scenario, Context(**vars(base)))))
             mutants.append(
                 Mutant(
                     mutator=mutator.name,
@@ -595,7 +628,7 @@ def generate() -> list[Mutant]:
             )
     for codec_mutator in CODEC_MUTATORS:
         for scenario in codec_mutator.scenarios:
-            raw = build(scenario, Context()).steps[0].raw
+            raw = build(scenario, Context(**vars(base))).steps[0].raw
             mutants.append(
                 Mutant(
                     mutator=codec_mutator.name,
@@ -654,6 +687,7 @@ def fuzz(
     trials: int = 2000,
     seed: int = 7,
     scenarios: tuple[str, ...] = FUZZ_SCENARIOS,
+    contexts: int = 1,
 ) -> dict:
     """Corrupt one random character of a valid message, ``trials`` times, and count rejects.
 
@@ -688,15 +722,28 @@ def fuzz(
 
     rng = random.Random(seed)
     messages: list[tuple[str, str, dict[int, int]]] = []
+    # One default context is enough to exercise every field a scenario carries, and it
+    # keeps this reproducible for the shipped benchmark. ``contexts`` above one draws
+    # random PANs, amounts, currencies and terminals instead, which is what the
+    # large-corpus run uses: a fuzz pool of ten messages can only ever report on the ten
+    # messages in it, and a character class that is only reachable at some amounts or in
+    # some currencies is never corrupted at all.
+    pool_contexts = [Context()]
+    if contexts > 1:
+        from .corpus import random_context
+
+        pool_rng = random.Random(seed + 1)
+        pool_contexts = [random_context(pool_rng) for _ in range(contexts)]
     for name in scenarios:
-        flow = build(name, Context())
-        for step in flow.steps:
-            spans = field_offsets(step.raw)
-            owner: dict[int, int] = {}
-            for de, (offset, length) in spans.items():
-                for position in range(offset, offset + length):
-                    owner[position] = de
-            messages.append((name, step.raw, owner))
+        for context in pool_contexts:
+            flow = build(name, Context(**vars(context)))
+            for step in flow.steps:
+                spans = field_offsets(step.raw)
+                owner: dict[int, int] = {}
+                for de, (offset, length) in spans.items():
+                    for position in range(offset, offset + length):
+                        owner[position] = de
+                messages.append((name, step.raw, owner))
 
     alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "
     groups = {
@@ -748,6 +795,7 @@ def fuzz(
     return {
         "trials": attempted,
         "messages_in_pool": len(messages),
+        "contexts_in_pool": len(pool_contexts),
         "scenarios": list(scenarios),
         "rejected": rejected,
         "accepted": attempted - rejected,
@@ -811,6 +859,7 @@ def fuzz_binary(
     trials: int = 1000,
     seed: int = 13,
     scenarios: tuple[str, ...] = FUZZ_SCENARIOS,
+    contexts: int = 1,
 ) -> dict:
     """The same pass against binary framing: corrupt one byte and count rejects.
 
@@ -832,11 +881,18 @@ def fuzz_binary(
     rng = random.Random(seed)
     frames = [Framing(header=True), Framing(header=False)]
     pool: list[tuple[str, bytes, Framing]] = []
+    pool_contexts = [Context()]
+    if contexts > 1:
+        from .corpus import random_context
+
+        pool_rng = random.Random(seed + 1)
+        pool_contexts = [random_context(pool_rng) for _ in range(contexts)]
     for name in scenarios:
-        flow = build(name, Context())
-        for step in flow.steps:
-            for framing in frames:
-                pool.append((name, pack_binary(step.message, framing), framing))
+        for context in pool_contexts:
+            flow = build(name, Context(**vars(context)))
+            for step in flow.steps:
+                for framing in frames:
+                    pool.append((name, pack_binary(step.message, framing), framing))
 
     rejected = 0
     header_caught = 0
@@ -869,6 +925,7 @@ def fuzz_binary(
     return {
         "trials": attempted,
         "messages_in_pool": len(pool),
+        "contexts_in_pool": len(pool_contexts),
         "rejected": rejected,
         "accepted": attempted - rejected,
         "rejection_rate": round(rejected / attempted, 4) if attempted else 0.0,

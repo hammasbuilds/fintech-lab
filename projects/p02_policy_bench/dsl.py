@@ -44,6 +44,8 @@ KEYWORDS = {
     "limit",
     "fee",
     "late_fee",
+    "interest",
+    "term",
     "if",
     "because",
     "and",
@@ -205,7 +207,7 @@ class ScoreRule:
 class Charge:
     """A fee. ``period`` is set only when the policy prices it per unit of time."""
 
-    kind: Literal["fee", "late_fee"]
+    kind: Literal["fee", "late_fee", "interest"]
     rate: float | None
     base: str | None
     flat: float | None
@@ -229,6 +231,11 @@ class Policy:
     score_rules: list[ScoreRule] = field(default_factory=list)
     approve_at: float | None = None
     limit: Expr | None = None
+    #: How many months the money is outstanding, as an expression so it can be a field.
+    #: A charge priced ``per month`` is multiplied by this; without it, a per-period
+    #: charge is counted once, which is what the policies written before this existed
+    #: expect and still get.
+    term_months: Expr | None = None
     charges: list[Charge] = field(default_factory=list)
     source: str = ""
 
@@ -241,6 +248,8 @@ class Policy:
             names |= _condition_fields(rule.condition)
         if self.limit is not None:
             names |= _expr_fields(self.limit)
+        if self.term_months is not None:
+            names |= _expr_fields(self.term_months)
         names.discard("score")
         return sorted(names)
 
@@ -270,6 +279,8 @@ class Policy:
             lines.append(f"approve if score >= {_number(self.approve_at)}")
         if self.limit is not None:
             lines.append(f"limit {self.limit.render()}")
+        if self.term_months is not None:
+            lines.append(f"term {self.term_months.render()} months")
         for charge in self.charges:
             lines.append(charge.render())
         return "\n".join(lines) + "\n"
@@ -372,7 +383,13 @@ class Parser:
             elif word == "limit":
                 self.advance()
                 policy.limit = self.parse_expr()
-            elif word in {"fee", "late_fee"}:
+            elif word == "term":
+                self.advance()
+                policy.term_months = self.parse_expr()
+                unit = self.expect("name")
+                if unit.text != "months":
+                    raise PolicyError(f"a term is stated in months; found {unit.text!r}", unit.line)
+            elif word in {"fee", "late_fee", "interest"}:
                 policy.charges.append(self.parse_charge())
             else:
                 raise PolicyError(f"{word!r} cannot start a statement", token.line)
@@ -574,6 +591,21 @@ class Parser:
                 f"awards no points, so nothing can ever be approved",
                 last,
             )
+        for charge in policy.charges:
+            if charge.kind != "interest":
+                continue
+            if charge.period is None:
+                raise PolicyError(
+                    "an interest charge is priced per unit of time; write "
+                    "'interest <rate>% of limit per month'",
+                    charge.line,
+                )
+            if policy.term_months is None:
+                raise PolicyError(
+                    "this policy charges interest per month but never says for how many; "
+                    "add 'term <field or number> months'",
+                    charge.line,
+                )
         reachable = sum(rule.points for rule in policy.score_rules if rule.points > 0)
         if policy.approve_at > reachable:
             raise PolicyError(

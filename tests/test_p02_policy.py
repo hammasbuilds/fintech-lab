@@ -137,7 +137,13 @@ def test_an_approval_carries_its_limit_and_fee() -> None:
     assert decision.approved
     assert decision.limit == 10000
     assert decision.charges == [
-        {"kind": "fee", "amount": 200.0, "basis": "fee 2% of limit", "period": None}
+        {
+            "kind": "fee",
+            "amount": 200.0,
+            "basis": "fee 2% of limit",
+            "period": None,
+            "periods_charged": None,
+        }
     ]
 
 
@@ -414,3 +420,91 @@ def test_a_compound_condition_is_translated_part_by_part() -> None:
     assert " aur " in translated
     assert "aamdani" in translated
     assert "wallet" in translated
+
+
+PRICED = """
+policy "Priced per month"
+version 1
+currency XXX
+
+decline if age < 18 because "below the legal age"
+
+score +50 if months_employed >= 6 because "half a year in work"
+
+approve if score >= 50
+limit min(0.25 * monthly_income, 20000)
+term loan_term_months months
+interest 1.5% of limit per month
+"""
+
+TERMLESS = """
+policy "Per day, no term"
+version 1
+currency PKR
+
+decline if age < 18 because "below the legal age"
+
+score +50 if months_employed >= 6 because "half a year in work"
+
+approve if score >= 50
+limit min(0.25 * monthly_income, 20000)
+late_fee 1% of limit per day
+"""
+
+
+def test_interest_is_charged_once_per_month_of_the_stated_term() -> None:
+    policy = dsl.compile_policy(PRICED)
+    applicant = {"age": 30, "monthly_income": 40000, "months_employed": 24, "loan_term_months": 12}
+    decision = engine.evaluate(policy, applicant)
+    assert decision.limit == 10000
+    charge = decision.charges[0]
+    # 1.5% of 10,000 is 150 a month, and the term says twelve of them.
+    assert charge["amount"] == 1800.0
+    assert charge["periods_charged"] == 12
+    assert charge["period"] == "month"
+
+
+def test_the_term_can_differ_per_applicant_because_it_is_a_field() -> None:
+    policy = dsl.compile_policy(PRICED)
+    base = {"age": 30, "monthly_income": 40000, "months_employed": 24}
+    short = engine.evaluate(policy, base | {"loan_term_months": 6})
+    long = engine.evaluate(policy, base | {"loan_term_months": 60})
+    assert short.charges[0]["amount"] == 900.0
+    assert long.charges[0]["amount"] == 9000.0
+
+
+def test_a_per_period_charge_without_a_term_is_still_counted_once() -> None:
+    """The policies written before ``term`` existed must earn exactly what they did."""
+    policy = dsl.compile_policy(TERMLESS)
+    decision = engine.evaluate(policy, {"age": 30, "monthly_income": 40000, "months_employed": 24})
+    charge = decision.charges[0]
+    assert charge["amount"] == 100.0
+    assert charge["periods_charged"] is None
+
+
+def test_interest_without_a_term_is_refused_at_compile_time() -> None:
+    source = PRICED.replace("term loan_term_months months", "")
+    with pytest.raises(dsl.PolicyError) as caught:
+        dsl.compile_policy(source)
+    assert "never says for how many" in str(caught.value)
+
+
+def test_interest_must_be_priced_per_period() -> None:
+    source = PRICED.replace("interest 1.5% of limit per month", "interest 1.5% of limit")
+    with pytest.raises(dsl.PolicyError) as caught:
+        dsl.compile_policy(source)
+    assert "per unit of time" in str(caught.value)
+
+
+def test_a_term_is_stated_in_months() -> None:
+    source = PRICED.replace("term loan_term_months months", "term loan_term_months weeks")
+    with pytest.raises(dsl.PolicyError) as caught:
+        dsl.compile_policy(source)
+    assert "stated in months" in str(caught.value)
+
+
+def test_a_priced_policy_round_trips_through_its_own_text() -> None:
+    policy = dsl.compile_policy(PRICED)
+    assert dsl.compile_policy(policy.render()).render() == policy.render()
+    assert "term loan_term_months months" in policy.render()
+    assert "loan_term_months" in policy.fields_used

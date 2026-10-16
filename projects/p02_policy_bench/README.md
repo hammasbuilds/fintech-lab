@@ -38,7 +38,7 @@ that can never approve anyone, which is otherwise a silent configuration mistake
 
 ## The numbers
 
-5,000 synthetic borrowers, base default rate 5.86%. From [`results.json`](results.json).
+50,000 synthetic borrowers, base default rate 5.86%. From [`results.json`](results.json).
 
 | Policy | Approvals | Bad rate | Disbursed | Net | Lint |
 |---|---:|---:|---:|---:|---|
@@ -77,14 +77,14 @@ every candidate cutoff.
 |---|---:|
 | The policy's own cutoff | 45, net **229,924 PKR** |
 | Net-maximising cutoff | **40**, net **255,108 PKR** |
-| Available by moving it | **+25,184 PKR** |
+| Available by moving it | **+184,716 PKR** |
 
 And it explains the earlier finding rather than repeating it. The scorecard's
 discrimination is reported separately, because moving a cutoff cannot change it:
 
 | | |
 |---|---:|
-| Gini | **0.284** |
+| Gini | **0.233** |
 | AUC | 0.642 |
 | KS | 0.259 (at score 35) |
 | Measured on | 2,531 scored; 2,469 stopped by a gate first |
@@ -174,3 +174,43 @@ factors no policy can see.
 
 **Every number here is a statement about that generator, not about a market.** Load your
 own cohort to get numbers about something real.
+
+## At full size, on two real books
+
+The cohort above is generated, and a generated cohort can only tell you about its own
+generator. These numbers are the same policy engine, the same backtest and the same cutoff
+sweep run over **255,347 real loan applications with the outcomes that actually happened**,
+and over **438,557 real card applications of which only 8.3% have any repayment history** -
+which is the shape a credit team actually has to work with.
+
+Both are public Kaggle files, fetched by `make data` and never committed. The field map for
+each one is written out in `loanbook.py` and `cardbook.py`, including the two derivations
+and the two real-data traps that are handled rather than averaged over.
+
+<!-- datasets:start -->
+| Dataset | Rows | Size | Role | Source |
+| --- | ---: | ---: | --- | --- |
+| `real/loan_book` | 255,347 | 24 MB | cohort | kaggle:nikhil1e9/loan-default |
+| `real/card_applications` | 438,557 | 52 MB | cohort | kaggle:rikdifos/credit-card-approval-prediction |
+| `real/card_credit_records` | 1,048,575 | 15 MB | lookup | kaggle:rikdifos/credit-card-approval-prediction |
+
+| The real loan book | Result | Over |
+| --- | ---: | --- |
+| base default rate | **0.1161** | 29,653 of 255,347 applications |
+| v1 approval rate | **0.2584** | the whole book |
+| v1 bad rate among approvals | **0.0679** | 65,987 approvals |
+| v1 Gini | **0.2551** | 163,562 scored |
+| v2 Gini, price signal removed | **0.1917** | same book, one rule dropped |
+| v1 net, one-off 2% fee | **-3834225.85** | negative at every cutoff |
+| v3 net, priced over the term | **72098169.15** | and flagged critical by the compliance lint |
+
+| The real card book | Result | Over |
+| --- | ---: | --- |
+| applications scored | **438,557** | every outcome figure withheld |
+| joined to a repayment history | **36,457** | a join rate of 0.0831 |
+| pensioners caught by the 365243 sentinel | **75,329** | would otherwise read as -12,175 months of work |
+| Gini, bad = ever 30+ days past due | **0.0462** | the 36,457-row slice |
+| Gini, bad = ever 60+ days past due | **0.1644** | the same 36,457 rows |
+
+Three findings come out of the real books that the synthetic cohort cannot show. The strongest feature in the loan book is `interest_rate` - the lender's own price for that applicant - and dropping it costs a quarter of the separation, so a scorecard that uses it is partly scoring a decision the lender already made. A one-off 2% service fee loses money at every cutoff, which is why the sweep's net-maximising threshold for v1 and v2 is the one that approves nobody; only pricing over the term earns anything, and that is the version rule C1 flags as critical. And on the card book, two defensible definitions of "bad" on the same 36,457 rows give Gini figures that differ by more than three times - whoever picks the definition picks the result.
+<!-- datasets:end -->

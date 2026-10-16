@@ -41,6 +41,12 @@ LEXICON: dict[str, tuple[str, ...]] = {
         "load karwa",
         "load karo",
         "load kar",
+        # "250 ka load do" and "ka load dedo" are how this is actually asked for, and
+        # none of the entries above match them: every one needs the verb "kar". Found by
+        # scoring the generated set, where 14% of top-up requests read as no intent.
+        "ka load",
+        "load do",
+        "load de",
         "balance load",
         "recharge",
         "top up",
@@ -78,6 +84,10 @@ LEXICON: dict[str, tuple[str, ...]] = {
         "balance check",
         "kitne paise",
         "kitna paisa",
+        # "mera account me kitna hai" names no balance word at all.
+        "account me kitna",
+        "account mein kitna",
+        "khate me kitna",
         "balance",
         "بیلنس",
     ),
@@ -102,10 +112,14 @@ LEXICON: dict[str, tuple[str, ...]] = {
         "transfer kar",
         "paise bhej",
         "paisay bhej",
-        "bhej do",
-        "bhejo",
-        "bhej den",
-        "bhejna",
+        # The bare stem, which covers bhej, bhejo, bhej do, bhej dedo, bhej dein,
+        # bhejna and bheje in one entry. It was missing, and a corpus of 200,000
+        # utterances put 429 plain "Omar ko 4 hzar bhej" sentences in front of this
+        # function that it read as no intent at all - the single commonest way of
+        # saying it. The cost is that the past tense ("kal 5000 bheja tha") now reads
+        # as a request; the confirmation spine turns that into a question rather than a
+        # transfer, which is the right way round for this trade.
+        "bhej",
         "send money",
         "send",
         "transfer",
@@ -254,10 +268,24 @@ class Utterance:
         }
 
 
+#: Phrasings a substring cannot catch, because the words that make the intent sit on
+#: either side of the amount: "Dilshan ke account me 154,000 dein". There is one entry
+#: and it is deliberately narrow - it needs an explicit recipient marker (``ko`` or
+#: ``account me``) *and* an unambiguous giving verb. The bare ``do`` is left out: next to
+#: a number it is as likely to be the numeral two as the verb.
+PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
+    SEND: (re.compile(r"\b(?:ko|account\s+me(?:in)?)\b[^.?!]*\b(?:dedo|dein|den|dena|deni)\b"),),
+}
+
+
 def detect_intent(text: str) -> tuple[str, list[str]]:
     lowered = numerals.normalise(text).lower()
     for intent in PRIORITY:
         hits = [phrase for phrase in LEXICON[intent] if phrase in lowered]
+        for pattern in PATTERNS.get(intent, ()):
+            found = pattern.search(lowered)
+            if found:
+                hits.append(found.group(0))
         if hits:
             return intent, sorted(hits, key=len, reverse=True)
     return UNKNOWN, []

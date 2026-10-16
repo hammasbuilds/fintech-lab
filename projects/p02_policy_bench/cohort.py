@@ -68,7 +68,7 @@ def _logistic(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x))
 
 
-def generate(size: int = 5000, seed: int = 20261015) -> list[Borrower]:
+def generate(size: int = 50_000, seed: int = 20261015) -> list[Borrower]:
     """Build the cohort. Same seed, same cohort, on every machine."""
     rng = random.Random(seed)
     borrowers: list[Borrower] = []

@@ -9,15 +9,19 @@ carries the error text, how far the parser got, and whatever fields it read firs
 from __future__ import annotations
 
 import json
+import pathlib
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from shared.datapage import Block, Figure, dig, figures_from  # noqa: F401
+from shared.datapage import Page as DataPage
+from shared.datapage import attach as attach_datasets
 from shared.iopage import Page, Row, Section, attach_io
 from shared.theme import attach_theme
 from shared.webkit import App, BadRequest, Request, Response, attach_metrics, run
 
-from . import binary, emv, lifecycle, mutations, narrate, scenarios
+from . import binary, corpus, emv, lifecycle, mutations, narrate, scenarios
 from . import fields as F
 from .codec import CodecError, Message, describe_mti, field_offsets, is_request, pack, unpack
 
@@ -27,6 +31,8 @@ RESULTS = Path(__file__).with_name("results.json")
 app = App("switchboard", static_dir=STATIC)
 attach_theme(app)
 attach_metrics(app)
+
+SOURCE = "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p01_switchboard"
 
 
 # ------------------------------------------------------------------- endpoints
@@ -290,6 +296,141 @@ def _results() -> dict[str, Any] | None:
         return None
 
 
+# ---------------------------------------------------------------------------- datasets
+# What this project is measured on at full size, and what came out. The figures are read
+# out of results_datasets.json and data/MANIFEST.json rather than typed, so this page
+# cannot drift from the run that produced it.
+DATASETS_RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
+
+
+def _at_scale() -> dict:
+    if DATASETS_RESULTS.is_file():
+        try:
+            return json.loads(DATASETS_RESULTS.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def datasets_page() -> DataPage:
+    data = _at_scale()
+    blocks = [
+        Block(
+            title="Codec, every message in the corpus",
+            subtitle="Packed, re-parsed, packed again, in both framings. No sampling.",
+            figures=figures_from(
+                data,
+                [
+                    ("messages checked", "codec.messages_checked", "the whole corpus"),
+                    (
+                        "ASCII round trip stable",
+                        "codec.ascii_round_trip_stable",
+                        "messages checked",
+                    ),
+                    (
+                        "binary round trip stable",
+                        "codec.binary_round_trip_stable",
+                        "messages checked",
+                    ),
+                    ("failed to pack", "codec.messages_that_failed_to_pack", "messages checked"),
+                    (
+                        "character class violations",
+                        "codec.character_class_violations",
+                        "messages checked",
+                    ),
+                ],
+            ),
+            reading=str(dig(data, "codec.reading", "")),
+        ),
+        Block(
+            title="Invariants, every lifecycle",
+            subtitle="All of them are valid by construction, so a finding is a false positive.",
+            figures=figures_from(
+                data,
+                [
+                    ("rules", "invariants.rules", ""),
+                    ("lifecycles checked", "invariants.flows_checked", "the whole corpus"),
+                    (
+                        "lifecycles with findings",
+                        "invariants.flows_with_findings",
+                        "lifecycles checked",
+                    ),
+                    ("false positive rate", "invariants.false_positive_rate", "lifecycles checked"),
+                ],
+            ),
+            reading=str(dig(data, "invariants.reading", "")),
+        ),
+        Block(
+            title="Fuzz, widened",
+            subtitle=(
+                "Single-character and single-byte damage, over a pool built from 50 "
+                "random contexts."
+            ),
+            figures=figures_from(
+                data,
+                [
+                    ("ASCII trials", "fuzz_ascii.trials", ""),
+                    ("ASCII rejection rate", "fuzz_ascii.rejection_rate", "ASCII trials"),
+                    (
+                        "illegal characters rejected",
+                        "fuzz_ascii.groups.class_violating.rejection_rate",
+                        "class-violating trials",
+                    ),
+                    (
+                        "framing damage rejected",
+                        "fuzz_ascii.groups.framing.rejection_rate",
+                        "framing trials",
+                    ),
+                    ("binary trials", "fuzz_binary.trials", ""),
+                    ("binary rejection rate", "fuzz_binary.rejection_rate", "binary trials"),
+                ],
+            ),
+            reading=(
+                "The class-legal group is 0.000 by design: a legal character in a free-text "
+                "field makes an unusual message, not an invalid one, and a parser that "
+                "rejected it would be wrong."
+            ),
+        ),
+        Block(
+            title="Mutation, at every amount and currency",
+            subtitle=(
+                "The 38 curated faults, re-injected into flows built from 200 random contexts."
+            ),
+            figures=figures_from(
+                data,
+                [
+                    ("mutants", "mutation.mutants", "200 contexts"),
+                    ("killed", "mutation.killed", "mutants"),
+                    ("kill rate", "mutation.kill_rate", "mutants"),
+                    ("killed by the intended rule", "mutation.by_intended_rate", "mutants"),
+                ],
+            ),
+            reading=str(dig(data, "mutation.reading", "")),
+        ),
+    ]
+    if not data:
+        blocks = [
+            Block(
+                title="Not run on this machine",
+                subtitle=(
+                    "The at-scale figures come from results_datasets.json, which is "
+                    "committed. If this page is empty the file is missing: run make data "
+                    "and then make bench-datasets."
+                ),
+            )
+        ]
+    return DataPage(
+        title="01 Switchboard",
+        subtitle="The generated ISO 8583 corpus, and the whole-corpus run",
+        dataset_keys=[corpus.KEY],
+        blocks=blocks,
+        links=[("Dashboard", "/"), ("Input and output", "/io"), ("Source", SOURCE)],
+    )
+
+
+attach_datasets(app, datasets_page)
+
+
 def main(port: int = 8101) -> None:
     run(app, port=port)
 
@@ -419,7 +560,7 @@ def io_page() -> Page:
             ("Open the dashboard", "/"),
             (
                 "Source on GitHub",
-                "https://github.com/hammasbuilds/fintech-lab/tree/main/projects/p01_switchboard",
+                SOURCE,
             ),
             ("All three projects", "https://hammasbuilds.github.io/fintech-lab/"),
         ],

@@ -1,7 +1,7 @@
 """Grade by running the policy, not by reading it.
 
 The headline column is **agreement**: the model's policy and the hand-written reference
-both decide all 5,000 borrowers, and the grader counts how many they decide the same way,
+both decide all 50,000 borrowers, and the grader counts how many they decide the same way,
 limit included. A policy that compiles, reads sensibly and approves a different 4% of
 applicants is the output this project exists to catch, and no check that stops at the text
 can see it.

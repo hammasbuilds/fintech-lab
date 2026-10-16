@@ -68,7 +68,7 @@ Built with code. No model, no GPU, no API key.
 | | Project | What it is | The number that matters | Tests |
 |---|---|---|---|---|
 | [**01**](projects/p01_switchboard/) | [**Switchboard**](projects/p01_switchboard/) | An ISO 8583 workbench. Reads both the ASCII form and the **binary framing a real switch sends** (packed bitmap, BCD fields, length header), tells them apart on its own, expands DE 55 chip data as BER-TLV, and checks a flow against 22 invariants. | **38 of 38** injected faults killed, every one by the rule written for it, with **0** false positives across 14 valid flows. Of 2,000 random character corruptions, **651/651** illegal ones rejected. | 128 |
-| [**02**](projects/p02_policy_bench/) | [**Policy Bench**](projects/p02_policy_bench/) | A lending-policy language a product owner can read, compiled to something executable, back-tested on a borrower cohort &mdash; or **on your own, loaded as CSV** &mdash; with a cutoff sweep, Gini and KS, segment impact, and decline notices in two languages. | The v1&rarr;v2 tightening declines **1,238** more applicants: **47** would have defaulted, **1,191** would have repaid, precision **3.8%**. The sweep says why &mdash; Gini **0.284** &mdash; and finds **40** rather than 45, worth **+25,184 PKR**. | 74 |
+| [**02**](projects/p02_policy_bench/) | [**Policy Bench**](projects/p02_policy_bench/) | A lending-policy language a product owner can read, compiled to something executable, back-tested on a borrower cohort &mdash; or **on your own, loaded as CSV** &mdash; with a cutoff sweep, Gini and KS, segment impact, and decline notices in two languages. | The v1&rarr;v2 tightening declines **12,459** more applicants: **451** would have defaulted, **12,008** would have repaid, precision **3.6%**. The sweep says why &mdash; Gini **0.233** &mdash; and finds **35** rather than 45, worth **+184,716 PKR**. | 74 |
 | [**03**](projects/p03_guardian/) | [**Guardian**](projects/p03_guardian/) | A transaction assistant for Roman Urdu, Urdu and code-mixed speech: a confirmation spine, a coercion check on the words, and a **behavioural check on the transfer**. No model: a lexicon, a grammar and an account history. | **140** hand-written cases. Amounts **48/48**, actions **30/30**, replies **21/21**, **0** wrongly read as consent. The lexical check misses **4/4** scams phrased in ordinary language; judging the transfer escalates **4/4**, at a cost of **1 in 5** ordinary transfers also slowed. | 209 |
 
 ## The three model arms
@@ -79,7 +79,7 @@ pair's own grader. Every grade is computed, never judged.
 | | Project | Asks | Graded by |
 |---|---|---|---|
 | [**04**](projects/p04_spec_to_wire/) | [**Spec to wire**](projects/p04_spec_to_wire/) | Produce ISO 8583 traffic: read a message, emit its data elements, emit the whole message, and write a test case that breaks one named invariant. | Project 01's parser and its 22 invariants. A message packs or it does not. |
-| [**05**](projects/p05_policy_from_prose/) | [**Policy from prose**](projects/p05_policy_from_prose/) | Turn a credit policy written by a product owner into project 02's language, and write the applicant's notice. | Project 02's cohort: does the compiled policy decide the **same 5,000 borrowers**, decision for decision and limit for limit. |
+| [**05**](projects/p05_policy_from_prose/) | [**Policy from prose**](projects/p05_policy_from_prose/) | Turn a credit policy written by a product owner into project 02's language, and write the applicant's notice. | Project 02's cohort: does the compiled policy decide the **same 50,000 borrowers**, decision for decision and limit for limit. |
 | [**06**](projects/p06_model_vs_lexicon/) | [**Model against lexicon**](projects/p06_model_vs_lexicon/) | Answer project 03's own test set: the amounts, the actions, and the coercion verdicts. | Project 03's grader, on the same cases, with the rules in the next column of the table. |
 
 ### What they found
@@ -92,7 +92,7 @@ Measured with `qwen2.5:14b-instruct`, every case accounted for:
   attempts the server aborted the prediction: the model degenerates into repeating a token
   until Ollama's repeat guard kills it. The generator scores 1.00 on all four.
 - **05** &mdash; this one went **against** the hypothesis. Without the grammar, **0 of 5**
-  policies compile; with it, **4 of 5** compile and all four decide all 5,000 borrowers
+  policies compile; with it, **4 of 5** compile and all four decide all 50,000 borrowers
   *identically* to the hand-written reference. The feared "compiles but approves a
   different set" column is **zero**. The failure is a located parse error, which stops a
   policy shipping; silent drift would not have.
@@ -122,7 +122,7 @@ asserts that the number on the badge is the one the suite actually collects.
 
 Each project ships a figure that does not favour it. Switchboard's random-corruption
 rejection stops at 97.4% on the framing, because an ISO 8583 bitmap carries no redundancy
-and one flipped bit can produce a different valid message. Policy Bench's Gini is 0.284 and
+and one flipped bit can produce a different valid message. Policy Bench's Gini is 0.233 and
 the sweep calls that weak separation in those words. Guardian's word-based check misses
 every scam that avoids its lexicon, and the layer that recovers those slows one ordinary
 transfer in five. The model arms report what they could not do: replies cut off by the
@@ -135,131 +135,284 @@ One command runs all three and prints what they did. `uv run python demo.py`
 
 ### 01 &mdash; generate a lifecycle, read it back, then break it
 
+<!-- io:01:start -->
 ```
   INPUT   scenario 'atm_partial_approval', amount 10,000.00 PKR
 
+  OUTPUT
+
     step 1  acquirer -> issuer  (withdrawal request for 10,000.00)
-    raw     0200F23C448188E09000000000000400000016411111111111111101100000000100000010150930...
-    reads   Financial request, originated at the acquirer, a cash withdrawal on the
-            cardholder's savings account, for 10,000.00 PKR, at terminal ATM00417 of
-            acquirer 37101, trace 004712.
+    raw     0200F23C448188E092000000000004000000164111111111111111011000000001000000101509301200471209301210152809601105102070037101070037101415093000417ATM00417MCC6011PK00417 1LINK ATM GULBERG LAHORE          PK    586A1B2C3D4E5F6071814082023C00950500000000009A032610159C01015F2A0205869F02060000010000009F100706010A03A000009F2608A1B2C3D4E5F607189F2701809F360200219F37041A2B3C4D18PK12ABCD0000001234
+    reads   Financial request, originated at the acquirer, a cash withdrawal on the cardholder's savings account, for 10,000.00 PKR, at terminal ATM00417 of acquirer 37101, trace 004712.
 
     step 2  issuer -> acquirer  (partial approval for 6,000.00)
-    reads   Financial request response, ... for 6,000.00 PKR, ... answered 10 - partial
-            approval, trace 004712.
+    raw     0210F23800018E808000000000000400000016411111111111111101100000000060000010150930120047120930121015070037101070037101415093000417A4170010ATM0041758618PK12ABCD0000001234
+    reads   Financial request response, originated at the acquirer, a cash withdrawal on the cardholder's savings account, for 6,000.00 PKR, at terminal ATM00417 of acquirer 37101, answered 10 - partial approval, trace 004712.
 
-  INPUT   the same message, one bitmap bit flipped
-    rejected: bitmap sets DE 64 but it is not in the dictionary, so the remaining
-              20 characters cannot be read
+  The response is allowed to change DE 4 here and nowhere else:
+  requested                      10,000.00 PKR
+  approved                       6,000.00 PKR
+  response code                  10 - partial approval
 
   INPUT   the same message as a switch would actually send it
+  OUTPUT
   binary, with a length header   244 bytes
   the same thing in ASCII        386 characters
     hex     00F20200F23C448188E092000000000004000000164111111111111111011000...
   framing detected as            binary
-      - the first two bytes read 242, which is exactly the number of bytes that
-        follow - that is a length header
+      - the first two bytes read 242, which is exactly the number of bytes that follow - that is a length header
       - binary parses cleanly
   fields identical to the ASCII form True
 
+  INPUT   DE 55, the chip data, which most decoders print as one hex blob
+  OUTPUT
+    82     Application interchange profile      3C00               
+    95     Terminal verification results        0000000000         terminal verification results, all zero
+    9A     Transaction date                     261015             dated 2026-10-15
+    9C     Transaction type                     01                 cash advance
+    5F2A   Transaction currency code            0586               currency 0586
+    9F02   Amount, authorised                   000001000000       authorised amount 1,000,000 in minor units
+    ...
+  mandatory tags missing         none
+
   INPUT   DE 4 doubled, with the chip's own 9F02 left alone
+  OUTPUT
   every field still well-formed  True
   the message still parses       True
-    caught by  chip tag 9F02 authorised 1,000,000 minor units but DE 4 asks for
-               2,000,000 - the cardholder would be debited an amount the chip
-               never approved
+    caught by  chip tag 9F02 authorised 1,000,000 minor units but DE 4 asks for 2,000,000 - the cardholder would be debited an amount the chip never approved
+
+  INPUT   one bitmap bit flipped
+  OUTPUT
+    rejected: bitmap sets DE 64 but it is not in the dictionary, so the remaining 20 characters cannot be read
 
   INPUT   all 14 scenarios, then every injected fault
+  OUTPUT
   valid flows checked            14 (33 messages)
-  false positives on them        0
+  false positives on them        0  
+  faults injected                38
   killed                         38/38
   killed by the intended rule    38/38
   invariants never exercised     none
-  random illegal characters      651/651 rejected
-  random framing damage          567/582 rejected
+  random illegal characters      315/315 rejected
+  random framing damage          304/311 rejected
   random byte damage, binary     319/500 rejected
+
+  The framing figure is not 100% and cannot be: an ISO 8583 bitmap carries no
+  redundancy, so flipping one bit can swap DE 14 for DE 16 - both n4 - and the
+  message re-parses as a different, well-formed message. That is why the
+  invariant layer exists instead of stopping at the parser.
 ```
+<!-- io:01:end -->
 
 ### 02 &mdash; compile three policies and diff two of them
 
+<!-- io:02:start -->
 ```
-  INPUT   three policy files and 5,000 synthetic borrowers
+  INPUT   three policy files and 50,000 synthetic borrowers
 
-    Nano loan v1   approvals  56.7%   bad rate 2.61%   net      221,531 PKR   lint clean
-    Nano loan v2   approvals  31.9%   bad rate 1.69%   net      229,925 PKR   lint clean
-    Nano loan v3   approvals  31.9%   bad rate 1.69%   net      229,925 PKR   lint C1
+  OUTPUT
+    Nano loan v1   approvals  57.0%   bad rate 2.62%   net    1,797,671 PKR   lint clean
+    Nano loan v2   approvals  32.1%   bad rate 1.84%   net    2,070,026 PKR   lint clean
+    Nano loan v3   approvals  32.1%   bad rate 1.84%   net    2,070,026 PKR   lint 1 note(s): C1
 
   INPUT   move from v1 to v2 - raise the income floor, penalise turnover
-  newly declined                 1,238
-  of those, would have defaulted 47
-  of those, would have repaid    1,191
-  precision of the tightening    3.8%
-  bad rate                       -0.92 points
-  net                            +8,394 PKR
-  disbursed                      -9,817,026 PKR
+  OUTPUT
+  newly declined                 12,459
+  of those, would have defaulted 451
+  of those, would have repaid    12,008
+  precision of the tightening    3.6%
+  approval rate                  -24.92 points
+  bad rate                       -0.78 points
+  net                            +272,355 PKR
+  disbursed                      -98,069,414 PKR
 
-  The tightening works, and it costs 1,191 good borrowers to avoid 47.
+  The tightening works, and it costs 12,008 good borrowers to avoid 451.
   An approval-rate chart shows the first half of that sentence only.
 
+  INPUT   v3, which is v2 with the late fee re-expressed per day
+  OUTPUT
+  credit decisions changed       0
+  lint C1 (critical)             'late_fee 1% of limit per day' grows with how long the money is outstanding, which prices ...
+
   INPUT   v2's approvals, grouped by region (no policy here mentions region)
-  raw approval-rate gap          39.0%  (central-urban vs east-rural)
-  gap within income bands        17.0%
+  OUTPUT
+  raw approval-rate gap          36.4%  (central-urban vs east-rural)
+  gap within income bands        15.7%
+
+  The gap falls from 36.4% to 15.7% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than region itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.
 
   INPUT   v2's score against the outcome, then every possible cutoff
-  Gini                           0.2842   (AUC 0.6421, KS 0.2587)
-  measured on                    2,531 scored, 2,469 gated out first
+  OUTPUT
+  Gini                           0.2329   (AUC 0.6164, KS 0.1705)
+  measured on                    25,584 scored, 24,416 gated out first
     Weak separation. A cutoff on this score will cut good and bad alike.
 
      cutoff  approved  bad rate           net  good declined
-         30    42.5%     2.12%       236,264            385
-         40    34.7%     1.67%       255,108            760
-         50    27.4%     1.75%       201,204          1,119
+        -10    51.1%     2.51%     1,966,275              8
+          0    51.1%     2.51%     1,965,173             15
+         10    49.9%     2.41%     2,050,052            613
+         20    47.6%     2.29%     2,123,650          1,666
+         30    43.0%     2.09%     2,241,239          3,889
+         40    35.0%     1.95%     2,123,099          7,774
+         50    27.8%     1.84%     1,871,118         11,323
+         60    18.7%     1.64%     1,478,500         15,753
+         70     8.7%     1.26%       866,889         20,639
+         80     3.1%     0.84%       359,007         23,414
+         90     1.4%     0.87%       166,191         24,263
 
   the policy's own cutoff        45
-  net-maximising cutoff          40
-  available by moving it         +25,184 PKR
+  net-maximising cutoff          35
+  available by moving it         +184,716 PKR
 
-  This is why the tightening cut mostly good borrowers: a Gini of 0.2842 barely
+    The net-maximising threshold of 35 is chosen on the same 25,584 borrowers it is scored against. It is the best cutoff for this cohort's past, and an optimistic estimate for anyone it has not seen. Treat the shape of the curve as the finding, not the argmax.
+
+  This is why the tightening cut mostly good borrowers: a Gini of 0.2329 barely
   separates the two groups, so any cutoff on this score cuts both at once.
+
+  INPUT   the same cohort as CSV, with the outcome column removed
+  OUTPUT
+  rows read                      500
+  approval rate                  27.8%
+  bad rate                       None
+  expected loss                  None
+
+    This cohort has no outcome column, so bad rate, expected loss, net and the cost of the declines cannot be computed and are left empty.
+
+  INPUT   one applicant who falls ten points short
+  OUTPUT
+
+    [en] Not approved this time. Your score was 35 and this product needs 45.
+      - income comfortably above the floor  (not met)
+      - repaid on time before  (not met)
+      - keeps a balance between salary days  (not met)
+
+    [ur] Is waqt manzoori nahi hui. Aap ka score 35 tha, is product ke liye 45 chahiye.
+      - aap ki maheena aamdani 30000 rupay se zyada ya barabar hai  (yeh shart poori nahi hui)
+      - waqt par wapas kiye gaye qarze 2 se zyada ya barabar hai  (yeh shart poori nahi hui)
+      - aap ke wallet ka aam balance 4000 rupay se zyada ya barabar hai  (yeh shart poori nahi hui)
 ```
+<!-- io:02:end -->
 
 ### 03 &mdash; a transfer, an unclear reply, then a yes
 
+<!-- io:03:start -->
 ```
   INPUT   amounts as people actually say them
+  OUTPUT
     pandrah hazaar                 15,000   read back as 15 hazaar rupay
     dedh hazaar                     1,500   read back as 1 hazaar 5 sau rupay
     sawa lakh                     125,000   read back as 1 lakh 25 hazaar rupay
+    saadhe teen hazaar              3,500   read back as 3 hazaar 5 sau rupay
     paune do lakh                 175,000   read back as 1 lakh 75 hazaar rupay
+    do hazaar paanch sau            2,500   read back as 2 hazaar 5 sau rupay
     saat hazaar                     7,000   read back as 7 hazaar rupay
     saath hazaar                   60,000   read back as 60 hazaar rupay
 
+  INPUT   a transfer, an unclear reply, then a yes
+  OUTPUT
+
     user       Rashid ko pandrah hazaar bhejo
-    assistant  Please confirm: 15 thousand rupees (15,000) to Rashid Ali, Meezan account
-               ending 4417.  Not Rashida Bibi (...9082).  Reply 'yes' to send or 'no' to cancel.
+    assistant  Please confirm: 15 thousand rupees (15,000) to Rashid Ali, Meezan account ending 4417.  Not Rashida Bibi (...9082).  2 things about this transfer are unusual for this account at once (first_time_beneficiary, unusually_large). That is not a reason to refuse it - it may be exactly what you meant - but it is a reason to slow down and check the details rather than confirm out of habit.  Nothing is wrong with a transfer being unusual. Read the name and the last four digits back to yourself before you confirm, and if someone is on the phone with you right now, hang up first and call them back on a number you already have.  Reply with the word 'confirm' to send, or 'no' to cancel.
+    state      awaiting_confirmation   action None
+
     user       acha
-    assistant  I did not understand that as a yes or a no, so nothing has been sent.
+    assistant  I did not understand that as a yes or a no, so nothing has been sent. Reply with 'yes' to send, or 'no' to cancel.
+    state      awaiting_confirmation   action None
+
     user       haan
-    assistant  Sent: 15 thousand rupees to Rashid Ali.
+    assistant  Because this transfer is unusual for your account, a plain yes is not enough. Reply with the word 'confirm' if you are sure, or 'no' to stop. Nothing has been sent.
+    state      awaiting_confirmation   action None
+
+  The read-back named Rashida Bibi before anything moved. 'Rashid' is an
+  exact first name and also the start of another contact's, so the near miss
+  is spelled out rather than resolved quietly.
+
+  INPUT   a scam script
+  OUTPUT
+  state                          blocked
+  pressure patterns              account_redirect, otp_solicitation, staff_impersonation, threat, urgency
+  action                         None
+
+    5 separate pressure patterns appear together (account_redirect, otp_solicitation, staff_impersonation, threat, urgency). That combination is a script, not a coincidence, so nothing is sent from this message.  No bank, and no part of this app, will ever ask you for an OTP, a PIN or a password. Hang up and call the number printed on your card. Nothing has been sent.
 
   INPUT   pressure arriving during a confirmation, then a yes
+  OUTPUT
   action after the yes           None
   anything executed              False
   audit chain intact             True
 
   INPUT   a scam approach that uses none of the detector's vocabulary
+  OUTPUT
     message    beta main tumhari ammi ki saheli hoon, thori madad chahiye thi
   coercion check                 allow   <- it misses this entirely
+  usual transfer                 PKR 3,200
+  paid before                    Bilal Traders, Imran Shah, Nasreen Akhtar
   the transfer it wants          PKR 50,000 to Zubair Khan, never paid before
   behaviour                      elevated
       - first_time_beneficiary: Zubair Khan has not been paid from this account before
-      - unusually_large: 50,000 is 15.6 times the usual transfer, 3,200
-      - exceeds_balance: 50,000 is more than the 18,424 in the account
+      - unusually_large: 50,000 is 15.6 times the usual transfer from this account, 3,200
+      - exceeds_balance: 50,000 is more than the 18,424 in the account, so it cannot complete as asked
+
+    Words can be rephrased; this cannot. The layer judges the transfer against
+    what the account normally does, and escalates - it asks for the word
+    'confirm' instead of a habitual yes. It does not block, because a first
+    large transfer to a new payee is also what paying a new landlord looks like.
 
   INPUT   that transfer, with a habitual yes and then the real word
+  OUTPUT
   after 'haan'                   action None, step-up required True
   after 'confirm'                executed, action True
+
+  INPUT   the scored test set
+  OUTPUT
+  cases                          140
+  amounts parsed exactly         48/48
+  amounts invented from nothing  0
+  actions correct                30/30
+  asked instead of guessing      10/10
+  replies wrongly read as consent 0
+  ordinary traffic blocked       0/5
+  scams the words miss           4/4
+  of those, escalated anyway     4/4
+  missed by both layers          0/4
+  ordinary transfers escalated   1/5
+  end-to-end properties holding  9/9
+
+  The lexical check still misses all four, and that is still published. What
+  changed is that judging the transfer catches them anyway, at a cost of one
+  ordinary transfer in five also being slowed down - friction, not a refusal.
+  Both halves of that trade are measured, because reporting only the first
+  would be advertising.
 ```
+<!-- io:03:end -->
+
+## What each project is measured on
+
+Every project is scored on a dataset of between **50,000 and one million rows**. Two of
+them are public files that `make data` downloads; five are generated from a seed by code in
+the repo. None of them is committed - at 447 MB that would be absurd - so the repository
+ships the generators, a 200-row sample of each dataset under `data/samples/`, and a
+manifest of row counts and sha256 fingerprints that every README, dashboard and published
+page reads its figures out of.
+
+The small runs stay as they were: `results.json` is reproducible from a seed on any
+machine and CI re-derives it. The at-scale numbers live beside them in
+`results_datasets.json`, committed and not re-derived, because CI cannot download 95 MB of
+Kaggle files.
+
+<!-- datasets:start -->
+| Project | Dataset | Rows | Size | Source |
+| --- | --- | ---: | ---: | --- |
+| 01 | ISO 8583 messages, generated from a seed | 120,120 | 123 MB | generated by projects/p01_switchboard/corpus.py |
+| 02 | Real loan applications with their outcomes | 255,347 | 24 MB | kaggle:nikhil1e9/loan-default |
+| 02 | Real card applications, outcome mostly unknown | 438,557 | 52 MB | kaggle:rikdifos/credit-card-approval-prediction |
+| 02 | Monthly repayment status, joined as a lookup | 1,048,575 | 15 MB | kaggle:rikdifos/credit-card-approval-prediction |
+| 03 | Wallet utterances, labelled by construction | 200,000 | 70 MB | generated by projects/p03_guardian/generator.py |
+| 04 | Wire tasks drawn from the 01 corpus | 60,000 | 30 MB | generated by projects/p04_spec_to_wire/bank.py |
+| 05 | Policies in prose and in the DSL | 60,000 | 114 MB | generated by projects/p05_policy_from_prose/bank.py |
+| 06 | The same set project 03 is scored on | 200,000 | 70 MB | generated by projects/p03_guardian/generator.py |
+| | **distinct rows across the repo** | **2,182,599** | | |
+<!-- datasets:end -->
 
 ## One panel for all six
 

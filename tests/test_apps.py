@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from projects.p01_switchboard.app import app as switchboard
+from projects.p02_policy_bench import cohort
 from projects.p02_policy_bench.app import app as policy_bench
 from projects.p03_guardian.app import app as guardian
 from shared.webkit import App, BackgroundServer
@@ -179,8 +180,13 @@ def test_policy_bench_backtests_and_measures_fairness() -> None:
     status, data = call(policy_bench, "POST", "/api/backtest", {"source": source})
     assert status == 200
     report = data["backtest"]
-    assert report["applications"] == 5000
-    assert report["approvals"] + report["refers"] + report["declines"] == 5000
+    # Pinned to the generator's own size, not to a literal: the cohort was raised to
+    # the repo's 50,000-row floor and a hard-coded 5000 here was the only thing that
+    # noticed.
+    size = len(cohort.generate())
+    assert size == 50_000
+    assert report["applications"] == size
+    assert report["approvals"] + report["refers"] + report["declines"] == size
     assert data["fairness"]["raw_gap"] >= 0
     assert "not a compliance opinion" in data["fairness"]["not_a_verdict"]
 

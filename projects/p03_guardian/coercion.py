@@ -83,6 +83,28 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "fauran",
             "jaldi karo",
             "jaldi bhejo",
+            # The attested spellings of "quickly" that were missing: 29% of generated
+            # urgency scripts went uncaught because they used "fori", "jald" or "abhee"
+            # rather than the three spellings listed above.
+            #
+            # They are listed *with a verb*, not on their own. Adding the bare words took
+            # the catch rate from 0.706 to 0.969 and the false-block rate on ordinary
+            # traffic from 0.021 to 0.123 - one message in eight, because "ammi ko 5000
+            # bhejo, jaldi nahi koi baat nahi" says "no rush" with the word "jaldi" in
+            # it. A hurry is only a signal when it is a hurry to *do* something.
+            "fori bhej",
+            "fori karo",
+            "fori transfer",
+            "jald bhej",
+            "jald karo",
+            "jaldi bhej",
+            "abhee bhej",
+            "abhee karo",
+            "abhi bhej",
+            "abhi transfer",
+            "waqt nahi hai",
+            "der ho jaye gi",
+            "der ho jaye ga",
             "do minute mein",
             "2 minute mein",
             "ek ghante mein",
@@ -103,6 +125,8 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "account bند",
             "account suspend",
             "fir ho",
+            "fir case",
+            "case ho jaye",
             "f.i.r",
             "police",
             "qanooni",
@@ -164,6 +188,21 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "new account number",
             "iban bhejta hoon",
             "jo number main dun",
+            # Added after scoring 6,950 generated redirect scripts, of which this family
+            # named only 30% - and named *none* of them as a redirect. The three
+            # commonest ways of saying it were all missing, and two of them were being
+            # caught as a threat instead, because "purana account band hai" contains
+            # "account band". A scam that is caught under the wrong name is caught by
+            # luck.
+            "account badal",
+            "account change",
+            "doosre account",
+            "dusre account",
+            "doosray account",
+            "purana account band",
+            "naye number pe",
+            "naye number par",
+            "new number pe",
             "اس اکاؤنٹ میں",
         ),
     ),

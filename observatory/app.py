@@ -53,6 +53,7 @@ def meta(_request: Request) -> Response:
                     "port": project.port,
                     "folder": project.folder,
                     "links": project.links(),
+                    "datasets": project.datasets(),
                 }
                 for project in PROJECTS
             ],

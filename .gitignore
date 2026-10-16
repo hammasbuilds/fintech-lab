@@ -12,3 +12,9 @@ build/
 
 # Runtime state of the control panel: which servers are up, and what they printed.
 observatory/state/
+
+# Datasets. The row counts are large enough that the repo ships the generators, the
+# manifest (row counts + sha256) and a small committed sample instead of the bulk.
+# `make data` rebuilds everything here from scratch.
+data/raw/
+data/generated/

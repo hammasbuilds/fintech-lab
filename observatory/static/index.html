@@ -230,6 +230,24 @@ function card(item) {
         + "re-measuring needs a local model." }));
   }
 
+  // What this project is measured on at full size. The row counts come from
+  // data/MANIFEST.json through /api/meta, so a rebuilt dataset cannot leave this line
+  // quoting a size that no longer exists.
+  if (item.datasets && item.datasets.length) {
+    const built = item.datasets.filter((d) => d.built);
+    const rows = built.reduce((total, d) => total + (d.rows || 0), 0);
+    const line = built.length
+      ? rows.toLocaleString() + " rows in " + built.length
+        + (built.length === 1 ? " dataset" : " datasets")
+      : "datasets not built on this machine - run: make data";
+    const wrap = el("p", { class: "mini", style: "margin:6px 0 0" });
+    wrap.append(document.createTextNode("Measured on " + line + ". "));
+    const link = el("a", { href: "http://127.0.0.1:" + item.port + "/datasets",
+      target: "_blank", rel: "noopener", text: "Dataset page" });
+    wrap.append(link);
+    node.append(wrap);
+  }
+
   if (item.headline.length) {
     const figs = el("dl", { class: "figs" });
     for (const figure of item.headline) {

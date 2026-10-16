@@ -150,7 +150,7 @@ def policy_bench() -> None:
     v3 = dsl.compile_policy((policies / "nano_v3_timepriced.policy").read_text(encoding="utf-8"))
     people = cohort.generate()
 
-    print("\n  INPUT   three policy files and 5,000 synthetic borrowers\n")
+    print("\n  INPUT   three policy files and 50,000 synthetic borrowers\n")
     print("  OUTPUT")
     for policy in (v1, v2, v3):
         report, _ = backtest.run(policy, people)
@@ -540,6 +540,125 @@ def model_vs_lexicon() -> None:
     )
 
 
+def datasets() -> None:
+    """What every project is measured on, and the headline from each at-scale run."""
+    import json
+    import pathlib
+
+    from shared import datasets as ds
+
+    heading("", "The datasets", "Between 50,000 and a million rows per project, none of it in git.")
+    manifest = ds.load_manifest()
+    if not manifest:
+        print()
+        print("  not built on this machine; run: make data")
+        return
+
+    order = [
+        ("generated/p01_messages", "01"),
+        ("real/loan_book", "02"),
+        ("real/card_applications", "02"),
+        ("real/card_credit_records", "02"),
+        ("generated/p03_utterances", "03"),
+        ("generated/p04_tasks", "04"),
+        ("generated/p05_policies", "05"),
+    ]
+    print()
+    print("  " + "project  dataset".ljust(38) + "rows".rjust(12) + "size".rjust(10) + "  role")
+    total = 0
+    for key, project in order:
+        entry = manifest.get(key)
+        if not entry:
+            continue
+        total += int(entry["rows"])
+        size = int(entry["bytes"]) / (1024 * 1024)
+        print(
+            f"  {project:<7}  {key:<28}{entry['rows']:>12,}{size:>9,.0f}M"
+            f"  {entry.get('role', 'cohort')}"
+        )
+    print(f"  {'':<7}  {'total':<28}{total:>12,}")
+
+    print()
+    print("  OUTPUT   what each project scores on all of it")
+    print()
+    for folder, label, path, over in (
+        (
+            "p01_switchboard",
+            "01 invariants, false positives",
+            "invariants.flows_with_findings",
+            "invariants.flows_checked",
+        ),
+        (
+            "p01_switchboard",
+            "01 mutants killed by their rule",
+            "mutation.by_intended_rate",
+            "mutation.mutants",
+        ),
+        (
+            "p02_policy_bench",
+            "02 Gini on the real loan book",
+            "loan_book.policies.real_v1_scoregate.discrimination.gini",
+            "loan_book.cohort.rows",
+        ),
+        (
+            "p03_guardian",
+            "03 amounts read exactly",
+            "generated.amounts.exact_rate",
+            "generated.amounts.cases",
+        ),
+        (
+            "p03_guardian",
+            "03 coercion caught",
+            "generated.coercion.catch_rate",
+            "generated.coercion.cases",
+        ),
+        (
+            "p03_guardian",
+            "03 ordinary traffic blocked",
+            "generated.benign.false_block_rate",
+            "generated.benign.cases",
+        ),
+        (
+            "p04_spec_to_wire",
+            "04 codec, wire tasks",
+            "product_on_the_whole_bank.by_family.wire.accuracy",
+            "product_on_the_whole_bank.by_family.wire.cases",
+        ),
+        (
+            "p05_policy_from_prose",
+            "05 policies that round-trip",
+            "language_on_the_whole_bank.round_trip_rate",
+            "language_on_the_whole_bank.policies",
+        ),
+        (
+            "p06_model_vs_lexicon",
+            "06 model's share of the set",
+            "model_on_a_sample.share_of_the_set",
+            "the_same_dataset.rows",
+        ),
+    ):
+        results = pathlib.Path("projects") / folder / "results_datasets.json"
+        if not results.is_file():
+            continue
+        data = json.loads(results.read_text(encoding="utf-8"))
+
+        def dig(payload, dotted):
+            for step in dotted.split("."):
+                if not isinstance(payload, dict) or step not in payload:
+                    return None
+                payload = payload[step]
+            return payload
+
+        value, denominator = dig(data, path), dig(data, over)
+        if value is None:
+            continue
+        shown = (
+            f"{value:,.4f}".rstrip("0").rstrip(".") if isinstance(value, float) else f"{value:,}"
+        )
+        tail = f"   over {denominator:,}" if isinstance(denominator, int) else ""
+        print(f"    {label:<34}{shown:>12}{tail}")
+
+
 DEMOS = {
     "1": switchboard,
     "2": policy_bench,
@@ -547,6 +666,8 @@ DEMOS = {
     "4": spec_to_wire,
     "5": policy_from_prose,
     "6": model_vs_lexicon,
+    # Last, and not numbered: it is about all six rather than one of them.
+    "data": datasets,
 }
 
 
@@ -560,7 +681,7 @@ def main() -> None:
         raise SystemExit(f"unknown demo {unknown}; choose from {', '.join(DEMOS)}")
     print(
         "fintech-lab - six projects, standard library only. 01-03 need no model; "
-        "04-06 read committed results."
+        "04-06 read committed results. Every project is measured on 50,000+ rows."
     )
     for choice in wanted:
         DEMOS[choice]()

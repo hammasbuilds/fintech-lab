@@ -9,7 +9,7 @@ What makes it worth measuring is that **the grade is not "does it look right"**.
 compiled policy can be run, so the grader runs it:
 
 * does it compile at all, and if not, where;
-* does it **behave identically** to the hand-written policy over all 5,000 borrowers -
+* does it **behave identically** to the hand-written policy over all 50,000 borrowers -
   decision for decision, limit for limit;
 * when it differs, on how many borrowers, and in which direction.
 

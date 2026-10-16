@@ -107,7 +107,8 @@ def evaluate(policy: Policy, applicant: dict[str, object]) -> Decision:
     threshold = policy.approve_at or 0.0
     approved = score >= threshold
     limit = _expr(policy.limit, applicant, score) if (policy.limit and approved) else 0.0
-    charges = [_charge(charge, limit) for charge in policy.charges] if approved else []
+    periods = _expr(policy.term_months, applicant, score) if policy.term_months else None
+    charges = [_charge(charge, limit, periods) for charge in policy.charges] if approved else []
 
     if approved:
         reasons = [
@@ -140,13 +141,24 @@ def _round(value: float) -> str:
     return str(int(value)) if float(value).is_integer() else f"{value:.1f}"
 
 
-def _charge(charge: Charge, limit: float) -> dict[str, object]:
+def _charge(charge: Charge, limit: float, periods: float | None = None) -> dict[str, object]:
+    """One charge, in money.
+
+    A charge priced per unit of time is multiplied by ``periods`` when the policy states
+    a term. When it does not - which is every policy written before ``term`` existed -
+    the charge is counted once, exactly as before: inventing a number of months for a
+    policy that never named one would change what those policies are measured to earn.
+    """
     amount = charge.flat if charge.flat is not None else (charge.rate or 0.0) * limit
+    months = periods if (charge.period and periods) else None
+    if months:
+        amount *= months
     return {
         "kind": charge.kind,
         "amount": round(amount, 2),
         "basis": charge.render(),
         "period": charge.period,
+        "periods_charged": round(months, 2) if months else None,
     }
 
 

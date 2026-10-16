@@ -35,6 +35,9 @@ SCALES: dict[str, int] = {
     "thousand": 1_000,
     "hazaar": 1_000,
     "hazar": 1_000,
+    # Attested in the two mined corpora (see projects/p03_guardian/variants.py) and
+    # missing here, so "eight hzar paanch sau" read as five hundred.
+    "hzar": 1_000,
     "hazzar": 1_000,
     "hajar": 1_000,
     "ہزار": 1_000,
@@ -49,34 +52,120 @@ SCALES: dict[str, int] = {
 #: because ``saat``/``saath`` and ``nau``/``nabbay`` are a digit apart in sound and an
 #: order of magnitude apart in money.
 UNITS: dict[str, float] = {
-    "aik": 1, "ek": 1, "ik": 1, "one": 1, "ایک": 1,
-    "do": 2, "two": 2, "دو": 2,
-    "teen": 3, "tin": 3, "three": 3, "تین": 3,
-    "char": 4, "chaar": 4, "four": 4, "چار": 4,
-    "panch": 5, "paanch": 5, "panj": 5, "five": 5, "پانچ": 5,
-    "che": 6, "chay": 6, "chhe": 6, "six": 6, "چھ": 6,
-    "saat": 7, "sat": 7, "seven": 7, "سات": 7,
-    "aath": 8, "ath": 8, "eight": 8, "آٹھ": 8,
-    "nau": 9, "no": 9, "nine": 9, "نو": 9,
-    "das": 10, "dus": 10, "ten": 10, "دس": 10,
-    "gyarah": 11, "gyara": 11, "eleven": 11, "گیارہ": 11,
-    "barah": 12, "bara": 12, "twelve": 12, "بارہ": 12,
-    "terah": 13, "tera": 13, "thirteen": 13, "تیرہ": 13,
-    "chaudah": 14, "chauda": 14, "fourteen": 14, "چودہ": 14,
-    "pandrah": 15, "pandra": 15, "pandhra": 15, "fifteen": 15, "پندرہ": 15,
-    "solah": 16, "sola": 16, "sixteen": 16, "سولہ": 16,
-    "satrah": 17, "satra": 17, "seventeen": 17, "سترہ": 17,
-    "atharah": 18, "athara": 18, "eighteen": 18, "اٹھارہ": 18,
-    "unnees": 19, "unnis": 19, "nineteen": 19, "انیس": 19,
-    "bees": 20, "bis": 20, "twenty": 20, "بیس": 20,
-    "pachees": 25, "pachis": 25, "پچیس": 25,
-    "tees": 30, "tis": 30, "thirty": 30, "تیس": 30,
-    "chalees": 40, "chalis": 40, "forty": 40, "چالیس": 40,
-    "pachaas": 50, "pachas": 50, "fifty": 50, "پچاس": 50,
-    "saath": 60, "sath": 60, "sixty": 60, "ساٹھ": 60,
-    "sattar": 70, "satar": 70, "seventy": 70, "ستر": 70,
-    "assi": 80, "asi": 80, "eighty": 80, "اسی": 80,
-    "nabbay": 90, "nabbe": 90, "ninety": 90, "نوے": 90,
+    "aik": 1,
+    "ek": 1,
+    "ik": 1,
+    "one": 1,
+    "ایک": 1,
+    "do": 2,
+    "two": 2,
+    "دو": 2,
+    "teen": 3,
+    "tin": 3,
+    "three": 3,
+    "تین": 3,
+    "char": 4,
+    "chaar": 4,
+    "four": 4,
+    "چار": 4,
+    "panch": 5,
+    "paanch": 5,
+    "panj": 5,
+    "five": 5,
+    "پانچ": 5,
+    "che": 6,
+    "chay": 6,
+    "chhe": 6,
+    "six": 6,
+    "چھ": 6,
+    "saat": 7,
+    "sat": 7,
+    "seven": 7,
+    "سات": 7,
+    "aath": 8,
+    "ath": 8,
+    "eight": 8,
+    "آٹھ": 8,
+    "nau": 9,
+    "no": 9,
+    "nine": 9,
+    "نو": 9,
+    "das": 10,
+    "dus": 10,
+    "ten": 10,
+    "دس": 10,
+    "gyarah": 11,
+    "gyara": 11,
+    "eleven": 11,
+    "گیارہ": 11,
+    "barah": 12,
+    "bara": 12,
+    "twelve": 12,
+    "بارہ": 12,
+    "terah": 13,
+    "tera": 13,
+    "thirteen": 13,
+    "تیرہ": 13,
+    "chaudah": 14,
+    "chauda": 14,
+    "fourteen": 14,
+    "چودہ": 14,
+    "pandrah": 15,
+    "pandra": 15,
+    "pandhra": 15,
+    "fifteen": 15,
+    "پندرہ": 15,
+    "solah": 16,
+    "sola": 16,
+    "sixteen": 16,
+    "سولہ": 16,
+    "satrah": 17,
+    "satra": 17,
+    "seventeen": 17,
+    "سترہ": 17,
+    "atharah": 18,
+    "athara": 18,
+    "eighteen": 18,
+    "اٹھارہ": 18,
+    "unnees": 19,
+    "unnis": 19,
+    "nineteen": 19,
+    "انیس": 19,
+    "bees": 20,
+    "bis": 20,
+    "twenty": 20,
+    "بیس": 20,
+    "pachees": 25,
+    "pachis": 25,
+    "پچیس": 25,
+    "tees": 30,
+    "tis": 30,
+    "thirty": 30,
+    "تیس": 30,
+    "chalees": 40,
+    "chalis": 40,
+    "forty": 40,
+    "چالیس": 40,
+    "pachaas": 50,
+    "pachas": 50,
+    "fifty": 50,
+    "پچاس": 50,
+    "saath": 60,
+    "sath": 60,
+    "sixty": 60,
+    "ساٹھ": 60,
+    "sattar": 70,
+    "satar": 70,
+    "seventy": 70,
+    "ستر": 70,
+    "assi": 80,
+    "asi": 80,
+    "eighty": 80,
+    "اسی": 80,
+    "nabbay": 90,
+    "nabbe": 90,
+    "ninety": 90,
+    "نوے": 90,
 }
 
 #: Modifiers that attach to the number *after* them. ``base`` is used when the modifier
@@ -97,13 +186,29 @@ MODIFIERS: dict[str, tuple[float, float]] = {
 
 #: Standalone fractional amounts.
 STANDALONE: dict[str, float] = {
-    "dedh": 1.5, "derh": 1.5, "deed": 1.5, "ڈیڑھ": 1.5,
-    "dhai": 2.5, "dhaai": 2.5, "ڈھائی": 2.5,
-    "aadha": 0.5, "adha": 0.5, "half": 0.5, "آدھا": 0.5,
+    "dedh": 1.5,
+    "derh": 1.5,
+    "deed": 1.5,
+    "ڈیڑھ": 1.5,
+    "dhai": 2.5,
+    "dhaai": 2.5,
+    "ڈھائی": 2.5,
+    "aadha": 0.5,
+    "adha": 0.5,
+    "half": 0.5,
+    "آدھا": 0.5,
 }
 
 CURRENCY_WORDS = {
-    "rupay", "rupaye", "rupees", "rupee", "rs", "pkr", "rupya", "روپے", "روپیہ",
+    "rupay",
+    "rupaye",
+    "rupees",
+    "rupee",
+    "rs",
+    "pkr",
+    "rupya",
+    "روپے",
+    "روپیہ",
 }
 
 #: Words that may appear inside an amount phrase without ending it.
@@ -115,11 +220,18 @@ _URDU_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "012345
 #: to be recognised *before* the amount scan rather than filtered by length afterwards:
 #: "0321-4455667" splits on the hyphen into two short runs, and a length rule lets both
 #: of them through as amounts.
+#: The digit guards on the first alternative are load-bearing. Without the lookbehind,
+#: "42000 03461124202 ko bhejo" - an amount followed by the number it goes to, which is
+#: how a great many of these messages are written - matched "000 0346112" starting
+#: *inside* the amount. The reserved span then overlapped the amount, the amount was
+#: dropped, and the assistant reported no amount at all in a sentence that plainly
+#: contains one. It took a generated corpus to notice: every hand-written case in the
+#: shipped test set puts the amount after the number, never before it.
 _NOT_AN_AMOUNT = re.compile(
     r"""
-      0\d{2,3}[\s-]?\d{7}        # 0300 1234567, 0321-4455667
-    | \b\d{10,}\b                # a long bare run: account or reference
-    | \b[A-Z]{2}\d{2}[A-Z0-9]{6,}\b  # IBAN-shaped
+      (?<!\d)0\d{2,3}[\s-]?\d{7}(?!\d)   # 0300 1234567, 0321-4455667
+    | \b\d{10,}\b                        # a long bare run: account or reference
+    | \b[A-Z]{2}\d{2}[A-Z0-9]{6,}\b      # IBAN-shaped
     """,
     re.VERBOSE,
 )
@@ -162,7 +274,7 @@ def find_all(text: str) -> list[Amount]:
     reserved = [(m.start(), m.end()) for m in _NOT_AN_AMOUNT.finditer(folded)]
     found: list[Amount] = []
     found += _digit_amounts(folded)
-    found += _word_amounts(folded)
+    found += _word_amounts(folded, reserved)
     found = [
         amount
         for amount in found
@@ -175,7 +287,9 @@ def find_all(text: str) -> list[Amount]:
     for amount in found:
         if any(amount.start >= other.start and amount.end <= other.end for other in kept):
             continue
-        kept = [other for other in kept if not (other.start >= amount.start and other.end <= amount.end)]
+        kept = [
+            other for other in kept if not (other.start >= amount.start and other.end <= amount.end)
+        ]
         kept.append(amount)
     kept.sort(key=lambda amount: amount.start)
     return kept
@@ -209,14 +323,30 @@ def _digit_amounts(text: str) -> list[Amount]:
     return out
 
 
-def _word_amounts(text: str) -> list[Amount]:
-    """Scan word runs, building a value whenever a scale or standalone word appears."""
+def _word_amounts(text: str, reserved: list[tuple[int, int]] | None = None) -> list[Amount]:
+    """Scan word runs, building a value whenever a scale or standalone word appears.
+
+    ``reserved`` are the spans that are known not to be amounts - mobile numbers,
+    account numbers, IBANs. They have to be withheld from the token list rather than
+    filtered out of the result, because this scanner *joins* adjacent number tokens: in
+    "teen karor 03074061991 ko bhejo" it read the phone number as the continuation of
+    the amount and produced 3,104,061,991. Dropping that afterwards for overlapping a
+    reserved span threw away the real 30,000,000 along with it, so the sentence came
+    back with no amount at all. Now the digits are never offered to the scanner.
+    """
+    reserved = reserved or []
+
+    def is_reserved(start: int, end: int) -> bool:
+        return any(start < stop and end > begin for begin, stop in reserved)
+
     tokens: list[tuple[str, int, int]] = []
     for match in _WORD.finditer(text):
-        tokens.append((match.group(0).lower(), match.start(), match.end()))
+        if not is_reserved(match.start(), match.end()):
+            tokens.append((match.group(0).lower(), match.start(), match.end()))
     # Digits can be the number in front of a scale word: "15 hazaar".
     for match in _PLAIN.finditer(text):
-        tokens.append((match.group(1).replace(",", ""), match.start(), match.end()))
+        if not is_reserved(match.start(), match.end()):
+            tokens.append((match.group(1).replace(",", ""), match.start(), match.end()))
     tokens.sort(key=lambda item: item[1])
 
     out: list[Amount] = []
@@ -240,9 +370,7 @@ def _starts_amount(token: str) -> bool:
     return token in UNITS or token in MODIFIERS or token in STANDALONE or token.isdigit()
 
 
-def _consume(
-    tokens: list[tuple[str, int, int]], index: int
-) -> tuple[float | None, int, bool]:
+def _consume(tokens: list[tuple[str, int, int]], index: int) -> tuple[float | None, int, bool]:
     """Read one amount phrase starting at ``index``.
 
     Returns the value, how many tokens it used, and whether a scale word was involved -
@@ -292,7 +420,9 @@ def _consume(
             if pending is not None:
                 number += pending
                 pending = None
-            current = number if current is None or current in (1.25, 0.5, 0.75) else current + number
+            current = (
+                number if current is None or current in (1.25, 0.5, 0.75) else current + number
+            )
             position += 1
             last_useful = position - 1
             continue

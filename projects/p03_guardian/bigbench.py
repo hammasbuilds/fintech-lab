@@ -162,14 +162,23 @@ def _score_structuring(legs: list[dict]) -> dict[str, object]:
 
 
 def _score_threads(turns: dict[str, list[dict]]) -> dict[str, object]:
-    """Replay whole conversations through the session, not one sentence at a time."""
+    """Replay whole conversations through the session, not one sentence at a time.
+
+    Whether a conversation *can* end in a transfer is part of the gold. A thread about
+    somebody who is not in the contact book cannot, and counting that as a failure to
+    complete would mark the assistant down for refusing to pay a stranger.
+    """
     from .confirm import Session, State
 
     completed = 0
-    asked_for_a_stronger_word = 0
-    executed_when_it_should = 0
-    executed_when_it_should_not = 0
+    handled = 0
+    executed_after_yes = 0
+    executed_after_no = 0
+    asked_to_strengthen = 0
     unfinished = 0
+    correctly_refused_unknown = 0
+    correctly_stopped = 0
+    by_shape: dict[str, dict[str, int]] = {}
     examples: list[dict[str, object]] = []
 
     for name, rows in sorted(turns.items()):
@@ -179,59 +188,90 @@ def _score_threads(turns: dict[str, list[dict]]) -> dict[str, object]:
         # turn one with "that name is not in your contacts" - a defect in this harness
         # that looked like a defect in the product.
         session = Session(contacts=CONTACTS)
-        said_yes = bool(rows[-1].get("recipe", {}).get("affirmative"))
+        recipe = rows[-1].get("recipe", {}) or {}
+        shape = str(recipe.get("shape", "plain"))
+        should_complete = bool(recipe.get("completes"))
+        said_yes = bool(recipe.get("affirmative"))
+
         for row in rows:
             session.handle(str(row["text"]))
         completed += 1
         executed = session.state is State.EXECUTED
         # A transfer the behavioural layer escalated needs the stronger word, and a plain
-        # "haan" is correctly refused. That is the product working, not a thread failing,
-        # so it is counted on its own rather than as a miss.
+        # "haan" is correctly refused. That is the product working, not a thread failing.
         stepped_up = bool(getattr(session, "stepped_up", False)) and not executed
-        if said_yes and executed:
-            executed_when_it_should += 1
-        elif not said_yes and executed:
-            executed_when_it_should_not += 1
-        elif said_yes and stepped_up:
-            asked_for_a_stronger_word += 1
-        elif said_yes and not executed:
+
+        if executed and not should_complete:
+            outcome = "executed_when_it_should_not"
+            executed_after_no += 1
+        elif not should_complete:
+            # Two different right answers, and lumping them together mislabelled every
+            # "no" as a refusal over an unknown payee.
+            if said_yes:
+                outcome = "correctly_refused_unknown_payee"
+                correctly_refused_unknown += 1
+            else:
+                outcome = "correctly_stopped_on_a_no"
+                correctly_stopped += 1
+            handled += 1
+        elif executed:
+            outcome = "executed_after_a_yes"
+            executed_after_yes += 1
+            handled += 1
+        elif stepped_up:
+            outcome = "asked_to_strengthen"
+            asked_to_strengthen += 1
+            handled += 1
+        else:
+            outcome = "a_yes_that_did_not_execute"
             unfinished += 1
             if len(examples) < 20:
                 examples.append(
                     {
                         "thread": name,
+                        "shape": shape,
                         "turns": [row["text"] for row in rows],
                         "ended_in": str(session.state),
                     }
                 )
 
+        tally = by_shape.setdefault(shape, {"threads": 0, "handled": 0})
+        tally["threads"] += 1
+        tally["handled"] += int(
+            outcome != "a_yes_that_did_not_execute" and outcome != "executed_when_it_should_not"
+        )
+
+    yes_threads = executed_after_yes + asked_to_strengthen + unfinished
     return {
         "threads": completed,
-        "executed_after_a_yes": executed_when_it_should,
-        "executed_after_a_no": executed_when_it_should_not,
+        "executed_after_a_yes": executed_after_yes,
+        "executed_after_a_no": executed_after_no,
         "a_yes_that_did_not_execute": unfinished,
-        "a_yes_the_layer_asked_to_strengthen": asked_for_a_stronger_word,
-        "completion_rate": round(executed_when_it_should / completed, 4) if completed else None,
-        "handled_correctly_rate": (
-            round(
-                (
-                    executed_when_it_should
-                    + asked_for_a_stronger_word
-                    + (completed - executed_when_it_should - asked_for_a_stronger_word - unfinished)
-                )
-                / completed,
-                4,
-            )
-            if completed
-            else None
-        ),
+        "a_yes_the_layer_asked_to_strengthen": asked_to_strengthen,
+        "correctly_refused_because_the_payee_is_unknown": correctly_refused_unknown,
+        "correctly_stopped_because_the_reply_was_no": correctly_stopped,
+        # Of the threads that could complete and said yes, how many did.
+        "completion_rate": round(executed_after_yes / yes_threads, 4) if yes_threads else None,
+        # Counted while deciding each thread, not derived afterwards by subtracting three
+        # tallies from the total - which is the arithmetic that quietly double-counts.
+        "handled_correctly": handled,
+        "handled_correctly_rate": round(handled / completed, 4) if completed else None,
+        "by_shape": {
+            name: {
+                **entry,
+                "handled_rate": round(entry["handled"] / entry["threads"], 4)
+                if entry["threads"]
+                else None,
+            }
+            for name, entry in sorted(by_shape.items())
+        },
         "examples_of_a_yes_that_did_not_execute": examples,
         "reading": (
             "executed_after_a_no is the number that has to be zero: it would mean a "
-            "refusal was read as consent. A yes the layer asked to strengthen is the "
-            "step-up working, not a failure. A yes that does not execute and was not "
-            "stepped up is the real miss, and the three are counted apart because they "
-            "are three different things."
+            "refusal, or a payee the book does not have, was read as consent. A yes the "
+            "layer asked to strengthen is the step-up working. A yes that did not execute "
+            "and was not stepped up is the real miss, and by_shape says which kind of "
+            "conversation it was."
         ),
     }
 

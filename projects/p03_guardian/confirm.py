@@ -24,6 +24,7 @@ looks like. Words that only occur in a script block; unusual behaviour slows thi
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -65,6 +66,21 @@ AFFIRMATIVE = {
     "send it",
     "go ahead",
     "bilkul",
+    # Compound forms. The set is closed on purpose - nothing outside it counts as consent -
+    # and it was missing the commonest way of saying yes to a transfer in Roman Urdu. Over
+    # 1,667 generated conversations, 71 ended with "haan bhej do" and were read as neither
+    # a yes nor a no, which is a refusal to act on an unmistakable instruction. Each of
+    # these is a yes *and* the verb; none is ambiguous.
+    "haan bhej do",
+    "haan bhejo",
+    "haan bhej dein",
+    "ji haan bhej do",
+    "haan karo",
+    "theek hai bhej do",
+    "ok bhej do",
+    "yes send",
+    "yes send it",
+    "ہاں بھیج دو",
     "ہاں",
     "جی ہاں",
     "ٹھیک ہے",
@@ -169,6 +185,9 @@ class Session:
             filled = self._fill_the_gap(text)
             if filled is not None:
                 return filled
+            kept = self._keep_waiting(text)
+            if kept is not None:
+                return kept
 
         if assessment.verdict == coercion.BLOCK:
             self.state = State.BLOCKED
@@ -248,6 +267,75 @@ class Session:
             "action": None,
         }
 
+    #: Ways of saying "the Nth one", in the two languages this assistant speaks. Only
+    #: reachable while a candidate list is on screen, so there is nothing for an ordinal
+    #: to point at by accident.
+    ORDINALS = {
+        "pehla": 0,
+        "pehla wala": 0,
+        "pehle wala": 0,
+        "first": 0,
+        "1": 0,
+        "ek": 0,
+        "doosra": 1,
+        "doosra wala": 1,
+        "dusra": 1,
+        "dusra wala": 1,
+        "second": 1,
+        "2": 1,
+        "teesra": 2,
+        "teesra wala": 2,
+        "tisra": 2,
+        "third": 2,
+        "3": 2,
+        "chautha": 3,
+        "fourth": 3,
+        "4": 3,
+        "aakhri": -1,
+        "akhri": -1,
+        "last": -1,
+        "aakhri wala": -1,
+    }
+
+    def _choose_from_candidates(self, text: str, pending: nlu.Utterance) -> nlu.Contact | None:
+        """Read "the first one", "the HBL one" or "...7725" as a pick from the list.
+
+        Narrow on purpose. It only runs while a candidate list has been offered, it only
+        accepts an answer that picks exactly one of them, and it never guesses: two banks
+        called HBL in the list means the answer was not an answer, and the question is
+        asked again.
+        """
+        candidates = list(pending.candidates) or list(pending.near_misses)
+        if not candidates:
+            return None
+        cleaned = numerals.normalise(text).strip().lower().strip(".!?,")
+
+        index = self.ORDINALS.get(cleaned)
+        if index is None:
+            # "jo pehla hai", "pehla wala hi" - the ordinal with words around it.
+            for word, position in self.ORDINALS.items():
+                if word.isdigit():
+                    continue
+                if re.search(rf"\b{re.escape(word)}\b", cleaned):
+                    index = position
+                    break
+        if index is not None and -len(candidates) <= index < len(candidates):
+            return candidates[index]
+
+        by_bank = [
+            contact
+            for contact in candidates
+            if re.search(rf"\b{re.escape(contact.bank.lower())}\b", cleaned)
+        ]
+        if len(by_bank) == 1:
+            return by_bank[0]
+
+        digits = re.findall(r"\d{4}", cleaned)
+        by_tail = [contact for contact in candidates if contact.account_tail in digits]
+        if len(by_tail) == 1:
+            return by_tail[0]
+        return None
+
     # -- answering the question that was just asked --
     def _fill_the_gap(self, text: str) -> dict[str, object] | None:
         """Read ``text`` as an answer to the pending question, or decline to.
@@ -267,9 +355,21 @@ class Session:
 
         if issue in {nlu.NO_BENEFICIARY, nlu.AMBIGUOUS_BENEFICIARY, nlu.UNKNOWN_BENEFICIARY}:
             resolution = nlu.resolve_beneficiary(text, self.contacts)
-            if resolution.contact is None:
+            contact = resolution.contact
+            if contact is None:
+                # The question was "which one?" and it listed the candidates with their
+                # banks and account tails. A person answers that with "the first one" or
+                # "the HBL one", and neither is a name, so the resolver above cannot see
+                # it: 381 of 1,667 generated conversations died on exactly this turn.
+                contact = self._choose_from_candidates(text, pending)
+            if contact is None:
                 return None
-            pending.beneficiary = resolution.contact
+            # Rebuilt rather than mutated: the resolver's own reply said no single
+            # contact matched, and this is a different answer to a different question.
+            resolution = nlu.Resolution(
+                contact=contact, candidates=[], mention=text.strip(), issues=[]
+            )
+            pending.beneficiary = contact
             pending.beneficiary_mention = text.strip()
             pending.candidates = []
             pending.issues = [
@@ -284,7 +384,7 @@ class Session:
             ]
             self.ledger.append(
                 "gap_filled",
-                {"issue": issue, "answer": text, "beneficiary": resolution.contact.name},
+                {"issue": issue, "answer": text, "beneficiary": contact.name},
             )
         elif issue == nlu.NO_AMOUNT:
             amounts = numerals.find_all(text)
@@ -338,6 +438,38 @@ class Session:
             "utterance": pending.as_dict(),
             "assessment": assessment.as_dict(),
             "behaviour": conduct.as_dict(),
+            "action": None,
+        }
+
+    def _keep_waiting(self, text: str) -> dict[str, object] | None:
+        """Hold the pending request when the reply is neither an answer nor a new order.
+
+        "koi bhi" ("any of them") answers nothing, and the session used to parse it as a
+        fresh instruction, find no intent in it, and **drop the transfer** - so the user's
+        whole request was gone and the assistant asked what they wanted to do. Only a
+        message that is recognisably a new instruction should replace a pending one.
+        """
+        pending = self.pending
+        if pending is None or not pending.issues:
+            return None
+        fresh = nlu.parse(text, self.contacts)
+        if fresh.intent != nlu.UNKNOWN:
+            return None  # a real instruction: let it take over
+        question = nlu.question(pending.issues[0], self.language)
+        extra = self._candidate_list(pending)
+        reply = self.say(
+            "I did not understand that as an answer.  "
+            + question
+            + (("  " + extra) if extra else "")
+        )
+        self.ledger.append(
+            "answer_not_understood", {"text": text, "still_asking": pending.issues[0]}
+        )
+        return {
+            "state": self.state.value,
+            "reply": reply.text,
+            "asking": pending.issues[0],
+            "utterance": pending.as_dict(),
             "action": None,
         }
 

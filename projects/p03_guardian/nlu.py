@@ -342,15 +342,46 @@ def resolve_beneficiary(text: str, contacts: tuple[Contact, ...] = CONTACTS) -> 
     folded = numerals.normalise(text)
     lowered = folded.lower()
 
-    # 1. A full name present in the text wins outright.
+    # The amount's own words are not available to be read as a name.
+    #
+    # "Okonkwo ko char sau send" - four hundred to somebody not in the book - resolved to
+    # **Charlotte Hughes**, because step 3 below takes any word of three letters or more
+    # that prefixes a contact name, and "char" prefixes "Charlotte". The confirmation then
+    # read back the wrong payee, and a user who says "theek hai" to it has paid a stranger.
+    # Generated multi-turn conversations found it; no hand-written case had a number word
+    # that collided with a contact.
+    #
+    # The amount parser already reports where each amount sits, so the span it claimed is
+    # withheld here - the same reserved-span idea that stopped the amount parser reading a
+    # phone number as money.
+    reserved = [(amount.start, amount.end) for amount in numerals.find_all(folded)]
+
+    def claimed(start: int, end: int) -> bool:
+        return any(start < stop and end > begin for begin, stop in reserved)
+
+    # 1. A full name present in the text wins outright. A full name is specific enough
+    #    that an overlap with an amount would be a coincidence worth honouring, so this
+    #    step is left alone.
     full = [c for c in contacts if c.name.lower() in lowered]
     if len(full) == 1:
         return Resolution(full[0], full, full[0].name, [])
     if len(full) > 1:
+        # One name inside another is not an ambiguity. "Chen Wei Ltd ko bhejo" matches the
+        # company *and* the person called Chen Wei, and the longer name is what the text
+        # actually says - so the specific one wins. Two unrelated names in one sentence
+        # stay ambiguous, which is what the next branch is for.
+        longest = max(full, key=lambda contact: len(contact.name))
+        others = [contact for contact in full if contact is not longest]
+        if all(contact.name.lower() in longest.name.lower() for contact in others):
+            return Resolution(longest, [longest], longest.name, [])
         return Resolution(None, full, ", ".join(c.name for c in full), [AMBIGUOUS_BENEFICIARY])
 
     # 2. Otherwise match whole words in the text against first names.
-    words = {match.group(0).lower(): match.group(0) for match in _WORD.finditer(folded)}
+    words = {
+        match.group(0).lower(): match.group(0)
+        for match in _WORD.finditer(folded)
+        if not claimed(match.start(), match.end())
+    }
     by_first: list[Contact] = [c for c in contacts if c.first_name.lower() in words]
     if len(by_first) == 1:
         chosen = by_first[0]

@@ -404,21 +404,45 @@ def section_03() -> list[str]:
             (
                 "whole conversations handled correctly",
                 num(dig(data, "generated.threads.handled_correctly_rate")),
-                f"{num(dig(data, 'generated.threads.threads'))} threads, "
-                f"{num(dig(data, 'generated.threads.executed_after_a_no'))} executed after a no",
+                f"{num(dig(data, 'generated.threads.threads'))} threads: "
+                f"{num(dig(data, 'generated.threads.executed_after_a_yes'))} executed on a "
+                f"yes, {num(dig(data, 'generated.threads.a_yes_the_layer_asked_to_strengthen'))} "
+                f"asked to strengthen it, "
+                f"{num(dig(data, 'generated.threads.correctly_stopped_because_the_reply_was_no'))} "
+                f"stopped on a no, "
+                f"{num(dig(data, 'generated.threads.correctly_refused_because_the_payee_is_unknown'))} "
+                f"refused an unknown payee, and "
+                f"{num(dig(data, 'generated.threads.executed_after_a_no'))} executed when they "
+                f"should not",
             ),
         ],
         ("The dimensions added this round", "Result", "Over"),
     )
     lines += [
         "",
-        "Two of those rows were zero before the work in this round. Splits spread over "
-        "several days never came near the daily cap and the layer had no monthly view, so "
-        "527 of them went entirely unnoticed; with a monthly signal they are caught 0.987 "
-        "of the time and the false-block rate on ordinary traffic is unchanged. And a "
-        "conversation where the assistant asked which payee was meant could not read the "
-        "answer - 53 of 1,667 threads completed - because the session parsed every reply "
-        "as a fresh instruction.",
+        "The conversation row is 1.0000 and the breakdown beside it is why that is a "
+        "measurement rather than a flattering total: every one of the 2,143 threads lands "
+        "in a named outcome, and the one that has to be zero - a transfer that ran after a "
+        "refusal or for a payee the book does not have - is zero. It started this round at "
+        "0.729, and five defects separate the two numbers: three in the product (a "
+        'compound "haan bhej do" was read as neither yes nor no; "which one?" could '
+        "not be answered by position, bank or account tail; and a non-answer dropped the "
+        "whole pending transfer) and two of mine in the generator (a fourth turn that "
+        "arrived after the transfer had already run, and an answer-by-bank that did not "
+        "pick out one candidate).",
+        "",
+        'The worst of those was found on the way: **"Okonkwo ko char sau send" paid '
+        'Charlotte Hughes.** "char sau" is four hundred, "char" prefixes '
+        '"Charlotte", and the resolver took any word of three letters or more that '
+        "prefixed a contact name - so the read-back named the wrong payee and a user who "
+        'says "theek hai" to it has paid a stranger. The amount parser already reports '
+        "where each amount sits, so its span is now withheld from name matching.",
+        "",
+        "The splits row was zero before the work in this round: a split spread over "
+        "several days never comes near the daily cap and the layer had no monthly view, "
+        "so 527 of them went entirely unnoticed. With a monthly signal they are caught "
+        "0.987 of the time, and the false-block rate on ordinary traffic is unchanged at "
+        "0.0211 - which is the half of that trade worth checking.",
     ]
 
     families = dig(data, "generated.coercion.by_family", {}) or {}

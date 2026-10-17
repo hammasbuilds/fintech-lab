@@ -192,17 +192,17 @@ as the parser. Build it with `make data` and run it with `make big03`.
 
 | At full size | Result | Over |
 | --- | ---: | --- |
-| amounts read exactly | **0.9943** | 141,882 cases carrying an amount |
+| amounts read exactly | **0.9943** | 142,358 cases carrying an amount |
 | amounts not found at all | **0** | same cases |
 | amounts wrong by ten times or more | **0** | same cases |
-| intent accuracy | **0.9759** | 146,667 cases with an intent |
-| payees resolved | **0.9263** | 77,275 naming one contact |
-| asked instead of guessing | **0.9899** | 32,401 ambiguous cases |
+| intent accuracy | **0.976** | 147,143 cases with an intent |
+| payees resolved | **0.9412** | 76,438 naming one contact |
+| asked instead of guessing | **0.9985** | 33,641 ambiguous cases |
 | coercion caught, families it knows | **0.9857** | the twelve families in the product's own vocabulary |
 | coercion caught, types it does not know | **0.0817** | job offers, QR swaps, SIM swaps, refund overpayment |
 | coercion caught, everything together | **0.8744** | 45,000 scam scripts; the blend of the two rows above |
 | ordinary traffic blocked | **0.0211** | 25,000 ordinary messages |
-| confirmations read correctly | **0.8992** | 5,000 replies |
+| confirmations read correctly | **1** | 5,000 replies |
 
 | The dimensions added this round | Result | Over |
 | --- | ---: | --- |
@@ -212,9 +212,13 @@ as the parser. Build it with `make data` and run it with `make big03`.
 | Urdu script, Arabic codepoints | **1** | the same sentences, pasted from elsewhere - identical to the row above, which is the point of folding the codepoints |
 | splits across one day | **1** | 514 splits |
 | splits across several days | **0.9867** | 527 splits |
-| whole conversations handled correctly | **0.7289** | 1,667 threads, 0 executed after a no |
+| whole conversations handled correctly | **1** | 2,143 threads: 591 executed on a yes, 440 asked to strengthen it, 592 stopped on a no, 520 refused an unknown payee, and 0 executed when they should not |
 
-Two of those rows were zero before the work in this round. Splits spread over several days never came near the daily cap and the layer had no monthly view, so 527 of them went entirely unnoticed; with a monthly signal they are caught 0.987 of the time and the false-block rate on ordinary traffic is unchanged. And a conversation where the assistant asked which payee was meant could not read the answer - 53 of 1,667 threads completed - because the session parsed every reply as a fresh instruction.
+The conversation row is 1.0000 and the breakdown beside it is why that is a measurement rather than a flattering total: every one of the 2,143 threads lands in a named outcome, and the one that has to be zero - a transfer that ran after a refusal or for a payee the book does not have - is zero. It started this round at 0.729, and five defects separate the two numbers: three in the product (a compound "haan bhej do" was read as neither yes nor no; "which one?" could not be answered by position, bank or account tail; and a non-answer dropped the whole pending transfer) and two of mine in the generator (a fourth turn that arrived after the transfer had already run, and an answer-by-bank that did not pick out one candidate).
+
+The worst of those was found on the way: **"Okonkwo ko char sau send" paid Charlotte Hughes.** "char sau" is four hundred, "char" prefixes "Charlotte", and the resolver took any word of three letters or more that prefixed a contact name - so the read-back named the wrong payee and a user who says "theek hai" to it has paid a stranger. The amount parser already reports where each amount sits, so its span is now withheld from name matching.
+
+The splits row was zero before the work in this round: a split spread over several days never comes near the daily cap and the layer had no monthly view, so 527 of them went entirely unnoticed. With a monthly signal they are caught 0.987 of the time, and the false-block rate on ordinary traffic is unchanged at 0.0211 - which is the half of that trade worth checking.
 
 | Coercion family | Caught | Named correctly | Scripts |
 | --- | ---: | ---: | ---: |

@@ -409,7 +409,7 @@ make ui         # every page's script parses, and every field a renderer reads i
 make ui-smoke   # opens all five in headless Chrome, clicks through the panels, fails on an
                 # empty one or a console error. Needs Node and Chrome, and says so when they
                 # are missing rather than skipping quietly.
-make test       # 700 tests, including the parse and contract checks above
+make test       # 708 tests, including the parse and contract checks above
 ```
 
 The browser pass earns its keep. It found four real defects the Python suite could not see,

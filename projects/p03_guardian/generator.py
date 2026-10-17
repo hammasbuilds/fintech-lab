@@ -949,71 +949,6 @@ def structuring_case(index: int, rng: random.Random) -> Case:
     )
 
 
-THREAD_SHAPES = (
-    ("{payee} ko {amount} {send} {do}", "request"),
-    ("{reply}", "answer"),
-    ("{confirm}", "confirmation"),
-)
-
-
-def thread_case(index: int, rng: random.Random) -> Case:
-    """One turn of a conversation, with the thread it belongs to.
-
-    A wallet conversation is a sequence - a request, a question about the payee, an
-    answer, a confirmation - and the confirmation spine is built for exactly that. The
-    set tested it one sentence at a time.
-    """
-    turns = 3
-    thread = index // turns
-    turn = index % turns
-    rng = random.Random(f"{SEED}-thread-{thread}")
-    amount = render_amount(rng)
-    slots = _slots(rng)
-    mention, payee, resolution = _payee_mention(rng)
-    affirmative = rng.random() < 0.72
-
-    if turn == 0:
-        text = f"{mention} ko {amount.text} {slots['send']} {slots['do']}".strip()
-        return Case(
-            id=f"thr-{index}",
-            family="thread",
-            text=text,
-            language="roman_urdu",
-            gold_amount=amount.value,
-            gold_intent="send_money",
-            gold_payee=payee,
-            gold_resolution=resolution,
-            thread_id=f"thr-{thread}",
-            turn=1,
-            recipe={"shape": "request", "style": amount.style, "mention": mention},
-        )
-    if turn == 1:
-        # The answer to "which of these did you mean", or a restatement.
-        text = payee.split()[0] if payee else rng.choice(("pehla wala", "jo HBL wala hai"))
-        return Case(
-            id=f"thr-{index}",
-            family="thread",
-            text=text,
-            language="roman_urdu",
-            gold_payee=payee,
-            gold_resolution="resolved" if payee else "ask",
-            thread_id=f"thr-{thread}",
-            turn=2,
-            recipe={"shape": "answer", "style": "-"},
-        )
-    text, says_yes = rng.choice([pair for pair in REPLIES if pair[1] == affirmative])
-    return Case(
-        id=f"thr-{index}",
-        family="thread",
-        text=text,
-        language="roman_urdu",
-        gold_intent="affirmative" if says_yes else "negative",
-        thread_id=f"thr-{thread}",
-        turn=3,
-        recipe={"shape": "confirmation", "affirmative": says_yes, "style": "-"},
-    )
-
-
 def benign_case(index: int, rng: random.Random) -> Case:
     slots = _slots(rng)
     amount = render_amount(rng)
@@ -1039,6 +974,173 @@ def benign_case(index: int, rng: random.Random) -> Case:
             "mention": mention,
             "names_a_payee": names_a_payee,
             "style": amount.style,
+        },
+    )
+
+
+#: Whether a thread can end in a transfer at all, which is part of the gold rather than
+#: something to be inferred. A conversation about a payee who is not in the contact book
+#: cannot complete, and scoring it as a failure to complete would be marking the assistant
+#: down for refusing to pay a stranger.
+THREAD_SHAPES = ("plain", "clarify", "unknown_payee")
+
+
+def thread_case(index: int, rng: random.Random) -> Case:
+    """One turn of a conversation, with the thread it belongs to.
+
+    Three shapes, because three things happen in life:
+
+    ``plain``          a complete request, then a yes. Two turns.
+    ``clarify``        a request naming someone ambiguous, the assistant asks which, an
+                       answer - by ordinal, bank or account tail, which is how people
+                       answer - and then a yes. Four turns.
+    ``unknown_payee``  a request naming somebody who is not in the book. It **cannot**
+                       complete, and the gold says so.
+    """
+    del rng
+    # Three turns for a clarification, not four. A fourth turn was a second confirmation
+    # word, which arrives *after* the transfer has already executed and is then read as a
+    # fresh instruction - so the thread ended in needs_information and the scorer counted
+    # a completed conversation as a miss. The step-up case needs no extra turn: the
+    # scorer already treats "the layer asked for a stronger word" as handled.
+    turns_for = {"plain": 2, "clarify": 3, "unknown_payee": 2}
+    # The shape is fixed by the thread, not drawn per turn, so every turn of a thread
+    # agrees about what conversation it is in.
+    plan: list[tuple[int, int, str]] = []
+    thread = 0
+    while len(plan) <= index:
+        shape = THREAD_SHAPES[thread % len(THREAD_SHAPES)]
+        for turn in range(turns_for[shape]):
+            plan.append((thread, turn, shape))
+        thread += 1
+    thread, turn, shape = plan[index]
+
+    rng = random.Random(f"{SEED}-thread-{thread}")
+    amount = render_amount(rng)
+    slots = _slots(rng)
+    affirmative = rng.random() < 0.72
+    yes_word, says_yes = rng.choice([pair for pair in REPLIES if pair[1] == affirmative])
+
+    if shape == "clarify":
+        shared = sorted(name for name, holders in FIRST_NAMES.items() if len(holders) > 1)
+        first = rng.choice(shared)
+        holders = FIRST_NAMES[first]
+        pick = rng.randrange(len(holders))
+        payee = holders[pick]
+        mention = first.capitalize()
+        # How the answer is given: by position, by bank, or by the account's last four.
+        contact = next(item for item in BOOK if item.name == payee)
+        # Answering "which one?" by bank only works when that bank picks out exactly one
+        # of the candidates. Both Imrans are at JS Bank, so "jo JS Bank wala hai" is not
+        # an answer - and the product is right to refuse to guess. Generating it anyway
+        # produced 53 conversations that counted as product misses and were mine.
+        same_first = [item for item in BOOK if item.name.split()[0] == payee.split()[0]]
+        banks = [item.bank for item in same_first]
+        kinds = ["ordinal", "tail"]
+        if banks.count(contact.bank) == 1:
+            kinds.append("bank")
+        answer_kind = rng.choice(kinds)
+        answer = {
+            "ordinal": ("pehla wala", "doosra", "teesra", "chautha")[min(pick, 3)],
+            "bank": f"jo {contact.bank} wala hai",
+            "tail": contact.last4,
+        }[answer_kind]
+        turns = [
+            (f"{mention} ko {amount.text} {slots['send']}", "request"),
+            (answer, "answer"),
+            (yes_word, "confirmation"),
+        ]
+        text, role = turns[turn]
+        return Case(
+            id=f"thr-{index}",
+            family="thread",
+            text=" ".join(text.split()),
+            language="roman_urdu",
+            gold_amount=amount.value if role == "request" else None,
+            gold_intent=(
+                "send_money"
+                if role == "request"
+                else ("affirmative" if says_yes else "negative")
+                if role == "confirmation"
+                else None
+            ),
+            gold_payee=payee if role in {"request", "answer"} else None,
+            gold_resolution="ask" if role == "request" else "resolved",
+            thread_id=f"thr-{thread}",
+            turn=turn + 1,
+            recipe={
+                "shape": shape,
+                "role": role,
+                "style": amount.style if role == "request" else "-",
+                "mention": mention,
+                "answer_kind": answer_kind if role == "answer" else "",
+                "affirmative": says_yes,
+                "completes": says_yes,
+                "turns": len(turns),
+            },
+        )
+
+    if shape == "unknown_payee":
+        stranger = rng.choice(("Hamza", "Sadia", "Wei Lin", "Okonkwo", "Berenice"))
+        turns = [
+            (f"{stranger} ko {amount.text} {slots['send']}", "request"),
+            (yes_word, "confirmation"),
+        ]
+        text, role = turns[turn]
+        return Case(
+            id=f"thr-{index}",
+            family="thread",
+            text=" ".join(text.split()),
+            language="roman_urdu",
+            gold_amount=amount.value if role == "request" else None,
+            gold_intent=(
+                "send_money" if role == "request" else ("affirmative" if says_yes else "negative")
+            ),
+            gold_payee=None,
+            gold_resolution="ask",
+            thread_id=f"thr-{thread}",
+            turn=turn + 1,
+            recipe={
+                "shape": shape,
+                "role": role,
+                "style": amount.style if role == "request" else "-",
+                "mention": stranger,
+                "affirmative": says_yes,
+                # It cannot complete, and that is correct: the payee is not in the book.
+                "completes": False,
+                "turns": len(turns),
+            },
+        )
+
+    mention, payee, resolution = _payee_mention(rng)
+    while payee is None:
+        mention, payee, resolution = _payee_mention(rng)
+    turns = [
+        (f"{mention} ko {amount.text} {slots['send']}", "request"),
+        (yes_word, "confirmation"),
+    ]
+    text, role = turns[turn]
+    return Case(
+        id=f"thr-{index}",
+        family="thread",
+        text=" ".join(text.split()),
+        language="roman_urdu",
+        gold_amount=amount.value if role == "request" else None,
+        gold_intent=(
+            "send_money" if role == "request" else ("affirmative" if says_yes else "negative")
+        ),
+        gold_payee=payee if role == "request" else None,
+        gold_resolution=resolution if role == "request" else "resolved",
+        thread_id=f"thr-{thread}",
+        turn=turn + 1,
+        recipe={
+            "shape": shape,
+            "role": role,
+            "style": amount.style if role == "request" else "-",
+            "mention": mention,
+            "affirmative": says_yes,
+            "completes": says_yes,
+            "turns": len(turns),
         },
     )
 

@@ -36,6 +36,60 @@ def _data() -> dict:
     return measure(live=False)
 
 
+def _at_scale() -> dict:
+    """The whole-bank run, if it has been done on this machine."""
+    path = pathlib.Path(__file__).with_name("results_datasets.json")
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _bank_rows() -> list[dict[str, object]]:
+    """Project 01's codec on all 60,000 tasks, beside the model's 29.
+
+    The two columns are measured at sizes four orders of magnitude apart, and the page
+    says so in both of them rather than letting a reader assume one number covers both.
+    """
+    data = _at_scale()
+    product = (data.get("product_on_the_whole_bank") or {}).get("by_family") or {}
+    sample = data.get("model_on_a_sample") or {}
+    rows: list[dict[str, object]] = []
+    for family in ("decode", "fields", "wire", "negative"):
+        entry = product.get(family) or {}
+        rows.append(
+            {
+                "family": family,
+                "who": "project 01's codec",
+                "cases": entry.get("cases"),
+                "score": entry.get("accuracy"),
+                "note": (
+                    "found a fault on every one; named the injected one "
+                    f"{entry.get('named_the_injected_fault_rate')}"
+                    if family == "negative"
+                    else "no sampling: every task in the bank"
+                ),
+            }
+        )
+    if sample.get("cases_the_model_answered"):
+        rows.append(
+            {
+                "family": "all four",
+                "who": "the model",
+                "cases": sample.get("cases_the_model_answered"),
+                "score": None,
+                "note": (
+                    f"a sample: {sample.get('share_of_the_bank')} of "
+                    f"{sample.get('tasks_in_the_bank')} tasks, "
+                    f"{sample.get('aborted_by_the_server')} replies aborted by the server"
+                ),
+            }
+        )
+    return rows
+
+
 def spec() -> Spec:
     data = _data()
     setup = data.get("setup", {})
@@ -112,6 +166,24 @@ def spec() -> Spec:
             "an engineer has is whether handing it the specification closes the gap.",
         ],
         tables=[
+            Table(
+                title="The same four families on all 60,000 tasks",
+                note=(
+                    "The codec answers every task in the generated bank; the model answers "
+                    "29 of them. A baseline measured on 29 cases cannot tell a parser that "
+                    "is right from a parser that is right about those 29."
+                ),
+                columns=[
+                    Column("family", "Family", "text"),
+                    Column("who", "Answered by", "text"),
+                    Column("cases", "Cases", "num"),
+                    Column("score", "Accuracy", "num"),
+                    Column("note", "What that is over", "reply"),
+                ],
+                rows=_bank_rows(),
+                baseline_key="who",
+                baseline_value="project 01's codec",
+            ),
             Table(
                 title="Mean score by task family",
                 note="0 to 1. decode: did it read a message. fields: did it name the right "

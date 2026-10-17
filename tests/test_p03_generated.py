@@ -157,6 +157,11 @@ def test_an_ambiguous_first_name_is_labelled_ask_and_a_unique_one_resolved(
         mention = str(case.recipe.get("mention", ""))
         if not mention or " " in mention:
             continue
+        # In a conversation the mention belongs to the *request*; by the answering turn
+        # the payee has been picked, so "resolved" is right there and this rule does not
+        # apply to it.
+        if case.recipe.get("role") not in (None, "request"):
+            continue
         matches = gen.FIRST_NAMES.get(mention.lower(), [])
         if len(matches) > 1:
             assert case.gold_resolution == "ask", case.text
@@ -203,3 +208,138 @@ def test_unattested_banking_words_are_kept_separate() -> None:
 
     for word in gen.CURATED_BANKING:
         assert not any(word in table for table in variants.VARIANTS.values()), word
+
+
+# ------------------------------------------------- what the conversations found
+
+
+def test_a_number_word_is_never_read_as_a_payee() -> None:
+    """ "Okonkwo ko char sau send" paid Charlotte Hughes before this was fixed.
+
+    "char sau" is four hundred; "char" prefixes "Charlotte", and the resolver took any
+    word of three letters or more that prefixed a contact name. The read-back then named
+    the wrong payee, and a user who says "theek hai" to that has paid a stranger.
+    """
+    from projects.p03_guardian import nlu
+    from projects.p03_guardian.bigbench import CONTACTS
+
+    for text in (
+        "Okonkwo ko char sau send",
+        "Berenice ko paune char hzar bhej",
+        "Wei Lin ko char hazaar panch sau bhej",
+    ):
+        resolution = nlu.resolve_beneficiary(text, CONTACTS)
+        assert resolution.contact is None, f"{text} resolved to {resolution.contact}"
+        assert "unknown_beneficiary" in resolution.issues
+
+
+def test_a_name_that_happens_to_look_like_a_number_still_resolves() -> None:
+    """The fix withholds the amount's span, not the name."""
+    from projects.p03_guardian import nlu
+    from projects.p03_guardian.bigbench import CONTACTS
+
+    for text, expected in (
+        ("Charlotte Hughes ko char sau bhejo", "Charlotte Hughes"),
+        ("Charlotte ko do hazaar bhejo", "Charlotte Hughes"),
+        ("Chen Wei ko paanch sau bhej do", "Chen Wei"),
+    ):
+        resolution = nlu.resolve_beneficiary(text, CONTACTS)
+        assert resolution.contact is not None, text
+        assert resolution.contact.name == expected
+
+
+def test_a_compound_yes_is_consent_and_a_hum_is_not() -> None:
+    from projects.p03_guardian.confirm import classify_reply
+
+    for yes in ("haan bhej do", "haan bhejo", "theek hai bhej do", "yes send it"):
+        assert classify_reply(yes) == "affirmative", yes
+    for unclear in ("hmm theek", "bhej", "acha", "theek hai na"):
+        assert classify_reply(unclear) == "unclear", unclear
+
+
+def test_which_one_can_be_answered_by_ordinal_bank_or_tail() -> None:
+    from projects.p03_guardian import nlu
+    from projects.p03_guardian.bigbench import CONTACTS
+    from projects.p03_guardian.confirm import Session, State
+
+    shared = [name for name, holders in gen.FIRST_NAMES.items() if len(holders) > 1]
+    first = sorted(shared)[0]
+    holders = [item for item in CONTACTS if item.name.split()[0].lower() == first]
+    assert len(holders) > 1
+
+    for answer, expected in (
+        ("pehla wala", holders[0].name),
+        ("doosra", holders[1].name),
+        (holders[1].account_tail, holders[1].name),
+    ):
+        session = Session(contacts=CONTACTS)
+        session.handle(f"{first.capitalize()} ko paanch hazaar bhejo")
+        session.handle(answer)
+        assert session.pending is not None, answer
+        assert session.pending.beneficiary is not None, answer
+        assert session.pending.beneficiary.name == expected, answer
+        assert session.state is State.AWAITING_CONFIRMATION
+
+    # An answer that is not an answer must not be read as one - and must not lose the
+    # request either. It used to be parsed as a new instruction, found to contain none,
+    # and the whole transfer was dropped.
+    session = Session(contacts=CONTACTS)
+    session.handle(f"{first.capitalize()} ko paanch hazaar bhejo")
+    out = session.handle("koi bhi")
+    assert session.state is State.NEEDS_INFORMATION
+    assert out["asking"] == nlu.AMBIGUOUS_BENEFICIARY
+    assert session.pending is not None
+    assert session.pending.amount is not None and session.pending.amount.value == 5000
+    # And the answer still works on the next turn.
+    session.handle("doosra")
+    assert session.state is State.AWAITING_CONFIRMATION
+
+
+def test_a_real_instruction_still_replaces_a_pending_one() -> None:
+    """Holding the pending request must not trap the user in it."""
+    from projects.p03_guardian.bigbench import CONTACTS
+    from projects.p03_guardian.confirm import Session, State
+
+    session = Session(contacts=CONTACTS)
+    session.handle("Imran ko paanch hazaar bhejo")
+    out = session.handle("balance batao")
+    assert session.state is State.EXECUTED
+    assert out["action"]["intent"] == "balance"
+
+
+def test_a_conversation_about_a_stranger_cannot_complete() -> None:
+    """The gold says so, and the product has to agree."""
+    from projects.p03_guardian.bigbench import CONTACTS
+    from projects.p03_guardian.confirm import Session, State
+
+    session = Session(contacts=CONTACTS)
+    session.handle("Okonkwo ko char sau send")
+    session.handle("theek hai")
+    assert session.state is not State.EXECUTED
+
+
+def test_a_name_inside_another_name_is_not_an_ambiguity() -> None:
+    """ "Chen Wei Ltd" is the company, not a choice between it and a person."""
+    from projects.p03_guardian import nlu
+    from projects.p03_guardian.bigbench import CONTACTS
+
+    for text, expected in (
+        ("Chen Wei Ltd ko 1 sau bhej", "Chen Wei Ltd"),
+        ("Chen Wei ko 1 sau bhej", "Chen Wei"),
+        ("Bilal Traders ko teen hazaar bhejo", "Bilal Traders"),
+        ("Bilal Khan ko teen hazaar bhejo", "Bilal Khan"),
+    ):
+        resolution = nlu.resolve_beneficiary(text, CONTACTS)
+        assert resolution.contact is not None, text
+        assert resolution.contact.name == expected, text
+
+
+def test_two_unrelated_names_in_one_sentence_stay_ambiguous() -> None:
+    """The longest-match rule must not turn a real ambiguity into a guess."""
+    from projects.p03_guardian import nlu
+    from projects.p03_guardian.bigbench import CONTACTS
+
+    resolution = nlu.resolve_beneficiary("Rashid Ali aur Imran Shah ko bhejo", CONTACTS)
+    assert resolution.contact is None
+    assert nlu.AMBIGUOUS_BENEFICIARY in resolution.issues
+    assert len(resolution.candidates) == 2

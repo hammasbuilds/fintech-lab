@@ -103,8 +103,8 @@ of them. The model answers 65.
 | The rules, on the whole set | Result | Over |
 | --- | ---: | --- |
 | amounts exact | **0.9943** | the cases carrying an amount |
-| intent accuracy | **0.9759** | the cases with an intent |
-| coercion caught | **0.861** | 40,000 scripts |
+| intent accuracy | **0.976** | the cases with an intent |
+| coercion caught | **0.8744** | 40,000 scripts |
 | ordinary traffic blocked | **0.0211** | 25,000 messages |
 | the model's share of the set | **0.0003** | 65 of 200,000 cases |
 

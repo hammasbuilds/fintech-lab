@@ -264,10 +264,42 @@ Over 1,667 generated conversations only **53** completed. The session now fills 
 just asked about - and only that gap, and only when the answer resolves it outright, so
 "nahi, rehne do" is still not a payee.
 
-After the fix: **72.9%** of threads are handled correctly, **0** executed after a no, and
-358 were correctly asked to strengthen a plain "haan" into "confirm" because the
-behavioural layer had escalated them. The remaining 452 are counted as misses rather than
-explained away.
+That fix took threads from 53 completions in 1,667 to 72.9% handled correctly, and the
+remaining misses turned out to be four more defects - three in the product and one of mine.
+They are listed in 3.6 below, and with them every one of 2,143 conversations now lands in a
+named outcome: **591** executed on a yes, **440** correctly asked to strengthen a plain
+"haan" into "confirm", **592** stopped on a no, **520** refused a payee the contact book
+does not have, and **0** executed when they should not have.
+
+### Gap 3.6 - And the conversations found a wrong-payee bug, which is the worst kind here.
+
+Chasing the threads that still did not complete turned up four things:
+
+1. **"Okonkwo ko char sau send" paid Charlotte Hughes.** "char sau" is four hundred;
+   "char" prefixes "Charlotte"; and the resolver took any word of three letters or more
+   that prefixed a contact name. The read-back then *named the wrong payee*, and a user who
+   says "theek hai" to that has paid a stranger. The amount parser already reports where
+   each amount sits, so its span is now withheld from name matching - the same reserved-span
+   idea that stopped the amount parser reading a phone number as money. No hand-written case
+   had a number word that collided with a contact name.
+2. **"haan bhej do" was read as neither a yes nor a no.** The affirmative set is closed on
+   purpose, and it was missing the commonest way of saying yes to a transfer in Roman Urdu.
+   71 conversations ended on it. The compound forms are in the set now, and confirmations
+   went from 0.8992 to **1.0000**.
+3. **"Which one?" could not be answered.** The assistant lists the candidates with their
+   banks and account tails, and a person answers "the first one" or "the HBL one" - neither
+   of which is a name, so nothing could read it. 381 conversations died on that turn. An
+   answer by position, bank or account tail now works, and only when it picks out exactly
+   one candidate: two contacts at the same bank is not an answer, and the question is asked
+   again.
+4. **A non-answer dropped the whole transfer.** "koi bhi" was parsed as a fresh instruction,
+   found to contain none, and the pending request was gone - so the user had to start over.
+   A pending request is now held unless the new message is recognisably a new instruction.
+
+And one more of mine, in the contact book rather than the product: **"Chen Wei Ltd" matched
+both the company and the person called Chen Wei**, so the assistant asked which. One name
+inside another is not an ambiguity - the longer name is what the text says - while two
+unrelated names in one sentence still are.
 
 ---
 

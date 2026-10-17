@@ -3,85 +3,85 @@
     "amounts": {
       "by_style": [
         {
-          "cases": 7386,
+          "cases": 7406,
           "exact_rate": 0.9816,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digit_word_scale"
         },
         {
-          "cases": 8385,
-          "exact_rate": 0.9833,
-          "none_found": 0,
-          "off_by_ten_or_more": 0,
-          "style": "word_two_scales"
-        },
-        {
-          "cases": 17395,
+          "cases": 17461,
           "exact_rate": 0.9833,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "word_scale"
         },
         {
-          "cases": 13849,
-          "exact_rate": 0.9848,
+          "cases": 8409,
+          "exact_rate": 0.9834,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "word_two_scales"
+        },
+        {
+          "cases": 13884,
+          "exact_rate": 0.9849,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "word_fraction"
         },
         {
-          "cases": 9547,
+          "cases": 9585,
           "exact_rate": 0.996,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "word_standalone"
         },
         {
-          "cases": 26808,
+          "cases": 26882,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits"
         },
         {
-          "cases": 13684,
+          "cases": 13742,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits_currency"
         },
         {
-          "cases": 19145,
+          "cases": 19220,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits_grouped"
         },
         {
-          "cases": 10823,
+          "cases": 10863,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "k_suffix"
         },
         {
-          "cases": 8223,
+          "cases": 8245,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "urdu_digits"
         },
         {
-          "cases": 6637,
+          "cases": 6661,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits_slash"
         }
       ],
-      "cases": 141882,
-      "exact": 141067,
+      "cases": 142358,
+      "exact": 141543,
       "exact_rate": 0.9943,
       "none_found": 0,
       "off_by_ten_or_more": 0,
@@ -89,13 +89,13 @@
       "reading": "An exact rate below one is not automatically a defect - some of these sentences carry two numbers and the gold names one of them - but a style whose rate is far below the others is a phrasing the parser does not handle, and that is a bug report with an address."
     },
     "beneficiaries": {
-      "ask_rate": 0.9899,
-      "asked": 32073,
+      "ask_rate": 0.9985,
+      "asked": 33592,
       "reading": "These two have to be read together. A resolver that never asks scores 1.000 on the first and 0.000 on the second, and pays whoever it guessed.",
-      "resolve_rate": 0.9263,
-      "resolved": 71579,
-      "should_ask": 32401,
-      "should_resolve": 77275
+      "resolve_rate": 0.9412,
+      "resolved": 71940,
+      "should_ask": 33641,
+      "should_resolve": 76438
     },
     "benign": {
       "blocked": 528,
@@ -197,7 +197,7 @@
       "catch_rate_within_the_vocabulary": 0.9857
     },
     "intents": {
-      "accuracy": 0.9759,
+      "accuracy": 0.976,
       "by_intent": {
         "balance": {
           "accuracy": 1.0,
@@ -215,13 +215,13 @@
           "correct": 8313
         },
         "send_money": {
-          "accuracy": 0.9753,
-          "cases": 119157,
-          "correct": 116214
+          "accuracy": 0.9754,
+          "cases": 119633,
+          "correct": 116690
         }
       },
-      "cases": 146667,
-      "correct": 143137
+      "cases": 147143,
+      "correct": 143613
     },
     "obfuscated_security_words": {
       "dashes": {
@@ -251,9 +251,9 @@
       }
     },
     "replies": {
-      "accuracy": 0.8992,
+      "accuracy": 1.0,
       "cases": 5000,
-      "correct": 4496
+      "correct": 5000
     },
     "scam_types_with_no_vocabulary": {
       "cases": 5542,
@@ -261,7 +261,7 @@
       "caught": 453,
       "reading": "Job offers, QR swaps, SIM swaps and refund-overpayment scripts. The product has no words for any of them, so this rate is the blind spot measured rather than asserted - and a generator cannot close it, because writing the missing words would be writing the answer key."
     },
-    "seconds": 47.1,
+    "seconds": 89.6,
     "structuring": {
       "by_pattern": {
         "across_days": {
@@ -342,196 +342,35 @@
       "threads": 1041
     },
     "threads": {
-      "a_yes_that_did_not_execute": 452,
-      "a_yes_the_layer_asked_to_strengthen": 358,
-      "completion_rate": 0.2214,
-      "examples_of_a_yes_that_did_not_execute": [
-        {
-          "ended_in": "awaiting_confirmation",
-          "thread": "thr-100",
-          "turns": [
-            "Yara Khalil ko sawa sau bhejna dedo",
-            "Yara",
-            "haan bhej do"
-          ]
+      "a_yes_that_did_not_execute": 0,
+      "a_yes_the_layer_asked_to_strengthen": 440,
+      "by_shape": {
+        "clarify": {
+          "handled": 714,
+          "handled_rate": 1.0,
+          "threads": 714
         },
-        {
-          "ended_in": "awaiting_confirmation",
-          "thread": "thr-1001",
-          "turns": [
-            "Omar ko \u06f1\u06f6\u06f6\u06f0 bhejo dedo",
-            "Omar",
-            "haan bhej do"
-          ]
+        "plain": {
+          "handled": 715,
+          "handled_rate": 1.0,
+          "threads": 715
         },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1008",
-          "turns": [
-            "behen ko 285,000 bhejna dein",
-            "pehla wala",
-            "haan"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1012",
-          "turns": [
-            "abu ko 2720 send dedo",
-            "pehla wala",
-            "haan"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1015",
-          "turns": [
-            "Hamza ko sawa thousand bhej do dein",
-            "pehla wala",
-            "haan"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1016",
-          "turns": [
-            "Sadia ko dhai crore bhejna dein",
-            "jo HBL wala hai",
-            "yes"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1018",
-          "turns": [
-            "03857009691 ko 8 hundred bhej do dedo",
-            "jo HBL wala hai",
-            "confirm"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-102",
-          "turns": [
-            "chacha ko paune saat hundred bhejna dena",
-            "jo HBL wala hai",
-            "confirm"
-          ]
-        },
-        {
-          "ended_in": "awaiting_confirmation",
-          "thread": "thr-1022",
-          "turns": [
-            "Marie ko 4,160 bhejna den",
-            "Marie",
-            "haan bhej do"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1026",
-          "turns": [
-            "behen ko 288k send dedo",
-            "pehla wala",
-            "haan bhej do"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1027",
-          "turns": [
-            "abu ko 441,000 bhej do do",
-            "jo HBL wala hai",
-            "yes"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1029",
-          "turns": [
-            "Wei Lin ko 385,000 bhejna dein",
-            "jo HBL wala hai",
-            "confirm"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1035",
-          "turns": [
-            "abbu ko 7 lakh send den",
-            "pehla wala",
-            "haan"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1037",
-          "turns": [
-            "baji ko 492000 bhej do dein",
-            "jo HBL wala hai",
-            "confirm"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1045",
-          "turns": [
-            "03156517911 ko 282k bhej do",
-            "jo HBL wala hai",
-            "confirm"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1049",
-          "turns": [
-            "03473723562 ko 9 thousand bhejo dedo",
-            "jo HBL wala hai",
-            "yes"
-          ]
-        },
-        {
-          "ended_in": "awaiting_confirmation",
-          "thread": "thr-1053",
-          "turns": [
-            "Marie Dubois ko paanch sau send dena",
-            "Marie",
-            "haan bhej do"
-          ]
-        },
-        {
-          "ended_in": "awaiting_confirmation",
-          "thread": "thr-1055",
-          "turns": [
-            "Grace ko five hazar two hundred bhej do",
-            "Grace",
-            "haan bhej do"
-          ]
-        },
-        {
-          "ended_in": "awaiting_confirmation",
-          "thread": "thr-1056",
-          "turns": [
-            "Rashid Ali ko teen thousand bhejo dena",
-            "Rashid",
-            "haan bhej do"
-          ]
-        },
-        {
-          "ended_in": "needs_information",
-          "thread": "thr-1058",
-          "turns": [
-            "brother ko 242,000 send do",
-            "jo HBL wala hai",
-            "yes"
-          ]
+        "unknown_payee": {
+          "handled": 714,
+          "handled_rate": 1.0,
+          "threads": 714
         }
-      ],
+      },
+      "completion_rate": 0.5732,
+      "correctly_refused_because_the_payee_is_unknown": 520,
+      "correctly_stopped_because_the_reply_was_no": 592,
+      "examples_of_a_yes_that_did_not_execute": [],
       "executed_after_a_no": 0,
-      "executed_after_a_yes": 369,
-      "handled_correctly_rate": 0.7289,
-      "reading": "executed_after_a_no is the number that has to be zero: it would mean a refusal was read as consent. A yes the layer asked to strengthen is the step-up working, not a failure. A yes that does not execute and was not stepped up is the real miss, and the three are counted apart because they are three different things.",
-      "threads": 1667
+      "executed_after_a_yes": 591,
+      "handled_correctly": 2143,
+      "handled_correctly_rate": 1.0,
+      "reading": "executed_after_a_no is the number that has to be zero: it would mean a refusal, or a payee the book does not have, was read as consent. A yes the layer asked to strengthen is the step-up working. A yes that did not execute and was not stepped up is the real miss, and by_shape says which kind of conversation it was.",
+      "threads": 2143
     },
     "urdu_script_variants": {
       "urdu": {

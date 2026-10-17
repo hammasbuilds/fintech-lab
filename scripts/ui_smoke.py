@@ -132,6 +132,22 @@ PLANS: dict[str, dict] = {
             {"expectText": "body", "contains": "refused by the grammar"},
         ],
     },
+    "p04_spec_to_wire": {
+        "settle": 2500,
+        "steps": [
+            {"waitFor": "body"},
+            {"expectText": "body", "contains": "The same four families on all 60,000 tasks"},
+            {"expectText": "body", "contains": "project 01's codec"},
+        ],
+    },
+    "p06_model_vs_lexicon": {
+        "settle": 2500,
+        "steps": [
+            {"waitFor": "body"},
+            {"expectText": "body", "contains": "The rules on the whole 200,000"},
+            {"expectText": "body", "contains": "ordinary traffic blocked"},
+        ],
+    },
 }
 
 

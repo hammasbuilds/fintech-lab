@@ -55,6 +55,76 @@ def _cells(name: str, block: dict) -> dict[str, object]:
     }
 
 
+def _at_scale() -> dict:
+    path = pathlib.Path(__file__).with_name("results_datasets.json")
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _scale_rows() -> list[dict[str, object]]:
+    """The rules on 200,000 cases beside the model's 65, with both sizes stated.
+
+    This is the comparison the project is for, and the asymmetry is the finding rather
+    than an omission: a lexicon and a grammar answer 200,000 cases in about a minute,
+    and 200,000 local model calls is a fortnight of GPU time for a result whose shape is
+    already visible at 65.
+    """
+    data = _at_scale()
+    rules = data.get("rules_on_the_whole_set") or {}
+    sample = data.get("model_on_a_sample") or {}
+    dataset = data.get("the_same_dataset") or {}
+    rows = [
+        {
+            "what": "amounts read exactly",
+            "rules": rules.get("amount_exact_rate"),
+            "over": "the cases carrying an amount",
+        },
+        {
+            "what": "intent accuracy",
+            "rules": rules.get("intent_accuracy"),
+            "over": "the cases with an intent",
+        },
+        {
+            "what": "payees resolved",
+            "rules": rules.get("payee_resolve_rate"),
+            "over": "cases naming one contact",
+        },
+        {
+            "what": "asked instead of guessing",
+            "rules": rules.get("payee_ask_rate"),
+            "over": "ambiguous cases",
+        },
+        {
+            "what": "coercion caught",
+            "rules": rules.get("coercion_catch_rate"),
+            "over": "40,000 scam scripts",
+        },
+        {
+            "what": "ordinary traffic blocked",
+            "rules": rules.get("false_block_rate_on_ordinary_traffic"),
+            "over": "25,000 ordinary messages",
+        },
+        {
+            "what": "confirmations read correctly",
+            "rules": rules.get("confirmation_accuracy"),
+            "over": "5,000 replies",
+        },
+        {
+            "what": "cases each side answered",
+            "rules": rules.get("cases"),
+            "over": (
+                f"the model answered {sample.get('cases')}, which is "
+                f"{sample.get('share_of_the_set')} of {dataset.get('rows')}"
+            ),
+        },
+    ]
+    return rows
+
+
 def spec() -> Spec:
     data = _data()
     setup = data.get("setup", {})
@@ -108,6 +178,20 @@ def spec() -> Spec:
             "would grade the subset that happened to be formatted correctly.",
         ],
         tables=[
+            Table(
+                title="The rules on the whole 200,000, and the model on 65 of them",
+                note=(
+                    "Both columns are scored on the same generated set by the same grader. "
+                    "The sizes differ by four orders of magnitude, and the last row says "
+                    "by how much."
+                ),
+                columns=[
+                    Column("what", "Measured", "text"),
+                    Column("rules", "Project 03's rules", "num"),
+                    Column("over", "Over", "reply"),
+                ],
+                rows=_scale_rows(),
+            ),
             Table(
                 title="The same cases, both ways",
                 note="Every cell is correct-over-attempted.",

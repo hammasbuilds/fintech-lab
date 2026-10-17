@@ -1,73 +1,79 @@
 {
   "codec": {
-    "ascii_round_trip_stable": 120120,
-    "binary_round_trip_stable": 120120,
+    "ascii_round_trip_stable": 160160,
+    "binary_round_trip_stable": 160160,
     "character_class_violations": 0,
     "examples_of_violations": [],
     "examples_that_failed": [],
     "framing_detected_on_a_sample": {
-      "ascii": 120
+      "ascii": 160
     },
-    "messages_checked": 120120,
+    "messages_checked": 160160,
     "messages_that_failed_to_pack": 0,
     "reading": "Every one of these messages was built by the packer, so a round-trip that is not stable is a defect in the codec and not in the corpus. The count to look at is messages_that_failed_to_pack, which has to be zero.",
-    "reparse_equal": 120120
+    "reparse_equal": 160160
   },
   "fuzz_ascii": {
-    "accepted": 23329,
+    "accepted": 22425,
     "accepted_by_field": {
-      "DE 102 (Account identification 1), class ans": 3475,
-      "DE 103 (Account identification 2), class ans": 81,
-      "DE 11 (System trace audit number), class n": 603,
-      "DE 12 (Local transaction time), class n": 354,
-      "DE 13 (Local transaction date), class n": 238,
-      "DE 14 (Expiration date), class n": 58,
-      "DE 18 (Merchant category code), class n": 71,
-      "DE 2 (Primary account number), class n": 945,
-      "DE 22 (Point of service entry mode), class n": 60,
-      "DE 25 (Point of service condition code), class n": 42,
-      "DE 3 (Processing code), class n": 398,
-      "DE 32 (Acquiring institution identification code), class n": 415,
-      "DE 33 (Forwarding institution identification code), class n": 395,
-      "DE 37 (Retrieval reference number), class an": 2902,
-      "DE 38 (Authorization identification response), class an": 503,
-      "DE 39 (Response code), class an": 486,
-      "DE 4 (Amount, transaction), class n": 712,
-      "DE 41 (Card acceptor terminal identification), class ans": 1938,
-      "DE 42 (Card acceptor identification code), class ans": 975,
-      "DE 43 (Card acceptor name and location), class ans": 2528,
-      "DE 49 (Currency code, transaction), class n": 197,
-      "DE 52 (Personal identification number data), class b": 388,
-      "DE 54 (Additional amounts), class an": 330,
-      "DE 55 (Integrated circuit card data), class b": 3349,
-      "DE 7 (Transmission date and time), class n": 1036,
-      "DE 70 (Network management information code), class n": 38,
-      "DE 90 (Original data elements), class n": 163,
-      "DE 95 (Replacement amounts), class an": 347,
-      "framing (MTI, bitmap or a length prefix)": 302
+      "DE 102 (Account identification 1), class ans": 2771,
+      "DE 103 (Account identification 2), class ans": 60,
+      "DE 11 (System trace audit number), class n": 589,
+      "DE 12 (Local transaction time), class n": 342,
+      "DE 13 (Local transaction date), class n": 227,
+      "DE 14 (Expiration date), class n": 42,
+      "DE 15 (Settlement date), class n": 9,
+      "DE 18 (Merchant category code), class n": 55,
+      "DE 2 (Primary account number), class n": 987,
+      "DE 22 (Point of service entry mode), class n": 43,
+      "DE 25 (Point of service condition code), class n": 27,
+      "DE 3 (Processing code), class n": 386,
+      "DE 32 (Acquiring institution identification code), class n": 492,
+      "DE 33 (Forwarding institution identification code), class n": 397,
+      "DE 37 (Retrieval reference number), class an": 3046,
+      "DE 38 (Authorization identification response), class an": 476,
+      "DE 39 (Response code), class an": 527,
+      "DE 4 (Amount, transaction), class n": 790,
+      "DE 41 (Card acceptor terminal identification), class ans": 2236,
+      "DE 42 (Card acceptor identification code), class ans": 783,
+      "DE 43 (Card acceptor name and location), class ans": 2215,
+      "DE 49 (Currency code, transaction), class n": 206,
+      "DE 52 (Personal identification number data), class b": 327,
+      "DE 54 (Additional amounts), class an": 276,
+      "DE 55 (Integrated circuit card data), class b": 2864,
+      "DE 60 (Reserved, national), class ans": 100,
+      "DE 7 (Transmission date and time), class n": 1008,
+      "DE 70 (Network management information code), class n": 43,
+      "DE 74 (Credits, number), class n": 27,
+      "DE 75 (Credits, reversal number), class n": 30,
+      "DE 86 (Credits, amount), class n": 38,
+      "DE 87 (Credits, reversal amount), class n": 47,
+      "DE 90 (Original data elements), class n": 379,
+      "DE 95 (Replacement amounts), class an": 272,
+      "framing (MTI, bitmap or a length prefix)": 308
     },
     "contexts_in_pool": 50,
     "groups": {
       "class_legal": {
         "rejected": 0,
         "rejection_rate": 0.0,
-        "trials": 23027
+        "trials": 22117
       },
       "class_violating": {
-        "rejected": 22354,
+        "rejected": 23424,
         "rejection_rate": 1.0,
-        "trials": 22354
+        "trials": 23424
       },
       "framing": {
-        "rejected": 14317,
-        "rejection_rate": 0.9793,
-        "trials": 14619
+        "rejected": 14151,
+        "rejection_rate": 0.9787,
+        "trials": 14459
       }
     },
     "illegal_characters_accepted": [],
-    "messages_in_pool": 1650,
-    "rejected": 36671,
-    "rejection_rate": 0.6112,
+    "messages_in_pool": 2200,
+    "rejected": 37575,
+    "rejection_rate": 0.6262,
     "scenarios": [
       "atm_withdrawal_approved",
       "atm_partial_approval",
@@ -82,89 +88,92 @@
       "balance_inquiry",
       "cardholder_transfer",
       "network_echo_test",
-      "network_sign_on"
+      "network_sign_on",
+      "stand_in_authorisation_advice",
+      "end_of_day_reconciliation",
+      "chargeback_and_representment"
     ],
     "trials": 60000
   },
   "fuzz_binary": {
-    "accepted": 10521,
+    "accepted": 10163,
     "accepted_examples": [
       {
-        "byte": 23,
+        "byte": 170,
         "framed": true,
+        "in_header": false,
+        "scenario": "atm_incorrect_pin_then_approved"
+      },
+      {
+        "byte": 164,
+        "framed": true,
+        "in_header": false,
+        "scenario": "atm_incorrect_pin_then_approved"
+      },
+      {
+        "byte": 21,
+        "framed": false,
         "in_header": false,
         "scenario": "atm_partial_reversal"
       },
       {
-        "byte": 68,
-        "framed": true,
-        "in_header": false,
-        "scenario": "atm_partial_approval"
-      },
-      {
-        "byte": 25,
-        "framed": true,
-        "in_header": false,
-        "scenario": "network_sign_on"
-      },
-      {
-        "byte": 217,
-        "framed": false,
-        "in_header": false,
-        "scenario": "atm_pin_tries_exceeded"
-      },
-      {
-        "byte": 80,
-        "framed": false,
-        "in_header": false,
-        "scenario": "balance_inquiry"
-      },
-      {
-        "byte": 209,
-        "framed": false,
-        "in_header": false,
-        "scenario": "atm_pin_tries_exceeded"
-      },
-      {
-        "byte": 57,
-        "framed": true,
-        "in_header": false,
-        "scenario": "cardholder_transfer"
-      },
-      {
-        "byte": 22,
-        "framed": false,
-        "in_header": false,
-        "scenario": "pos_refund"
-      },
-      {
-        "byte": 60,
+        "byte": 45,
         "framed": true,
         "in_header": false,
         "scenario": "pos_refund"
       },
       {
-        "byte": 46,
+        "byte": 70,
+        "framed": false,
+        "in_header": false,
+        "scenario": "end_of_day_reconciliation"
+      },
+      {
+        "byte": 28,
+        "framed": false,
+        "in_header": false,
+        "scenario": "end_of_day_reconciliation"
+      },
+      {
+        "byte": 50,
         "framed": true,
         "in_header": false,
-        "scenario": "atm_reversal_after_timeout"
+        "scenario": "pos_refund"
+      },
+      {
+        "byte": 40,
+        "framed": true,
+        "in_header": false,
+        "scenario": "end_of_day_reconciliation"
+      },
+      {
+        "byte": 187,
+        "framed": true,
+        "in_header": false,
+        "scenario": "atm_pin_tries_exceeded"
+      },
+      {
+        "byte": 17,
+        "framed": true,
+        "in_header": false,
+        "scenario": "chargeback_and_representment"
       }
     ],
-    "caught_by_the_length_header": 299,
+    "caught_by_the_length_header": 317,
     "contexts_in_pool": 50,
-    "messages_in_pool": 3300,
-    "rejected": 19479,
-    "rejection_rate": 0.6493,
+    "messages_in_pool": 4400,
+    "rejected": 19837,
+    "rejection_rate": 0.6612,
     "trials": 30000
   },
   "invariants": {
     "examples": [],
     "false_positive_rate": 0.0,
     "findings_by_rule": {},
-    "flows_checked": 50960,
+    "flows_checked": 61880,
     "flows_with_findings": 0,
     "flows_with_findings_by_scenario": {},
-    "reading": "Every flow here is valid by construction, so flows_with_findings is a count of false positives and has to be zero. The shipped benchmark checks 14 flows; this checks 50,960.",
+    "reading": "Every flow here is valid by construction, so flows_with_findings is a count of false positives and has to be zero. The shipped benchmark checks 14 flows; this checks 61,880.",
     "rules": 22
   },
   "mutation": {
@@ -229,9 +238,18 @@
   },
   "setup": {
     "corpus": {
-      "note": "not in the manifest yet"
+      "bytes": 163516453,
+      "note": "120,120 messages over 50,960 lifecycles, every one packed and re-parsed by the product's own codec before it was written. No public corpus of real card traffic exists, and for PCI reasons there will not be one.",
+      "role": "cohort",
+      "role_means": "rows a measurement reports a rate over; has to hold between 50,000 and 1,000,000 of them",
+      "rows": 160160,
+      "sample": "data/samples/generated_p01_messages.jsonl",
+      "sample_rows": 200,
+      "sha256": "c2ae3df5f4029b1bc5955102b501e4e5be2701a1c3d929a1329fc188c27c3b43",
+      "source": "generated by projects/p01_switchboard/corpus.py",
+      "within_the_size_policy": true
     },
-    "seconds": 161.5,
+    "seconds": 132.0,
     "why_this_is_a_separate_file": "The corpus is 128 MB of generated JSON lines, so CI cannot re-derive these numbers in a checkout. results.json stays small and reproducible."
   }
 }

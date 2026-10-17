@@ -132,6 +132,16 @@ def section_01() -> list[str]:
     )
     lines += [
         "",
+        "The corpus now carries advice, reconciliation and chargeback traffic as well as "
+        "authorisation, and transactions in currencies with **three different minor-unit "
+        "exponents** - 0 for yen, 2 for rupees, 3 for the Gulf dinars. Adding them found "
+        "four defects at once: the dictionary had no reconciliation elements, so a 0500 "
+        "could not be packed; function digit 5 was missing from the MTI table, so a "
+        "chargeback had no response; request/response pairing ignored notifications, so "
+        "every 0440 matched nothing; and the rule that every request is answered had no "
+        "concept of an advice, so the one scenario where the issuer is unreachable "
+        "reported itself as broken.",
+        "",
         "The mutation row is the one worth reading twice. Against the 14 shipped scenarios "
         "the 38 curated faults are killed 38 times out of 38. Re-injected into flows with "
         "random currencies, the first run scored 0.9725 - and the two detectors that missed "
@@ -222,7 +232,60 @@ def section_02() -> list[str]:
         ],
         ("The real card book", "Result", "Over"),
     )
+    lines += [""]
+    lines += table(
+        [
+            (
+                "PSI on the score, early window against late",
+                num(dig(data, "over_time.population_stability.psi")),
+                str(dig(data, "over_time.population_stability.reading", "")),
+            ),
+            (
+                "PSI on other-app exposure",
+                num(dig(data, "over_time.characteristic_stability.other_app_outstanding.psi")),
+                "the same two windows, one input",
+            ),
+            (
+                "net per loan the early window promised",
+                num(dig(data, "over_time.out_of_time.net_per_loan_promised")),
+                "cutoff chosen on the early months of the window",
+            ),
+            (
+                "net per loan it delivered later",
+                num(dig(data, "over_time.out_of_time.net_per_loan_delivered")),
+                "the same cutoff, months 18-23",
+            ),
+            (
+                "optimism per loan",
+                num(dig(data, "over_time.out_of_time.optimism_per_loan")),
+                "negative means the later book did better",
+            ),
+            (
+                "share of the population with no observable outcome",
+                num(
+                    dig(
+                        data,
+                        "over_time.approvals_only.share_of_the_population_with_no_observable_outcome",
+                    )
+                ),
+                "declined applicants never borrow",
+            ),
+            (
+                "bad rate, approvals only",
+                num(dig(data, "over_time.approvals_only.approved_bad_rate")),
+                f"against {num(dig(data, 'over_time.approvals_only.population_bad_rate'))} "
+                f"for the whole population",
+            ),
+        ],
+        ("With a time axis", "Result", "Over"),
+    )
     lines += [
+        "",
+        "These four need a cohort with dates and were impossible before this round. The "
+        "pair worth reading together is the two PSI rows: the score looks stable while one "
+        "of its inputs has moved twenty times as far. A scorecard turns several fields "
+        "into one coarse number, so reporting only the score's stability is how a drifting "
+        "population gets called stable.",
         "",
         "Three findings come out of the real books that the synthetic cohort cannot show. "
         "The strongest feature in the loan book is `interest_rate` - the lender's own price "
@@ -275,9 +338,20 @@ def section_03() -> list[str]:
                 f"{num(dig(data, 'generated.beneficiaries.should_ask'))} ambiguous cases",
             ),
             (
-                "coercion caught",
+                "coercion caught, families it knows",
+                num(dig(data, "generated.coercion.catch_rate_within_the_vocabulary")),
+                "the twelve families in the product's own vocabulary",
+            ),
+            (
+                "coercion caught, types it does not know",
+                num(dig(data, "generated.coercion.catch_rate_outside_the_vocabulary")),
+                "job offers, QR swaps, SIM swaps, refund overpayment",
+            ),
+            (
+                "coercion caught, everything together",
                 num(dig(data, "generated.coercion.catch_rate")),
-                f"{num(dig(data, 'generated.coercion.cases'))} scam scripts",
+                f"{num(dig(data, 'generated.coercion.cases'))} scam scripts; the blend of "
+                f"the two rows above",
             ),
             (
                 "ordinary traffic blocked",
@@ -292,6 +366,61 @@ def section_03() -> list[str]:
         ],
         ("At full size", "Result", "Over"),
     )
+    lines += [""]
+    lines += table(
+        [
+            (
+                "scam types the product has no words for",
+                num(dig(data, "generated.scam_types_with_no_vocabulary.catch_rate")),
+                f"{num(dig(data, 'generated.scam_types_with_no_vocabulary.cases'))} scripts: "
+                f"job offers, QR swaps, SIM swaps, refund overpayment",
+            ),
+            (
+                "obfuscated security words",
+                num(dig(data, "generated.obfuscated_security_words.leetspeak.catch_rate")),
+                "leetspeak; the other four techniques are within 0.01 of it",
+            ),
+            (
+                "Urdu script, ordinary spelling",
+                num(dig(data, "generated.urdu_script_variants.urdu.catch_rate")),
+                f"{num(dig(data, 'generated.urdu_script_variants.urdu.cases'))} scripts",
+            ),
+            (
+                "Urdu script, Arabic codepoints",
+                num(dig(data, "generated.urdu_script_variants.urdu_arabic_codepoints.catch_rate")),
+                "the same sentences, pasted from elsewhere - identical to the row above, "
+                "which is the point of folding the codepoints",
+            ),
+            (
+                "splits across one day",
+                num(dig(data, "generated.structuring.by_pattern.same_day.catch_rate")),
+                f"{num(dig(data, 'generated.structuring.by_pattern.same_day.threads'))} splits",
+            ),
+            (
+                "splits across several days",
+                num(dig(data, "generated.structuring.by_pattern.across_days.catch_rate")),
+                f"{num(dig(data, 'generated.structuring.by_pattern.across_days.threads'))} splits",
+            ),
+            (
+                "whole conversations handled correctly",
+                num(dig(data, "generated.threads.handled_correctly_rate")),
+                f"{num(dig(data, 'generated.threads.threads'))} threads, "
+                f"{num(dig(data, 'generated.threads.executed_after_a_no'))} executed after a no",
+            ),
+        ],
+        ("The dimensions added this round", "Result", "Over"),
+    )
+    lines += [
+        "",
+        "Two of those rows were zero before the work in this round. Splits spread over "
+        "several days never came near the daily cap and the layer had no monthly view, so "
+        "527 of them went entirely unnoticed; with a monthly signal they are caught 0.987 "
+        "of the time and the false-block rate on ordinary traffic is unchanged. And a "
+        "conversation where the assistant asked which payee was meant could not read the "
+        "answer - 53 of 1,667 threads completed - because the session parsed every reply "
+        "as a fresh instruction.",
+    ]
+
     families = dig(data, "generated.coercion.by_family", {}) or {}
     if families:
         lines += [
@@ -437,7 +566,33 @@ def section_05() -> list[str]:
         ],
         ("At full size", "Result", "Over"),
     )
+    lines += [""]
+    lines += table(
+        [
+            (
+                "requirements taken from real policy documents",
+                num(dig(data, "what_the_language_cannot_say.requirements")),
+                "each one run through the compiler by a test",
+            ),
+            (
+                "refused by the grammar",
+                num(dig(data, "what_the_language_cannot_say.refused_by_the_grammar")),
+                "the safe failure: the policy never ships",
+            ),
+            (
+                "compile, then fail on the first applicant",
+                num(dig(data, "what_the_language_cannot_say.compile_but_have_no_field")),
+                "the dangerous one: they pass review",
+            ),
+        ],
+        ("What the language cannot say", "Count", "Note"),
+    )
     lines += [
+        "",
+        "A compile rate of 1.0000 is 100% of what this language *can* say. The table above "
+        "is the other half, and the split in it is the finding: most of these are refused "
+        "outright, and a couple compile, pass review and die on the first applicant because "
+        "the field they name does not exist.",
         "",
         "This doubles as a grammar fuzzer, and the four rates above are the properties that "
         "have to hold: the text came out of this project's own printer, so a parse failure "

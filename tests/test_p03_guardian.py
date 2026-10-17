@@ -184,10 +184,26 @@ def test_an_absence_of_matches_is_not_claimed_as_safety() -> None:
 def test_the_blind_spot_is_real_and_the_test_set_contains_it() -> None:
     # Cases using none of the lexicon are in the set on purpose, so the reported figure
     # is not just a measure of the lexicon testing itself.
+    #
+    # The count was four and is three: one of them - "property ka token amount aaj dena
+    # hoga" - is a purchase scam, and the purchase-scam family now reads it. The case is
+    # still in the set with its new expectation rather than deleted.
     misses = [case for case in testset.COERCION_CASES if case[3]]
-    assert len(misses) >= 4
+    assert len(misses) >= 3
     for text, _, _, _ in misses:
         assert coercion.assess(text).verdict == coercion.ALLOW
+
+
+def test_the_case_that_left_the_blind_spot_is_still_in_the_set() -> None:
+    """A case that starts passing must keep its place, with the truth as its expectation."""
+    text = "property ka token amount aaj dena hoga warna deal nikal jayegi"
+    found = [case for case in testset.COERCION_CASES if case[0] == text]
+    assert found, "the case was deleted rather than relabelled"
+    _, verdict, families, is_a_miss = found[0]
+    assert verdict == "warn"
+    assert families == ("purchase_scam",)
+    assert is_a_miss is False
+    assert coercion.assess(text).families == ["purchase_scam"]
 
 
 def test_advice_is_available_in_both_languages() -> None:

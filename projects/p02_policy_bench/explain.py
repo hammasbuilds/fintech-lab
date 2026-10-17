@@ -18,6 +18,26 @@ from .engine import Decision
 #: field -> (English noun phrase, Roman Urdu noun phrase, unit)
 PHRASES: dict[str, tuple[str, str, str]] = {
     "age": ("your age", "aap ki umar", "years"),
+    "other_app_loans": (
+        "how many loans you have from other apps",
+        "doosri apps se aap ke kitne qarze chal rahe hain",
+        "loans",
+    ),
+    "other_app_outstanding": (
+        "what you owe other lending apps",
+        "doosri apps ka aap par kitna qarz hai",
+        "rupees",
+    ),
+    "tenor_days": (
+        "how many days you have to repay",
+        "wapsi ke liye kitne din hain",
+        "days",
+    ),
+    "origination_month": (
+        "which month you applied in",
+        "aap ne kis maheene darkhwast di",
+        "months into the window",
+    ),
     "monthly_income": ("your monthly income", "aap ki maheena aamdani", "rupees"),
     "wallet_months": (
         "how long your wallet has been open",
@@ -195,7 +215,8 @@ def untranslated_fields() -> list[str]:
     from .cohort import Borrower
 
     known = set(PHRASES)
-    available = {
-        name for name in Borrower.__dataclass_fields__ if name not in {"id", "would_default"}
-    }
+    # Outcome fields are not policy-readable, so they need no phrase: a decline notice
+    # that mentioned when the borrower defaulted would be quoting the future at them.
+    outcomes = {"id", "would_default", "months_to_default"}
+    available = {name for name in Borrower.__dataclass_fields__ if name not in outcomes}
     return sorted(available - known)

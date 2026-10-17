@@ -45,7 +45,7 @@ BURST_WINDOW = timedelta(hours=1)
 #: Signals that escalate on their own rather than needing a second one. The daily cap is
 #: not a soft anomaly - it is a limit the account already has - so passing it always
 #: earns the slower confirmation. A cap that a habitual "haan" clears is not a cap.
-ALWAYS_ESCALATES = {"beyond_daily_cap", "exceeds_balance"}
+ALWAYS_ESCALATES = {"beyond_daily_cap", "beyond_monthly_cap", "exceeds_balance"}
 
 
 @dataclass
@@ -61,6 +61,15 @@ class Profile:
 
     balance: float = 18423.50
     daily_cap: float = 50000.0
+    #: The wallet's monthly limit. Branchless banking accounts in Pakistan are tiered and
+    #: the tiers are limits - reported figures for the 2016 revision give Level 0 a daily
+    #: cap of Rs 25,000 and a monthly cap of Rs 40,000, and Level 1 Rs 50,000 and
+    #: Rs 80,000. This layer had only the daily one, and a split spread over several days
+    #: never goes near a daily cap: 527 of them in the generated set went entirely
+    #: unnoticed, which is why people split that way.
+    #:
+    #: https://propakistani.pk/2016/07/14/sbp-revises-transactions-limits-for-branchless-banking-accounts/
+    monthly_cap: float = 80000.0
     history: list[Transfer] = field(default_factory=list)
     now: datetime | None = None
 
@@ -105,6 +114,20 @@ class Profile:
     def sent_today(self) -> float:
         today = self.moment.date()
         return sum(t.amount for t in self.history if t.at.date() == today)
+
+    def sent_this_month(self) -> float:
+        """Everything sent in the calendar month this transfer falls in.
+
+        A calendar month rather than a rolling thirty days, because that is how the
+        wallet's own limit is written. A rolling window would be the better fraud
+        control and the worse answer to "have I broken my limit".
+        """
+        moment = self.moment
+        return sum(
+            transfer.amount
+            for transfer in self.history
+            if (transfer.at.year, transfer.at.month) == (moment.year, moment.month)
+        )
 
     def recent(self, window: timedelta = BURST_WINDOW) -> list[Transfer]:
         cutoff = self.moment - window
@@ -185,6 +208,18 @@ def assess(profile: Profile, beneficiary: str | None, amount: float | None) -> A
         )
 
     already = profile.sent_today()
+    this_month = profile.sent_this_month()
+    if profile.monthly_cap and this_month + amount > profile.monthly_cap:
+        signals.append(
+            # Each transfer on its own is well inside the daily cap, which is exactly
+            # what a split across several days looks like.
+            Signal(
+                "beyond_monthly_cap",
+                f"{this_month + amount:,.0f} this month against a cap of "
+                f"{profile.monthly_cap:,.0f}",
+            )
+        )
+
     if already + amount > profile.daily_cap:
         signals.append(
             Signal(

@@ -138,8 +138,15 @@ def test_every_coercion_case_names_at_least_one_family(sample: list[gen.Case]) -
     for case in sample:
         if case.family == "coercion":
             assert case.gold_should_block is True
-            assert len(case.gold_coercion) >= 1
             assert len(set(case.gold_coercion)) == len(case.gold_coercion)
+            if case.outside_the_vocabulary:
+                # A scam type the product has no words for names no family on
+                # purpose: that is what makes it a measurement of the blind spot
+                # rather than of the lexicon testing itself.
+                assert case.gold_coercion == ()
+                assert case.recipe["scam_type"] in gen.OUTSIDE_THE_VOCABULARY
+            else:
+                assert len(case.gold_coercion) >= 1
 
 
 def test_an_ambiguous_first_name_is_labelled_ask_and_a_unique_one_resolved(

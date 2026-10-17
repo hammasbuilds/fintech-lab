@@ -121,19 +121,35 @@ def test_every_paired_case_behaves_as_written(
 
 
 def test_the_layer_recovers_every_scam_the_words_miss() -> None:
+    # Three, not four: the purchase-scam family added in the dataset round reads the
+    # property-token case, so the words catch it and it is no longer a blind spot. The
+    # case is still in the paired set, now as one both layers see - see the test below.
     scams = [case for case in testset.PAIRED_CASES if case[6]]
-    assert len(scams) == 4
+    assert len(scams) == 3
     for label, message, payee, amount, _verdict, _level, _scam in scams:
         assert coercion.assess(message).verdict == coercion.ALLOW, f"{label} is not a blind spot"
         assert assess(demo_profile(), payee, amount).escalated, label
 
 
+def test_a_scam_both_layers_catch_is_still_in_the_paired_set() -> None:
+    """Belt and braces is the design, so a case that fires both is worth keeping."""
+    found = [case for case in testset.PAIRED_CASES if case[0] == "property token"]
+    assert found, "the case was deleted rather than relabelled"
+    _label, message, payee, amount, verdict, level, is_a_blind_spot = found[0]
+    assert is_a_blind_spot is False
+    assert verdict == "warn"
+    assert coercion.assess(message).families == ["purchase_scam"]
+    assert assess(demo_profile(), payee, amount).level == level
+
+
 def test_the_cost_is_bounded_and_is_friction_rather_than_refusal() -> None:
     benign = [case for case in testset.PAIRED_CASES if not case[6]]
     escalated = [case for case in benign if assess(demo_profile(), case[2], case[3]).escalated]
-    # One of these is a deliberate legitimate case: a first large transfer to a new
-    # payee. It should escalate, and escalation is a slower confirmation, not a block.
-    assert len(escalated) == 1
+    # Two of these escalate: a first large transfer to a new payee, which is the
+    # deliberate legitimate case, and the property-token scam the words now also catch.
+    # Escalation is a slower confirmation either way, not a block.
+    assert len(escalated) == 2
+    assert sorted(case[0] for case in escalated) == ["new landlord", "property token"]
     session = Session()
     session.handle("Rashid ko pandrah hazaar bhejo")
     assert session.state is State.AWAITING_CONFIRMATION

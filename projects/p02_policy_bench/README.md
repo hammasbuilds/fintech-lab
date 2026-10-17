@@ -212,5 +212,17 @@ and the two real-data traps that are handled rather than averaged over.
 | Gini, bad = ever 30+ days past due | **0.0462** | the 36,457-row slice |
 | Gini, bad = ever 60+ days past due | **0.1644** | the same 36,457 rows |
 
+| With a time axis | Result | Over |
+| --- | ---: | --- |
+| PSI on the score, early window against late | **0.0043** | stable |
+| PSI on other-app exposure | **0.09** | the same two windows, one input |
+| net per loan the early window promised | **103.88** | cutoff chosen on the early months of the window |
+| net per loan it delivered later | **110.25** | the same cutoff, months 18-23 |
+| optimism per loan | **-6.38** | negative means the later book did better |
+| share of the population with no observable outcome | **0.7802** | declined applicants never borrow |
+| bad rate, approvals only | **0.0215** | against 0.0851 for the whole population |
+
+These four need a cohort with dates and were impossible before this round. The pair worth reading together is the two PSI rows: the score looks stable while one of its inputs has moved twenty times as far. A scorecard turns several fields into one coarse number, so reporting only the score's stability is how a drifting population gets called stable.
+
 Three findings come out of the real books that the synthetic cohort cannot show. The strongest feature in the loan book is `interest_rate` - the lender's own price for that applicant - and dropping it costs a quarter of the separation, so a scorecard that uses it is partly scoring a decision the lender already made. A one-off 2% service fee loses money at every cutoff, which is why the sweep's net-maximising threshold for v1 and v2 is the one that approves nobody; only pricing over the term earns anything, and that is the version rule C1 flags as critical. And on the card book, two defensible definitions of "bad" on the same 36,457 rows give Gini figures that differ by more than three times - whoever picks the definition picks the result.
 <!-- datasets:end -->

@@ -21,7 +21,7 @@ def test_every_scenario_builds_and_is_clean() -> None:
 
 def test_scenarios_cover_both_directions_and_several_classes() -> None:
     flows = scenarios.build_all()
-    assert len(flows) == 14
+    assert len(flows) == 17
     classes = {step.message.mti[1] for flow in flows for step in flow.steps}
     assert {"2", "4", "8"} <= classes
     directions = {step.direction for flow in flows for step in flow.steps}
@@ -289,3 +289,30 @@ def test_pasted_traffic_can_be_validated_as_a_flow() -> None:
         ],
     )
     assert lifecycle.check(rebuilt) == []
+
+
+def test_the_scenarios_cover_more_than_authorisation_traffic() -> None:
+    """Advice, reconciliation and chargeback classes, which a switch spends its day on."""
+    classes = set()
+    for scenario in scenarios.SCENARIOS:
+        for step in scenarios.build(scenario.key, scenarios.Context()).steps:
+            classes.add(step.message.mti[1])
+    # 1 authorisation, 2 financial, 4 reversal and chargeback, 5 reconciliation,
+    # 8 network management.
+    assert {"1", "2", "4", "5", "8"} <= classes
+
+
+def test_a_stand_in_advice_closes_the_request_it_quotes() -> None:
+    """The issuer was unreachable, so nothing answers the request - the advice does."""
+    flow = scenarios.build("stand_in_authorisation_advice", scenarios.Context())
+    assert lifecycle.check(flow) == []
+    advice = flow.steps[1].message
+    assert advice.mti == "0120"
+    assert advice.get(90) is not None
+
+
+def test_a_flow_built_to_be_wrong_is_still_caught() -> None:
+    """The duplicate-trace flow is kept out of SCENARIOS and in the test suite."""
+    flow = scenarios.build_invalid("duplicate_trace_in_one_window")
+    rules = {finding.rule for finding in lifecycle.check(flow)}
+    assert "L15" in rules, "two live transactions sharing a trace must be caught"

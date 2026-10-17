@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from . import emv
-from .codec import Message, is_request, luhn_ok, response_mti
+from .codec import Message, expects_answer, luhn_ok, response_mti
 from .narrate import RESPONSE_CODES, decode_original_data_elements, mask_pan
 from .scenarios import Flow
 
@@ -212,7 +212,7 @@ def check(flow: Flow) -> list[Finding]:
     responses: list[tuple[int, Message]] = []
     for index, message in enumerate(messages):
         try:
-            request_like = is_request(message.mti)
+            request_like = expects_answer(message.mti)
         except Exception as exc:  # a bad MTI is a codec problem, reported as L02
             findings.append(_finding("L02", f"step {index + 1}: {exc}", index + 1))
             continue
@@ -295,8 +295,24 @@ def check(flow: Flow) -> list[Finding]:
             )
         findings.extend(_check_pair(partner, requests, response_index, response))
 
+    # A stand-in advice reports a decision the switch already made and quotes the
+    # original in DE 90. That closes the request as surely as a response does - and
+    # before this, the one scenario where the issuer was unreachable reported its own
+    # request as "neither answered nor reversed", which was the scenario working.
+    advised_stans: set[str] = set()
+    for index, message in enumerate(messages):
+        odes = message.get(90)
+        if odes is None or not message.mti.startswith("01"):
+            continue
+        parts = decode_original_data_elements(odes)
+        if "error" not in parts:
+            advised_stans.add(parts["original_stan"])
+            del index
+
     for request_index, request in requests:
         if request_index in matched:
+            continue
+        if _stan(request) in advised_stans:
             continue
         if _stan(request) in reversed_stans:
             continue
@@ -395,7 +411,13 @@ def _check_pair(
     # (MTI class 1) or financial (class 2) message. A reversal or a network response
     # approves without authorising anything and correctly carries none, which is what
     # the first run of this checker over its own valid flows demonstrated.
-    if code is not None and request.mti[1] in {"1", "2"}:
+    #
+    # And only where the request *asked* for an authorisation. An advice reports one that
+    # was already made and carries its own DE 38; the acknowledgement that comes back is
+    # not a second authorisation and has none. Scoping on the class alone made a correct
+    # stand-in advice response look like an approval with a missing handle.
+    acknowledging_an_advice = request.mti[2] == "2"
+    if code is not None and request.mti[1] in {"1", "2"} and not acknowledging_an_advice:
         auth = response.get(38)
         if code in APPROVED and auth is None:
             out.append(

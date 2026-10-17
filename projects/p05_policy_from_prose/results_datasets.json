@@ -12,7 +12,7 @@
     "reading": "Every policy here was printed by this project's own printer, so any rate below 1.000 is the language failing to read its own output. That is a different and more serious thing than a model failing to write it.",
     "round_trip_rate": 1.0,
     "round_trips": 60000,
-    "seconds": 564.7,
+    "seconds": 359.5,
     "stable_decision_rate": 1.0
   },
   "model_on_a_sample": {
@@ -78,5 +78,25 @@
       "within_the_size_policy": true
     },
     "borrowers_per_policy": 400
+  },
+  "what_the_language_cannot_say": {
+    "compile_but_have_no_field": 2,
+    "constructs_missing": [
+      "a charge model with a cost basis and instalments",
+      "a citation on a rule, so a change of law finds every rule it touches",
+      "a conditional charge",
+      "a date on the policy, and an engine that picks the version by application date",
+      "a limit that is a table rather than one expression",
+      "a rule about the book rather than about the applicant",
+      "a third outcome with a destination, not just approve, refer and decline",
+      "a window function over the borrower's history",
+      "an authority model and an audit entry inside the policy",
+      "arithmetic over several fields in a gate, which the grammar does not allow",
+      "more than one applicant per decision",
+      "nested policies, or a policy that can call another"
+    ],
+    "reading": "The generated bank reports that 100% of 60,000 policies compile. That is 100% of what this language can say. These are the things it cannot, taken from how credit policies are actually written - and they split in two. Most are refused outright, which is the safe failure. The rest compile, pass review and then fail on the first applicant because the field they name does not exist, which is the failure worth knowing about.",
+    "refused_by_the_grammar": 12,
+    "requirements": 14
   }
 }

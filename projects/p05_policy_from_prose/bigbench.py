@@ -32,7 +32,7 @@ import time
 from shared import datasets
 
 from ..p02_policy_bench import cohort, dsl, engine
-from . import bank
+from . import bank, inexpressible
 from .benchmark import RESULTS as MODEL_RESULTS
 
 RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
@@ -160,6 +160,9 @@ def run(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
     say("=== the language against every policy in the bank")
     results = {
         "language_on_the_whole_bank": score_the_language(limit=limit, verbose=verbose),
+        # The other half of "100% compile": what the language has no words for at all.
+        # A coverage number without this one flatters itself.
+        "what_the_language_cannot_say": inexpressible.summary(),
         "model_on_a_sample": model_sample(),
         "setup": {
             "bank": datasets.load_manifest().get(bank.KEY, {"note": "not in the manifest"}),

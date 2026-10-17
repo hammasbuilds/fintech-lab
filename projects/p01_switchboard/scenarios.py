@@ -438,6 +438,181 @@ def _network_sign_on(ctx: Context) -> list[Step]:
     ]
 
 
+# --------------------------------------------------------------- beyond authorisation
+#
+# Everything above is an authorisation, a response or a reversal: MTI classes 01xx, 02xx,
+# 04xx and 08xx. A switch carries more than that, and the rest is where money goes quietly
+# missing rather than loudly declining:
+#
+#   advice (x2x)           a transaction that already happened and the issuer has to be
+#                          told about - a stand-in approval made while it was down
+#   reconciliation (05xx)  totals for the window at cutover, where the acquirer's count
+#                          and the issuer's are compared and the difference is the point
+#   chargeback (04xx)      the dispute path, and the representment that answers it
+
+
+def _stand_in_authorisation_advice(ctx: Context) -> list[Step]:
+    """The issuer was down, the switch approved on its behalf, and now it has to know.
+
+    An advice is not a request: the money has moved. The issuer cannot decline it, only
+    acknowledge it, which is why the response carries an acknowledgement rather than an
+    approval code.
+    """
+    request = _financial_request(ctx, "010000")
+    advice = Message(
+        mti="0120",
+        fields={
+            2: request.fields[2],
+            3: request.fields[3],
+            4: request.fields[4],
+            7: ctx.transmitted,
+            11: ctx.next_stan(),
+            12: ctx.local_time,
+            13: ctx.local_date,
+            32: ctx.acquirer,
+            37: ctx.rrn,
+            38: "A41701",
+            39: "00",
+            41: ctx.terminal,
+            49: ctx.currency,
+            # DE 90 says which message this is about, exactly as a reversal does.
+            90: _original_data_elements(request, ctx),
+        },
+    )
+    return [
+        Step(
+            ACQ_TO_ISS,
+            "authorisation request (issuer unreachable)",
+            request,
+            "The switch could not reach the issuer, so it decided on its own authority.",
+        ),
+        Step(
+            ACQ_TO_ISS,
+            "stand-in advice",
+            advice,
+            "DE 39 00 on an advice reports what was already approved; it does not ask.",
+        ),
+        Step(ISS_TO_ACQ, "advice response", _response(advice, "00", auth_id=None)),
+    ]
+
+
+def _end_of_day_reconciliation(ctx: Context) -> list[Step]:
+    """Cutover. Both sides state their totals for the window and compare.
+
+    DE 74 is the count of credits, DE 86 their value; DE 75 and DE 87 the debits. The
+    response repeats them. A difference here is the whole purpose of the message.
+    """
+    request = Message(
+        mti="0500",
+        fields={
+            7: ctx.transmitted,
+            11: ctx.next_stan(),
+            15: ctx.local_date,
+            32: ctx.acquirer,
+            33: ctx.forwarder,
+            41: ctx.terminal,
+            49: ctx.currency,
+            # One withdrawal and one purchase in the window, which is what the other
+            # scenarios in this corpus would have put through it.
+            74: "000000002",
+            75: "000000000",
+            86: str(ctx.amount * 2).zfill(16),
+            87: "0" * 16,
+            # DE 60 carries the reconciliation's own reason code: 201 is cutover.
+            60: "201",
+        },
+    )
+    return [
+        Step(ACQ_TO_ISS, "cutover totals", request, "DE 74/86 are the window's counts and value."),
+        Step(
+            ISS_TO_ACQ,
+            "cutover response",
+            _response(request, "00", auth_id=None),
+            "A 00 here means both sides agree; 95 would mean they do not.",
+        ),
+    ]
+
+
+def _chargeback_and_representment(ctx: Context) -> list[Step]:
+    """The dispute path: the issuer takes the money back, the acquirer answers.
+
+    A chargeback is a 0440 - the same class as a reversal and a different function - and
+    it quotes the original transaction in DE 90 exactly as a reversal does. The
+    representment is the acquirer putting it back with evidence.
+    """
+    original = _financial_request(ctx, "000000")
+    approval = _response(original, "00")
+    chargeback = Message(
+        mti="0440",
+        fields={
+            2: original.fields[2],
+            3: original.fields[3],
+            4: original.fields[4],
+            7: ctx.transmitted,
+            11: ctx.next_stan(),
+            32: ctx.acquirer,
+            37: ctx.rrn,
+            41: ctx.terminal,
+            49: ctx.currency,
+            # DE 25 4831 territory: the reason the cardholder gave, carried in DE 60.
+            60: "4853",
+            90: _original_data_elements(original, ctx),
+        },
+    )
+    representment = Message(
+        mti="0440",
+        fields={
+            **chargeback.fields,
+            11: ctx.next_stan(),
+            60: "2713",
+        },
+    )
+    return [
+        Step(ACQ_TO_ISS, "purchase", original),
+        Step(ISS_TO_ACQ, "approval", approval),
+        Step(
+            ISS_TO_ACQ,
+            "chargeback",
+            chargeback,
+            "DE 60 4853 is the cardholder's reason; DE 90 says which transaction.",
+        ),
+        Step(ACQ_TO_ISS, "chargeback response", _response(chargeback, "00", auth_id=None)),
+        Step(
+            ACQ_TO_ISS,
+            "representment",
+            representment,
+            "The acquirer re-presents the same transaction under a different reason code.",
+        ),
+        Step(ISS_TO_ACQ, "representment response", _response(representment, "00", auth_id=None)),
+    ]
+
+
+def _duplicate_trace_in_one_window(ctx: Context) -> list[Step]:
+    """The same trace number twice in one window, for two different transactions.
+
+    This is valid on the wire and wrong in the ledger: DE 11 is how a reversal finds the
+    transaction it reverses, so two live transactions sharing one makes the next reversal
+    ambiguous. Nothing in the codec can refuse it - the invariant layer exists for cases
+    like this one.
+    """
+    stan = ctx.next_stan()
+    first = _financial_request(ctx, "010000")
+    first = first.replace(de11=stan)
+    second = _financial_request(ctx, "000000", amount=ctx.amount // 2)
+    second = second.replace(de11=stan)
+    return [
+        Step(ACQ_TO_ISS, "withdrawal", first),
+        Step(ISS_TO_ACQ, "approval", _response(first, "00")),
+        Step(
+            ACQ_TO_ISS,
+            "purchase on the same trace",
+            second,
+            "Same DE 11, different transaction, inside one reconciliation window.",
+        ),
+        Step(ISS_TO_ACQ, "approval", _response(second, "00")),
+    ]
+
+
 @dataclass(frozen=True)
 class Scenario:
     key: str
@@ -531,7 +706,46 @@ SCENARIOS: tuple[Scenario, ...] = (
         "Opening the session before any financial traffic.",
         _network_sign_on,
     ),
+    Scenario(
+        "stand_in_authorisation_advice",
+        "Stand-in authorisation, then the advice",
+        "The switch approved while the issuer was down, and has to say so afterwards.",
+        _stand_in_authorisation_advice,
+    ),
+    Scenario(
+        "end_of_day_reconciliation",
+        "Cutover reconciliation",
+        "Both sides state the window's counts and value; a difference is the point.",
+        _end_of_day_reconciliation,
+    ),
+    Scenario(
+        "chargeback_and_representment",
+        "Chargeback, then representment",
+        "The dispute path: taken back with a reason, put back with another.",
+        _chargeback_and_representment,
+    ),
 )
+
+#: Not in SCENARIOS, on purpose. Every scenario above is valid by construction - that is
+#: what lets the corpus report a finding as a false positive - and this one is a fault:
+#: two live transactions sharing a trace number. It is built the same way so the
+#: invariant layer can be shown catching it, and kept out of the corpus so the corpus
+#: keeps meaning what it says.
+KNOWN_INVALID: dict[str, Callable[[Context], list[Step]]] = {
+    "duplicate_trace_in_one_window": _duplicate_trace_in_one_window,
+}
+
+
+def build_invalid(key: str, ctx: Context | None = None) -> Flow:
+    """Build a flow that is wrong on purpose. Used by the tests, never by the corpus."""
+    scenario = Scenario(
+        key, "Known-invalid flow", "Built to be caught by the invariants.", KNOWN_INVALID[key]
+    )
+    context = ctx or Context()
+    flow = Flow(key=scenario.key, title=scenario.title, description=scenario.description)
+    flow.steps = scenario.build(context)
+    return flow
+
 
 BY_KEY: dict[str, Scenario] = {s.key: s for s in SCENARIOS}
 

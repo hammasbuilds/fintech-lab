@@ -1,7 +1,21 @@
 """Lint a policy for the things a reviewer would send it back for.
 
-Eight checks. They read the syntax tree, not the output, so they catch a problem in a
-policy that has never been run - which is the point of having the policy be a document.
+Thirteen checks: eight on how the policy is written, and five on what Pakistan's regulator
+caps. They read the syntax tree, not the output, so they catch a problem in a policy that
+has never been run - which is the point of having the policy be a document.
+
+The five regulatory checks come from **SECP Circular 10 of 2023** and the pricing circular
+that followed it, which govern digital nano lending by NBFCs - the product this project is
+written for. The limits are a single borrower capped at Rs 25,000 from one app and Rs 75,000
+across all apps, a tenor of no more than 30 days, total recoveries (markup, fees and
+penalties together) no greater than the principal, and an APR capped at ten times the policy
+rate. Before this, the engine could not express the aggregate cap and the cohort had no
+tenor, so three of the five could not be checked even in principle.
+
+R5 deliberately stops short of asserting a policy rate. The rate moves, this file would go
+stale, and a lint that quotes a stale number is worse than one that asks: it reports the
+APR the policy implies and the minimum policy rate that would make it legal, and leaves the
+comparison to whoever has today's number.
 
 The Shariah check is the one that needs its scope stated plainly. It flags a charge that
 is **priced per unit of time**, because a fee that grows with the number of days the
@@ -21,6 +35,23 @@ from .dsl import Comparison, Condition, Policy
 #: Fields that must not drive a decision directly. Using one of these is not a
 #: borderline modelling choice; it is the thing fair-lending rules exist to forbid.
 PROTECTED = ("region", "gender", "ethnicity", "religion", "marital_status")
+
+#: SECP Circular 10 of 2023 and the September 2023 pricing circular, for digital nano
+#: lending by NBFCs in Pakistan. Quoted here with their source so a reader can check them
+#: rather than trust this file.
+#:
+#: https://www.secp.gov.pk/document/circular-no-10-of-2023-requirements-for-lending-nbfcs-providing-digital-nano-lending
+NANO_SINGLE_APP_CAP = 25_000
+NANO_AGGREGATE_CAP = 75_000
+NANO_MAX_TENOR_DAYS = 30
+#: Total recoveries - markup, fees and penalties together - may not exceed the principal.
+NANO_TOTAL_COST_MULTIPLE = 1.0
+#: The APR ceiling is a multiple of the State Bank's policy rate rather than a number.
+NANO_APR_POLICY_RATE_MULTIPLE = 10
+
+#: The field a policy has to read to keep a borrower inside the aggregate cap. Naming it
+#: here rather than in the check keeps the cohort and the lint honest with each other.
+AGGREGATE_EXPOSURE_FIELD = "other_app_outstanding"
 
 
 @dataclass(frozen=True)
@@ -42,6 +73,11 @@ class Note:
 
 
 CHECKS = (
+    ("R1", "The limit can exceed the single-app cap", "critical"),
+    ("R2", "The policy cannot see another app's loan", "serious"),
+    ("R3", "The tenor is longer than nano lending allows", "serious"),
+    ("R4", "Total recoveries can exceed the principal", "critical"),
+    ("R5", "The APR needs a policy rate to be legal", "warning"),
     ("C1", "A charge is priced per unit of time", "critical"),
     ("C2", "A protected attribute drives the decision", "critical"),
     ("C3", "A gate has no reason the applicant can be given", "serious"),
@@ -62,9 +98,149 @@ def _fields(condition: Condition) -> set[str]:
     return out
 
 
+def _limit_cap(policy: Policy) -> float | None:
+    """The largest amount this policy can lend, when that is knowable from the text.
+
+    Returns the constant in ``min(<expression>, <cap>)``, or None when the limit has no
+    constant ceiling - in which case C5 already has something to say about it.
+    """
+    from .dsl import Call, Number
+
+    expr = policy.limit
+    if not isinstance(expr, Call) or expr.name != "min":
+        return None
+    constants = [arg.value for arg in expr.args if isinstance(arg, Number)]
+    return min(constants) if constants else None
+
+
+def _declared_term_days(policy: Policy) -> tuple[float | None, str]:
+    """How many days the money is out, from the policy's own ``term`` statement."""
+    from .dsl import Number
+
+    if policy.term_months is None:
+        return None, "the policy states no term"
+    if isinstance(policy.term_months, Number):
+        return policy.term_months.value * 30.0, f"{policy.term_months.value:g} months"
+    return None, f"a term taken from {policy.term_months.render()!r}, which varies per applicant"
+
+
+def _cost_as_a_share_of_principal(policy: Policy, term_months: float) -> tuple[float, list[str]]:
+    """Every charge this policy makes, as a multiple of the limit, with the arithmetic."""
+    total = 0.0
+    parts: list[str] = []
+    for charge in policy.charges:
+        if charge.rate is None:
+            continue
+        months = term_months if charge.period else 1.0
+        share = charge.rate * months
+        total += share
+        parts.append(
+            f"{charge.kind} {charge.rate * 100:g}%"
+            + (f" x {months:g} months" if charge.period else "")
+            + f" = {share * 100:g}% of principal"
+        )
+    return total, parts
+
+
+def regulatory(policy: Policy) -> list[Note]:
+    """The five nano-lending checks. See the module docstring for the source."""
+    notes: list[Note] = []
+
+    # R1 - the single-app cap.
+    cap = _limit_cap(policy)
+    if cap is not None and cap > NANO_SINGLE_APP_CAP:
+        notes.append(
+            Note(
+                "R1",
+                "critical",
+                "The limit can exceed the single-app cap",
+                f"the limit is capped at {cap:,.0f} and a single digital nano loan may "
+                f"not exceed {NANO_SINGLE_APP_CAP:,} (SECP Circular 10 of 2023)",
+                None,
+            )
+        )
+
+    # R2 - the aggregate cap needs a field nobody is reading.
+    if AGGREGATE_EXPOSURE_FIELD not in policy.fields_used:
+        notes.append(
+            Note(
+                "R2",
+                "serious",
+                "The policy cannot see another app's loan",
+                f"nothing in this policy reads {AGGREGATE_EXPOSURE_FIELD!r}, so a borrower "
+                f"already holding {NANO_AGGREGATE_CAP:,} from other apps can be lent to "
+                f"again. The single-app cap can be satisfied while the aggregate one is "
+                f"broken, and only this field can tell the difference.",
+                None,
+            )
+        )
+
+    # R3 - the tenor.
+    term_days, how = _declared_term_days(policy)
+    if term_days is not None and term_days > NANO_MAX_TENOR_DAYS:
+        notes.append(
+            Note(
+                "R3",
+                "serious",
+                "The tenor is longer than nano lending allows",
+                f"the policy prices over {how}, about {term_days:,.0f} days, and the tenor "
+                f"for digital nano lending is capped at {NANO_MAX_TENOR_DAYS} days",
+                None,
+            )
+        )
+
+    # R4 and R5 - what it all costs.
+    # When the term is a field rather than a number, the cost is computed at the 30-day
+    # cap and said so: a per-applicant term can only make it larger, never smaller, so
+    # this is the most favourable reading of the policy rather than a guess.
+    at_the_cap = term_days is None
+    months_for_cost = (term_days or float(NANO_MAX_TENOR_DAYS)) / 30.0
+    total, parts = _cost_as_a_share_of_principal(policy, months_for_cost)
+    if total > NANO_TOTAL_COST_MULTIPLE:
+        notes.append(
+            Note(
+                "R4",
+                "critical",
+                "Total recoveries can exceed the principal",
+                f"charges add up to {total * 100:,.0f}% of the principal over "
+                f"{months_for_cost:g} months ({'; '.join(parts)}), and total recoveries "
+                f"may not exceed the principal"
+                + (
+                    f". {how}, so this is the figure at the {NANO_MAX_TENOR_DAYS}-day cap "
+                    f"and a longer tenor multiplies it"
+                    if at_the_cap
+                    else ""
+                ),
+                None,
+            )
+        )
+    if total > 0 and months_for_cost > 0:
+        apr = total * (12.0 / months_for_cost)
+        implied = apr / NANO_APR_POLICY_RATE_MULTIPLE
+        notes.append(
+            Note(
+                "R5",
+                "warning",
+                "The APR needs a policy rate to be legal",
+                f"these charges imply an APR of about {apr * 100:,.0f}% over "
+                f"{months_for_cost:g} months. The ceiling is "
+                f"{NANO_APR_POLICY_RATE_MULTIPLE}x the policy rate, so this is inside it "
+                f"only while the policy rate is at least {implied * 100:,.1f}%. This lint "
+                f"does not hold a policy rate on purpose - it would go stale."
+                + (
+                    f" Computed at the {NANO_MAX_TENOR_DAYS}-day cap, because {how}."
+                    if at_the_cap
+                    else ""
+                ),
+                None,
+            )
+        )
+    return notes
+
+
 def review(policy: Policy) -> list[Note]:
     """Every note this policy earns, worst first."""
-    notes: list[Note] = []
+    notes: list[Note] = list(regulatory(policy))
 
     # C1 - time-priced charges.
     for charge in policy.charges:

@@ -11,6 +11,7 @@ from projects.p01_switchboard.codec import (
     build_bitmap,
     check_values,
     describe_mti,
+    expects_answer,
     field_offsets,
     is_request,
     normalise,
@@ -74,7 +75,10 @@ def test_mti_classes(mti: str, expected_class: str) -> None:
     assert describe_mti(mti)["class"] == expected_class
 
 
-@pytest.mark.parametrize("mti", ["0900", "0250", "0270", "4200", "020", "02a0", ""])
+# 0250 used to be in this list and is not reserved: function digit 5 is a notification
+# acknowledgement, which is how a chargeback is answered. It was missing from the table,
+# so the codec refused a legitimate MTI - and the dispute path had no reply at all.
+@pytest.mark.parametrize("mti", ["0900", "0260", "0270", "4200", "020", "02a0", ""])
 def test_a_reserved_or_malformed_mti_is_refused(mti: str) -> None:
     # Tolerating a reserved position only moves the failure somewhere later.
     with pytest.raises(CodecError):
@@ -90,7 +94,7 @@ def test_response_mti_increments_the_function_digit() -> None:
 def test_a_response_has_no_response() -> None:
     assert is_request("0200") is True
     assert is_request("0210") is False
-    with pytest.raises(CodecError, match="not a request"):
+    with pytest.raises(CodecError, match="expects no answer"):
         response_mti("0210")
 
 
@@ -276,3 +280,17 @@ def test_scenario_values_flow_through_to_the_message() -> None:
     request = flow.steps[0].message
     assert request.fields[2] == "5105105105105100"
     assert request.fields[4] == "000000123456"
+
+
+def test_a_notification_is_answered_with_an_acknowledgement() -> None:
+    """0440 is a chargeback: it asks for no decision and is still answered.
+
+    Function digit 5 was missing from the table, so 0450 was reserved and the dispute
+    path had no reply the codec would build.
+    """
+    assert describe_mti("0440")["function"] == "notification"
+    assert describe_mti("0450")["function"] == "notification acknowledgement"
+    assert response_mti("0440") == "0450"
+    assert is_request("0440") is False
+    assert expects_answer("0440") is True
+    assert expects_answer("0450") is False

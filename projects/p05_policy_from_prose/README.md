@@ -122,5 +122,13 @@ at the same time.
 | decisions unchanged across a reprint | **1** | 24,000,000 decisions |
 | the model's share of the bank | **0.0001** | 5 of 60,000 policies |
 
+| What the language cannot say | Count | Note |
+| --- | ---: | --- |
+| requirements taken from real policy documents | **14** | each one run through the compiler by a test |
+| refused by the grammar | **12** | the safe failure: the policy never ships |
+| compile, then fail on the first applicant | **2** | the dangerous one: they pass review |
+
+A compile rate of 1.0000 is 100% of what this language *can* say. The table above is the other half, and the split in it is the finding: most of these are refused outright, and a couple compile, pass review and die on the first applicant because the field they name does not exist.
+
 This doubles as a grammar fuzzer, and the four rates above are the properties that have to hold: the text came out of this project's own printer, so a parse failure would be the language unable to read what it writes. Two faults in the *generator* showed up on the way: a sampler that could produce a policy whose every rule took points away, which can never approve anybody and which the compiler correctly refuses; and a phrase table that paired a comparator with the opposite English, so "supports fewer than 6 dependants is worth 5 points" sat next to `score +5 if dependants >= 6`. A bank of 60,000 of those would have marked every correct answer wrong.
 <!-- datasets:end -->

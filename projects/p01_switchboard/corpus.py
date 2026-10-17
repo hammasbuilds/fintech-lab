@@ -50,7 +50,15 @@ DEFAULT_FLOWS = 3_640
 SEED = 20261016
 
 BINS = ("411111", "521234", "627654", "558011")
-CURRENCIES = ("586", "840", "784", "682", "826")
+#: Currencies with three different minor-unit exponents, on purpose: PKR, USD, AED and
+#: GBP have two decimal places, JPY and KRW have none, and KWD and BHD have three. Every
+#: message in the first version of this corpus was in a 2-decimal currency, so the whole
+#: class of exponent bugs was invisible to it.
+CURRENCIES = ("586", "840", "784", "826", "392", "410", "414", "048")
+
+#: Minor-unit exponents, so a generated amount is sensible in its own currency: 500,000
+#: minor units is 5,000.00 in rupees and 500 dinars, which are not the same transaction.
+EXPONENTS = {"392": 0, "410": 0, "414": 3, "048": 3}
 MCCS = ("6011", "5411", "5812", "5541", "4111", "5912", "7011", "5999")
 CITIES = (
     ("LAHORE", "PK"),
@@ -91,8 +99,13 @@ def _luhn_complete(prefix: str, rng: random.Random) -> str:
 def random_context(rng: random.Random) -> scenarios.Context:
     city, country = rng.choice(CITIES)
     merchant = rng.choice(MERCHANTS)
-    # Log-uniform so the corpus is not all mid-sized amounts.
-    amount = int(math.exp(rng.uniform(math.log(100), math.log(500_000))))
+    # Log-uniform so the corpus is not all mid-sized amounts, then scaled into the
+    # currency's own minor units: the same purchase is 500,000 minor units in rupees and
+    # 5,000 in yen.
+    currency = rng.choice(CURRENCIES)
+    exponent = EXPONENTS.get(currency, 2)
+    major = math.exp(rng.uniform(math.log(1), math.log(5_000)))
+    amount = max(1, int(major * (10**exponent)))
     month = rng.randrange(1, 13)
     day = rng.randrange(1, 29)
     hour, minute, second = rng.randrange(24), rng.randrange(60), rng.randrange(60)
@@ -105,7 +118,7 @@ def random_context(rng: random.Random) -> scenarios.Context:
         pan=_luhn_complete(rng.choice(BINS), rng),
         expiry=f"{rng.randrange(27, 32)}{rng.randrange(1, 13):02d}",
         amount=amount,
-        currency=rng.choice(CURRENCIES),
+        currency=currency,
         stan=rng.randrange(1, 900_000),
         terminal=terminal,
         acquirer=acquirer,

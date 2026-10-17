@@ -38,6 +38,19 @@ EMPLOYMENT = ("salaried", "self-employed", "daily-wage")
 #: arithmetic uses this rather than writing the full limit off.
 LOSS_GIVEN_DEFAULT = 0.75
 
+#: How long the origination window is. Twenty-four months is the shortest span over which
+#: a vintage curve and a population-stability index both say something.
+WINDOW_MONTHS = 24
+
+#: The drift the window carries. A real book's applicants change while a scorecard stays
+#: still - this one gets gradually younger, thinner on wallet history and more likely to
+#: be carrying another app's loan, which is what a PSI is for noticing.
+DRIFT = {
+    "income_per_month": -0.004,
+    "wallet_months_per_month": -0.10,
+    "other_app_rate_per_month": 0.012,
+}
+
 
 @dataclass(frozen=True)
 class Borrower:
@@ -53,13 +66,36 @@ class Borrower:
     employment: str
     region: str
     has_smartphone: int
+    #: Loans this borrower already has from **other** nano-lending apps, and what they
+    #: add up to. Without these the aggregate exposure cap in SECP Circular 10 of 2023
+    #: cannot be checked even in principle: a policy can be inside the Rs 25,000
+    #: single-app limit and still push a borrower past the Rs 75,000 aggregate one.
+    other_app_loans: int
+    other_app_outstanding: int
+    #: The tenor the product offers, in days. Nano lending is capped at 30 days, and the
+    #: cohort had no tenor at all, so neither the total-cost cap nor an APR could be
+    #: computed from it.
+    tenor_days: int
+    #: Months since the start of the twenty-four month origination window. Everything in
+    #: this cohort used to exist at the same instant, which rules out out-of-time
+    #: validation, vintage curves and population stability at a stroke.
+    origination_month: int
     # Ground truth, known to the generator and to nothing else in the project.
     would_default: int
+    #: Months on book when the default happened, for vintage curves. 0 for a borrower who
+    #: did not default.
+    months_to_default: int
 
     def record(self) -> dict[str, object]:
-        """The fields a policy may read. ``would_default`` is deliberately withheld."""
+        """The fields a policy may read.
+
+        ``would_default`` and ``months_to_default`` are both withheld: the second is as
+        much of an outcome as the first, and a policy that could read it would be
+        scoring the future.
+        """
         out = asdict(self)
         out.pop("would_default")
+        out.pop("months_to_default")
         out.pop("id")
         return out
 
@@ -103,6 +139,36 @@ def generate(size: int = 50_000, seed: int = 20261015) -> list[Borrower]:
             0, int(rng.lognormvariate(math.log(max(400, monthly_income * 0.11)), 0.7))
         )
         prior_defaults = rng.choices((0, 1, 2, 3), weights=(84, 11, 4, 1))[0]
+
+        # Where in the origination window this applicant arrived, and the drift that
+        # comes with it.
+        origination_month = rng.randrange(WINDOW_MONTHS)
+        monthly_income = max(
+            6000,
+            int(monthly_income * (1 + DRIFT["income_per_month"] * origination_month)),
+        )
+        wallet_months = max(
+            0,
+            int(wallet_months + DRIFT["wallet_months_per_month"] * origination_month),
+        )
+
+        # Other apps. The rate rises across the window, which is what the market did.
+        other_app_rate = 0.18 + DRIFT["other_app_rate_per_month"] * origination_month
+        if rng.random() < other_app_rate:
+            other_app_loans = rng.choices((1, 2, 3, 4), weights=(48, 28, 17, 7))[0]
+            # Each one is inside the single-app cap by construction; the borrowers who
+            # already have two or three tend to have taken larger ones, which is how the
+            # aggregate cap comes to bite on roughly one applicant in thirty.
+            floor = 5_000 if other_app_loans == 1 else 12_000
+            other_app_outstanding = sum(
+                rng.randrange(floor, 25_001, 500) for _ in range(other_app_loans)
+            )
+        else:
+            other_app_loans = 0
+            other_app_outstanding = 0
+
+        # Nano tenor. 30 days is the cap; a few products still quote the old 90.
+        tenor_days = rng.choices((15, 30, 60, 90), weights=(22, 61, 11, 6))[0]
         on_time_repayments = rng.choices((0, 1, 2, 3, 4, 5), weights=(30, 20, 18, 14, 10, 8))[0]
         has_smartphone = 1 if rng.random() < (0.72 if rural else 0.93) else 0
 
@@ -116,9 +182,16 @@ def generate(size: int = 50_000, seed: int = 20261015) -> list[Borrower]:
             - 0.21 * on_time_repayments
             + 0.10 * dependants
             - 0.00004 * avg_balance
+            # Carrying another app's loan is a real signal and a legal limit at the same
+            # time. The coefficient is deliberately modest: it is a worse risk, not a
+            # different species.
+            + 0.000035 * other_app_outstanding
             + rng.gauss(0, 0.85)  # the part no policy can see
         )
         would_default = 1 if rng.random() < _logistic(linear) else 0
+        # When it went bad, for vintage curves. Defaults cluster early, which is why a
+        # three-month-old book always looks better than it is.
+        months_to_default = 0 if not would_default else min(12, 1 + int(rng.expovariate(1 / 2.6)))
 
         borrowers.append(
             Borrower(
@@ -134,7 +207,12 @@ def generate(size: int = 50_000, seed: int = 20261015) -> list[Borrower]:
                 employment=employment,
                 region=region,
                 has_smartphone=has_smartphone,
+                other_app_loans=other_app_loans,
+                other_app_outstanding=other_app_outstanding,
+                tenor_days=tenor_days,
+                origination_month=origination_month,
                 would_default=would_default,
+                months_to_default=months_to_default,
             )
         )
     return borrowers

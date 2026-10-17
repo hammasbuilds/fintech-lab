@@ -187,7 +187,7 @@ One command runs all three and prints what they did. `uv run python demo.py`
 
   INPUT   all 14 scenarios, then every injected fault
   OUTPUT
-  valid flows checked            14 (33 messages)
+  valid flows checked            17 (44 messages)
   false positives on them        0  
   faults injected                38
   killed                         38/38
@@ -211,68 +211,70 @@ One command runs all three and prints what they did. `uv run python demo.py`
   INPUT   three policy files and 50,000 synthetic borrowers
 
   OUTPUT
-    Nano loan v1   approvals  57.0%   bad rate 2.62%   net    1,797,671 PKR   lint clean
-    Nano loan v2   approvals  32.1%   bad rate 1.84%   net    2,070,026 PKR   lint clean
-    Nano loan v3   approvals  32.1%   bad rate 1.84%   net    2,070,026 PKR   lint 1 note(s): C1
+    Nano loan v1   approvals  51.5%   bad rate 4.57%   net   -1,501,465 PKR   lint 2 note(s): R2
+    Nano loan v2   approvals  29.0%   bad rate 3.08%   net      530,631 PKR   lint 2 note(s): R2
+    Nano loan v3   approvals  29.0%   bad rate 3.08%   net      530,631 PKR   lint 3 note(s): C1
 
   INPUT   move from v1 to v2 - raise the income floor, penalise turnover
   OUTPUT
-  newly declined                 12,459
-  of those, would have defaulted 451
-  of those, would have repaid    12,008
-  precision of the tightening    3.6%
-  approval rate                  -24.92 points
-  bad rate                       -0.78 points
-  net                            +272,355 PKR
-  disbursed                      -98,069,414 PKR
+  newly declined                 11,234
+  of those, would have defaulted 730
+  of those, would have repaid    10,504
+  precision of the tightening    6.5%
+  approval rate                  -22.46 points
+  bad rate                       -1.49 points
+  net                            +2,032,096 PKR
+  disbursed                      -86,800,100 PKR
 
-  The tightening works, and it costs 12,008 good borrowers to avoid 451.
+  The tightening works, and it costs 10,504 good borrowers to avoid 730.
   An approval-rate chart shows the first half of that sentence only.
 
   INPUT   v3, which is v2 with the late fee re-expressed per day
   OUTPUT
   credit decisions changed       0
   lint C1 (critical)             'late_fee 1% of limit per day' grows with how long the money is outstanding, which prices ...
+  lint R2 (serious)              nothing in this policy reads 'other_app_outstanding', so a borrower already holding 75,000...
+  lint R5 (warning)              these charges imply an APR of about 42% over 1 months. The ceiling is 10x the policy rate,...
 
   INPUT   v2's approvals, grouped by region (no policy here mentions region)
   OUTPUT
-  raw approval-rate gap          36.4%  (central-urban vs east-rural)
-  gap within income bands        15.7%
+  raw approval-rate gap          35.3%  (central-urban vs south-rural)
+  gap within income bands        15.0%
 
-  The gap falls from 36.4% to 15.7% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than region itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.
+  The gap falls from 35.3% to 15.0% once income is held roughly still, so most of it is income reaching the decision through the policy's income rules rather than region itself. That is a product question - whether this product should serve lower incomes at all - not a defect in the rules.
 
   INPUT   v2's score against the outcome, then every possible cutoff
   OUTPUT
-  Gini                           0.2329   (AUC 0.6164, KS 0.1705)
-  measured on                    25,584 scored, 24,416 gated out first
+  Gini                           0.2349   (AUC 0.6175, KS 0.1813)
+  measured on                    24,622 scored, 25,378 gated out first
     Weak separation. A cutoff on this score will cut good and bad alike.
 
      cutoff  approved  bad rate           net  good declined
-        -10    51.1%     2.51%     1,966,275              8
-          0    51.1%     2.51%     1,965,173             15
-         10    49.9%     2.41%     2,050,052            613
-         20    47.6%     2.29%     2,123,650          1,666
-         30    43.0%     2.09%     2,241,239          3,889
-         40    35.0%     1.95%     2,123,099          7,774
-         50    27.8%     1.84%     1,871,118         11,323
-         60    18.7%     1.64%     1,478,500         15,753
-         70     8.7%     1.26%       866,889         20,639
-         80     3.1%     0.84%       359,007         23,414
-         90     1.4%     0.87%       166,191         24,263
+        -10    49.2%     4.36%      -958,295             12
+          0    49.2%     4.35%      -955,490             19
+         10    47.7%     4.18%      -745,500            699
+         20    45.0%     4.01%      -538,584          1,955
+         30    40.0%     3.75%      -200,627          4,286
+         40    32.1%     3.34%       273,881          8,034
+         50    24.4%     2.99%       542,870         11,714
+         60    15.9%     2.58%       631,994         15,810
+         70     6.9%     2.11%       434,184         20,167
+         80     2.3%     1.46%       211,916         22,404
+         90     1.0%     1.94%        75,924         23,043
 
   the policy's own cutoff        45
-  net-maximising cutoff          35
-  available by moving it         +184,716 PKR
+  net-maximising cutoff          55
+  available by moving it         +122,526 PKR
 
-    The net-maximising threshold of 35 is chosen on the same 25,584 borrowers it is scored against. It is the best cutoff for this cohort's past, and an optimistic estimate for anyone it has not seen. Treat the shape of the curve as the finding, not the argmax.
+    The net-maximising threshold of 55 is chosen on the same 24,622 borrowers it is scored against. It is the best cutoff for this cohort's past, and an optimistic estimate for anyone it has not seen. Treat the shape of the curve as the finding, not the argmax.
 
-  This is why the tightening cut mostly good borrowers: a Gini of 0.2329 barely
+  This is why the tightening cut mostly good borrowers: a Gini of 0.2349 barely
   separates the two groups, so any cutoff on this score cuts both at once.
 
   INPUT   the same cohort as CSV, with the outcome column removed
   OUTPUT
   rows read                      500
-  approval rate                  27.8%
+  approval rate                  29.2%
   bad rate                       None
   expected loss                  None
 
@@ -281,15 +283,15 @@ One command runs all three and prints what they did. `uv run python demo.py`
   INPUT   one applicant who falls ten points short
   OUTPUT
 
-    [en] Not approved this time. Your score was 35 and this product needs 45.
+    [en] Not approved this time. Your score was 30 and this product needs 45.
       - income comfortably above the floor  (not met)
+      - eighteen months of wallet history  (not met)
       - repaid on time before  (not met)
-      - keeps a balance between salary days  (not met)
 
-    [ur] Is waqt manzoori nahi hui. Aap ka score 35 tha, is product ke liye 45 chahiye.
+    [ur] Is waqt manzoori nahi hui. Aap ka score 30 tha, is product ke liye 45 chahiye.
       - aap ki maheena aamdani 30000 rupay se zyada ya barabar hai  (yeh shart poori nahi hui)
+      - aap ka wallet kitne maheene se chal raha hai 18 maheene se zyada ya barabar hai  (yeh shart poori nahi hui)
       - waqt par wapas kiye gaye qarze 2 se zyada ya barabar hai  (yeh shart poori nahi hui)
-      - aap ke wallet ka aam balance 4000 rupay se zyada ya barabar hai  (yeh shart poori nahi hui)
 ```
 <!-- io:02:end -->
 
@@ -372,10 +374,10 @@ One command runs all three and prints what they did. `uv run python demo.py`
   asked instead of guessing      10/10
   replies wrongly read as consent 0
   ordinary traffic blocked       0/5
-  scams the words miss           4/4
-  of those, escalated anyway     4/4
-  missed by both layers          0/4
-  ordinary transfers escalated   1/5
+  scams the words miss           3/3
+  of those, escalated anyway     3/3
+  missed by both layers          0/3
+  ordinary transfers escalated   2/6
   end-to-end properties holding  9/9
 
   The lexical check still misses all four, and that is still published. What
@@ -385,6 +387,25 @@ One command runs all three and prints what they did. `uv run python demo.py`
   would be advertising.
 ```
 <!-- io:03:end -->
+
+## What these products do not do
+
+[**GAPS.md**](GAPS.md) is the gap analysis: for each project, what the industry requires,
+what the product and its dataset actually did, what changed, and what the change measured.
+It is also where the work in this round came from - nine product defects found by putting
+traffic through these products that had never been put through them, and one published
+figure that got smaller because a fix made it smaller.
+
+Three of them, for the flavour:
+
+- a **chargeback had no response the codec would build**, because function digit 5 was
+  missing from the MTI table. One digit, and the dispute path did not exist.
+- the policy engine **could not see another app's loan**, so SECP Circular 10 of 2023's
+  Rs 75,000 aggregate cap could not be checked even in principle - and 5.0% of the cohort
+  is carrying enough from other apps that a legal loan would break it.
+- a transfer **split across several days** went entirely unnoticed: the behavioural layer
+  had a daily cap and no monthly view. 527 splits, none caught. With the monthly signal:
+  0.987, at an unchanged false-block rate on ordinary traffic.
 
 ## What each project is measured on
 
@@ -403,15 +424,15 @@ Kaggle files.
 <!-- datasets:start -->
 | Project | Dataset | Rows | Size | Source |
 | --- | --- | ---: | ---: | --- |
-| 01 | ISO 8583 messages, generated from a seed | 120,120 | 123 MB | generated by projects/p01_switchboard/corpus.py |
+| 01 | ISO 8583 messages, generated from a seed | 160,160 | 156 MB | generated by projects/p01_switchboard/corpus.py |
 | 02 | Real loan applications with their outcomes | 255,347 | 24 MB | kaggle:nikhil1e9/loan-default |
 | 02 | Real card applications, outcome mostly unknown | 438,557 | 52 MB | kaggle:rikdifos/credit-card-approval-prediction |
 | 02 | Monthly repayment status, joined as a lookup | 1,048,575 | 15 MB | kaggle:rikdifos/credit-card-approval-prediction |
-| 03 | Wallet utterances, labelled by construction | 200,000 | 70 MB | generated by projects/p03_guardian/generator.py |
-| 04 | Wire tasks drawn from the 01 corpus | 60,000 | 30 MB | generated by projects/p04_spec_to_wire/bank.py |
+| 03 | Wallet utterances, labelled by construction | 200,000 | 93 MB | generated by projects/p03_guardian/generator.py |
+| 04 | Wire tasks drawn from the 01 corpus | 60,000 | 29 MB | generated by projects/p04_spec_to_wire/bank.py |
 | 05 | Policies in prose and in the DSL | 60,000 | 114 MB | generated by projects/p05_policy_from_prose/bank.py |
-| 06 | The same set project 03 is scored on | 200,000 | 70 MB | generated by projects/p03_guardian/generator.py |
-| | **distinct rows across the repo** | **2,182,599** | | |
+| 06 | The same set project 03 is scored on | 200,000 | 93 MB | generated by projects/p03_guardian/generator.py |
+| | **distinct rows across the repo** | **2,222,639** | | |
 <!-- datasets:end -->
 
 ## One panel for all six

@@ -1,0 +1,44 @@
+# v4 is v2 with the regulator's limits written into the policy instead of left to luck.
+#
+# Digital nano lending in Pakistan is capped by SECP Circular 10 of 2023: Rs 25,000 from one
+# app, Rs 75,000 across all apps, a tenor of no more than 30 days, total recoveries no
+# greater than the principal, and an APR of at most ten times the policy rate. v1 to v3 sit
+# inside the single-app cap by arithmetic accident and have no opinion about the rest.
+#
+# Three changes:
+#
+#   - the aggregate cap is a gate. A borrower already holding 55,000 from other apps cannot
+#     be given another 20,000 without breaking the 75,000 limit, and the only way to know
+#     that is to read it, which no earlier policy did.
+#   - the limit is capped at 20,000, inside the single-app cap with room for the aggregate
+#     gate to do its work.
+#   - one one-off fee, no time-priced charge. At a 30-day tenor a 2.5% service fee is about
+#     30% APR, which needs a policy rate of 3% or more to be inside the 10x ceiling.
+#
+# It also keeps the turnover and household rules from v2, because nothing about the
+# regulatory limits makes the credit question go away.
+policy "Nano loan v4 - inside the caps"
+version 4
+currency PKR
+
+decline if age < 18 because "below the legal age to contract"
+decline if monthly_income < 18000 because "monthly income below the floor of 18,000"
+decline if prior_defaults >= 1 because "a default already on file"
+decline if txn_velocity > 120 because "wallet turnover too high to read as income"
+decline if other_app_outstanding > 55000 because "loans from other apps already near the 75,000 cap"
+decline if other_app_loans >= 4 because "four or more live loans from other lending apps"
+refer if dependants >= 6 because "a large household needs an officer to size the limit"
+refer if tenor_days > 30 because "a tenor over 30 days is outside nano lending"
+
+score +20 if wallet_months >= 6 because "six months of wallet history"
+score +15 if wallet_months >= 18 because "eighteen months of wallet history"
+score +20 if monthly_income >= 30000 because "income comfortably above the floor"
+score +15 if on_time_repayments >= 2 because "repaid on time before"
+score +10 if avg_balance >= 4000 because "keeps a balance between salary days"
+score -15 if txn_velocity > 80 because "turnover high enough to blur the income signal"
+score -10 if other_app_outstanding > 25000 because "already carrying another app's loan"
+score +10 if employment == "salaried" because "a salary lands on a predictable date"
+
+approve if score >= 45
+limit min(0.25 * monthly_income, 20000)
+fee 2.5% of limit

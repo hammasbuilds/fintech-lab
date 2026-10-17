@@ -5,10 +5,10 @@
     "actions": 30,
     "near_miss": 3,
     "coercion": 23,
-    "coercion_expected_misses": 4,
+    "coercion_expected_misses": 3,
     "replies": 21,
     "paired": 9,
-    "paired_scams": 4,
+    "paired_scams": 3,
     "all": 140
   },
   "numerals": {
@@ -36,15 +36,15 @@
   },
   "coercion": {
     "cases": 23,
-    "in_vocabulary_cases": 19,
-    "verdict_exact": 19,
+    "in_vocabulary_cases": 20,
+    "verdict_exact": 20,
     "verdict_accuracy": 1.0,
-    "families_complete": 19,
+    "families_complete": 20,
     "scripts_in_set": 9,
     "benign_cases": 5,
     "benign_blocked": 0,
-    "out_of_vocabulary_cases": 4,
-    "out_of_vocabulary_missed": 4,
+    "out_of_vocabulary_cases": 3,
+    "out_of_vocabulary_missed": 3,
     "miss_rate_out_of_vocabulary": 1.0,
     "failures": []
   },
@@ -58,12 +58,12 @@
   "paired": {
     "cases": 9,
     "as_expected": 9,
-    "scams": 4,
+    "scams": 3,
     "scams_caught_by_words": 0,
-    "scams_escalated_by_behaviour": 4,
+    "scams_escalated_by_behaviour": 3,
     "scams_missed_by_both": 0,
-    "benign": 5,
-    "benign_escalated": 1,
+    "benign": 6,
+    "benign_escalated": 2,
     "rows": [
       {
         "label": "ammi's friend",
@@ -106,8 +106,8 @@
       },
       {
         "label": "property token",
-        "scam": true,
-        "coercion_verdict": "allow",
+        "scam": false,
+        "coercion_verdict": "warn",
         "coercion_as_expected": true,
         "behaviour_level": "elevated",
         "behaviour_as_expected": true,
@@ -166,7 +166,7 @@
         ]
       }
     ],
-    "reading": "Of 4 scam approaches the word-based check lets through, judging the transfer instead escalates 4. The cost is 1 of 5 ordinary transfers also escalated - and escalation is a slower confirmation, not a refusal, so that cost is friction rather than a blocked payment."
+    "reading": "Of 3 scam approaches the word-based check lets through, judging the transfer instead escalates 3. The cost is 2 of 6 ordinary transfers also escalated - and escalation is a slower confirmation, not a refusal, so that cost is friction rather than a blocked payment."
   },
   "properties": {
     "checks": 9,
@@ -216,8 +216,8 @@
     "modifiers": 21,
     "intents": 7,
     "intent_phrases": 66,
-    "coercion_families": 7,
-    "coercion_phrases": 122,
+    "coercion_families": 12,
+    "coercion_phrases": 177,
     "coercion_proximity_patterns": 4,
     "behaviour_signals": 6,
     "contacts": 7

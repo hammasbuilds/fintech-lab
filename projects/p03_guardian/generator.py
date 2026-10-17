@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import asdict, dataclass, field
+from functools import lru_cache
 
 from shared import datasets
 
@@ -49,11 +50,19 @@ SEED = 20261017
 #: Families, and how many of each. Amounts dominate because an amount is the field a
 #: mistake costs money in.
 PLAN = {
-    "amount": 60_000,
-    "action": 70_000,
-    "coercion": 40_000,
+    "amount": 55_000,
+    "action": 60_000,
+    "coercion": 45_000,
     "benign": 25_000,
     "reply": 5_000,
+    #: Transfers split to stay under a wallet's daily cap. Structuring is the oldest
+    #: evasion there is and the set had no account level, no balance and no sequence, so
+    #: it could not contain one.
+    "structuring": 5_000,
+    #: Whole conversations rather than single sentences: a request, a question about the
+    #: payee, an answer, a confirmation. The confirmation spine is built for exactly this
+    #: and was being tested one sentence at a time.
+    "thread": 5_000,
 }
 
 #: Banking words the two Roman Urdu corpora do not contain. Kept apart from the attested
@@ -135,6 +144,17 @@ CONTACT_NAMES = (
 )
 
 RELATIONS = ("brother", "sister", "mother", "father", "uncle")
+
+#: Branchless banking tiers and their caps. Reported figures for the 2016 revision of the
+#: State Bank's regulations: Level 0 at Rs 25,000 a day and Rs 40,000 a month, Level 1 at
+#: Rs 50,000 and Rs 80,000. A bank's own page lists a different monthly figure for Level 0,
+#: so these are quoted as *reported* and dated rather than as current law.
+#:
+#: https://propakistani.pk/2016/07/14/sbp-revises-transactions-limits-for-branchless-banking-accounts/
+WALLET_LEVELS = {
+    "level_0": {"daily": 25_000, "monthly": 40_000, "yearly": 200_000},
+    "level_1": {"daily": 50_000, "monthly": 80_000, "yearly": 800_000},
+}
 
 BANKS = ("Meezan", "HBL", "UBL", "Alfalah", "Askari", "Faysal", "Bank Islami", "JS Bank")
 
@@ -333,6 +353,17 @@ class Case:
     gold_resolution: str = "none"
     gold_coercion: tuple[str, ...] = ()
     gold_should_block: bool = False
+    #: True when the scam type has no vocabulary in the product at all. These are the
+    #: blind spot at scale: the four hand-written cases could not measure a rate.
+    outside_the_vocabulary: bool = False
+    #: Which obfuscation was applied to a security word, if any.
+    obfuscation: str = ""
+    #: The wallet tier this case belongs to, and the cap it is being measured against.
+    wallet_level: str = ""
+    daily_cap: int = 0
+    #: For a thread, which turn this is and what the whole conversation is.
+    turn: int = 0
+    thread_id: str = ""
     recipe: dict[str, object] = field(default_factory=dict)
 
     def as_row(self) -> dict[str, object]:
@@ -373,7 +404,64 @@ BALANCE_TEMPLATES = (
     ("balance check {karo}", "code_mixed"),
 )
 
+#: Families the product has no vocabulary for. They are generated on purpose and labelled
+#: as outside it, so the blind spot is measured at scale instead of being four hand-written
+#: cases. A generator cannot be asked to invent the words a lexicon is missing - it would
+#: be writing the answer key - but it can carry whole scam *types* nobody has encoded.
+OUTSIDE_THE_VOCABULARY = {
+    "job_scam": (
+        "aap ki job confirm ho gayi hai, uniform aur training ka kharcha jama karwa dein",
+        "online data entry ka kaam hai, registration ke baad pehli salary mil jaye gi",
+        "company ne aap ko select kar liya hai, security deposit ke baad joining letter",
+    ),
+    "qr_swap": (
+        "ye wala qr scan karein, dukan wala qr kharab ho gaya hai",
+        "meter pe laga qr purana hai, main apna bhej raha hoon",
+        "scan karke bata dein kitna aya, qr apne aap amount le lega",
+    ),
+    "sim_swap": (
+        "aap ka number band ho raha hai, naya sim lene ke liye verification karwayein",
+        "franchise se bol raha hoon, sim upgrade ke liye form bhar dein",
+        "aap ke number pe doosra sim issue hua hai, roknay ke liye tasdeeq karein",
+    ),
+    "refund_overpayment": (
+        "ghalti se aap ko zyada paisay chale gaye, extra wapas kar dein",
+        "double payment ho gayi hai, jo ziyada aya wo laut a dein",
+        "refund process ho gaya tha, ab aap ko wapas bhejna hai",
+    ),
+}
+
 COERCION_SCRIPTS = {
+    # The five families the published breakdowns put first. Purchase scams are the single
+    # largest category of authorised push payment fraud in the UK regulator's data, and
+    # the set had none at all.
+    "purchase_scam": (
+        "advance payment bhej dein, phir courier kar deta hoon",
+        "token amount bhej dein warna deal nikal jaye gi",
+        "olx pe dekha tha na, booking amount aaj bhej dein",
+        "last piece bacha hai, pehle paisay bhej dein to rakh leta hoon",
+        "parcel chhurwane ke liye delivery charges bhej dein",
+    ),
+    "investment_scam": (
+        "paisa double karwa dunga, monthly profit guaranteed",
+        "forex trading account khol dete hain, guaranteed return milta hai",
+        "crypto invest kar lein, 50 percent profit teen mahine me",
+    ),
+    "romance_scam": (
+        "mujhse shadi karni hai, visa ke paisay bhej do",
+        "hospital me hoon, mera phone band ho raha hai, madad karo",
+        "gift bheja hai customs clearance ke paisay chahiye",
+    ),
+    "advance_fee": (
+        "loan approve ho gaya hai, processing fee bhej dein",
+        "aap ne ticket jeeta hai, clearance fee jama karwa dein",
+        "warasat ka case hai, registration fee bhej dein",
+    ),
+    "invoice_redirect": (
+        "invoice ka account badal gaya hai, naya invoice bhej raha hoon",
+        "supplier ka naya account hai, is bar is account me bhej dein",
+        "updated bank details attach hain, iban change ho gaya hai",
+    ),
     "otp_solicitation": (
         "aap ka otp batao warna account band ho jaye ga",
         "code bhejo verification ke liye",
@@ -501,6 +589,48 @@ def _payee_mention(rng: random.Random) -> tuple[str, str | None, str]:
     return unknown, None, "ask"
 
 
+#: How a scammer hides a security word once it has been blocked once. The dataset records
+#: which technique was used, so a miss rate can be reported per technique rather than as
+#: one number that averages "0tp" with "o t p".
+OBFUSCATIONS = ("leetspeak", "dots", "spaces", "dashes", "mixed_case")
+_LEET = {"o": "0", "i": "1", "e": "3", "a": "4", "s": "5", "t": "7"}
+SECURITY_WORDS = ("otp", "pin", "code", "cvv", "password")
+
+#: Arabic codepoints that arrive where an Urdu one is meant. Identical in most fonts,
+#: different bytes, and a lexicon written in one never matches text written in the other.
+URDU_TO_ARABIC = {"ی": "ي", "ک": "ك"}
+
+
+def obfuscate(text: str, rng: random.Random) -> tuple[str, str]:
+    """Hide a security word in ``text``. Returns the text and the technique used."""
+    word = next((w for w in SECURITY_WORDS if w in text.lower()), "")
+    if not word:
+        return text, ""
+    technique = rng.choice(OBFUSCATIONS)
+    at = text.lower().index(word)
+    original = text[at : at + len(word)]
+    if technique == "leetspeak":
+        hidden = "".join(_LEET.get(char.lower(), char) for char in original)
+    elif technique == "dots":
+        hidden = ".".join(original)
+    elif technique == "spaces":
+        hidden = " ".join(original)
+    elif technique == "dashes":
+        hidden = "-".join(original)
+    else:
+        hidden = "".join(
+            char.upper() if index % 2 == 0 else char.lower() for index, char in enumerate(original)
+        )
+    return text[:at] + hidden + text[at + len(original) :], technique
+
+
+def arabise(text: str) -> str:
+    """Write the Urdu in a message with Arabic codepoints, as a pasted message arrives."""
+    for urdu, arabic in URDU_TO_ARABIC.items():
+        text = text.replace(urdu, arabic)
+    return text
+
+
 def _typo(text: str, rng: random.Random, protect: str = "") -> str:
     """Drop, double or swap one letter. People type on phones.
 
@@ -602,12 +732,97 @@ def action_case(index: int, rng: random.Random) -> Case:
     )
 
 
+#: Scam scripts in Urdu script rather than Roman. The set had eleven of them, which is
+#: not enough to measure anything - and the whole point of folding Arabic codepoints to
+#: Urdu ones is that pasted messages arrive in the wrong one. These are written in
+#: ordinary Urdu and half of them are rewritten with Arabic codepoints by the generator,
+#: so the fix is measured on both spellings of the same sentence.
+URDU_SCRIPT_SCRIPTS = {
+    "otp_solicitation": (
+        "اپنا کوڈ بتاؤ ورنہ اکاؤنٹ بند ہو جائے گا",
+        "او ٹی پی شیئر کریں تصدیق کے لیے",
+    ),
+    "threat": (
+        "اکاؤنٹ بند ہو جائے گا اگر ابھی نہیں کیا",
+        "قانونی کارروائی ہو گی پیسے بھیج دیں",
+    ),
+    "urgency": (
+        "ابھی بھیجو دیر ہو جائے گی",
+        "فوراً کریں وقت نہیں ہے",
+    ),
+    "account_redirect": (
+        "اس اکاؤنٹ میں بھیج دیں پرانا بند ہے",
+        "میرا اکاؤنٹ بدل گیا ہے نئے نمبر پہ بھیجیں",
+    ),
+}
+
+
+#: How often each family is drawn. Weighted towards purchase scams because that is what
+#: the published breakdowns show - one summary of the UK regulator's figures puts them at
+#: 68% of cases, impersonation at 10%, advance fee at 9% and investment at 6%. A test set
+#: with seven families in equal proportions measures a product against a fraud mix that
+#: does not exist.
+FAMILY_WEIGHTS = {
+    "purchase_scam": 34,
+    "staff_impersonation": 9,
+    "advance_fee": 8,
+    "investment_scam": 7,
+    "otp_solicitation": 7,
+    "account_redirect": 6,
+    "romance_scam": 5,
+    "invoice_redirect": 5,
+    "remote_access": 4,
+    "threat": 4,
+    "urgency": 4,
+    "lure": 3,
+}
+
+
 def coercion_case(index: int, rng: random.Random) -> Case:
     slots = _slots(rng)
     amount = render_amount(rng)
-    families = [rng.choice(sorted(COERCION_SCRIPTS))]
+
+    # One case in eight is a scam type the product has no words for at all.
+    if rng.random() < 0.125:
+        kind = rng.choice(sorted(OUTSIDE_THE_VOCABULARY))
+        text = rng.choice(OUTSIDE_THE_VOCABULARY[kind]).format(amount=amount.text, **slots)
+        return Case(
+            id=f"coe-{index}",
+            family="coercion",
+            text=text,
+            language="roman_urdu",
+            gold_coercion=(),
+            gold_should_block=True,
+            outside_the_vocabulary=True,
+            recipe={"scam_type": kind, "style": "-"},
+        )
+
+    names = sorted(FAMILY_WEIGHTS)
+    weights = [FAMILY_WEIGHTS[name] for name in names]
+
+    # One in eight is written in Urdu script, and half of those with Arabic codepoints -
+    # which is how a forwarded message arrives and which the lexicon, written in Urdu,
+    # never matched until the normaliser folded them.
+    if rng.random() < 0.125:
+        family = rng.choice(sorted(URDU_SCRIPT_SCRIPTS))
+        text = rng.choice(URDU_SCRIPT_SCRIPTS[family])
+        language = "urdu"
+        if rng.random() < 0.5:
+            text = arabise(text)
+            language = "urdu_arabic_codepoints"
+        return Case(
+            id=f"coe-{index}",
+            family="coercion",
+            text=text,
+            language=language,
+            gold_coercion=(family,),
+            gold_should_block=True,
+            recipe={"families": [family], "style": "-", "script": language},
+        )
+
+    families = [rng.choices(names, weights=weights)[0]]
     if rng.random() < 0.25:
-        second = rng.choice(sorted(COERCION_SCRIPTS))
+        second = rng.choices(names, weights=weights)[0]
         if second != families[0]:
             families.append(second)
     parts = []
@@ -615,16 +830,187 @@ def coercion_case(index: int, rng: random.Random) -> Case:
         script = rng.choice(COERCION_SCRIPTS[family])
         parts.append(script.format(amount=amount.text, **slots))
     text = ", ".join(parts)
+
+    # Obfuscation only does anything when a security word is there to hide, and a
+    # scammer who has been blocked once hides it most of the time - so the rate is high
+    # among the scripts that have one rather than low across all of them. At 18% of every
+    # script it produced about 500 obfuscated cases in 200,000, which is too few to
+    # report a rate per technique.
+    obfuscation = ""
+    if rng.random() < 0.6:
+        text, obfuscation = obfuscate(text, rng)
+    language = "roman_urdu"
+    if any(ord(char) > 0x0600 for char in text) and rng.random() < 0.5:
+        text = arabise(text)
+        language = "urdu_arabic_codepoints"
     if rng.random() < 0.1:
         text = _typo(text, rng, protect=amount.text)
     return Case(
         id=f"coe-{index}",
         family="coercion",
         text=text,
-        language="roman_urdu",
+        language=language,
         gold_coercion=tuple(sorted(families)),
         gold_should_block=True,
+        obfuscation=obfuscation,
         recipe={"families": families, "style": amount.style if "{amount}" in text else "-"},
+    )
+
+
+@lru_cache(maxsize=4)
+def _structuring_threads(upto: int) -> tuple[tuple[int, int, int, str, int, str, int], ...]:
+    """Partition the case indices into splits of two to four legs.
+
+    Threads have different lengths, so the index cannot be divided by a constant to find
+    which thread it belongs to - an earlier version did exactly that and produced
+    "threads" whose legs overlapped and whose turn numbers repeated. The partition is
+    computed once from the seed and every leg reads its own entry out of it.
+
+    Each entry is ``(thread, leg, legs, wallet level, amount per leg, pattern, days
+    between legs)``.
+    """
+    rng = random.Random(f"{SEED}-structuring")
+    out: list[tuple[int, int, int, str, int, str, int]] = []
+    thread = 0
+    while len(out) < upto:
+        level = rng.choice(sorted(WALLET_LEVELS))
+        caps = WALLET_LEVELS[level]
+        # Two ways to split, and the difference between them is the whole point.
+        #
+        #   same_day    every leg on one day, and the day's total crosses the daily cap.
+        #               A daily-cap signal sees this the moment it happens.
+        #   across_days one leg a day for several days, no day anywhere near the cap, and
+        #               the *month* over the monthly limit. Nothing that looks at a
+        #               single day can see it, which is exactly why people do it.
+        pattern = "same_day" if rng.random() < 0.5 else "across_days"
+        if pattern == "same_day":
+            legs = rng.choice((2, 3, 4))
+            total = caps["daily"] * rng.uniform(1.2, 2.5)
+            per_leg = min(int(total / legs) // 500 * 500, caps["daily"] - 500)
+            spacing = 0
+        else:
+            legs = rng.choice((5, 6, 7, 8))
+            total = caps["monthly"] * rng.uniform(1.1, 1.6)
+            per_leg = min(int(total / legs) // 500 * 500, caps["daily"] - 500)
+            spacing = rng.choice((1, 2, 3))
+        for leg in range(legs):
+            out.append((thread, leg, legs, level, per_leg, pattern, spacing))
+        thread += 1
+    return tuple(out[:upto])
+
+
+def structuring_case(index: int, rng: random.Random) -> Case:
+    """One leg of a transfer split to stay under a wallet's daily cap.
+
+    Each leg is an ordinary transfer and legal on its own, which is the whole point: the
+    pattern is only visible across the sequence, and a set of single utterances cannot
+    hold it. The gold says which cap is being evaded, how many legs there are and what
+    they add up to.
+    """
+    del rng  # the thread owns the random state, not the case
+    plan = _structuring_threads(max(1024, index + 1))
+    thread, leg, legs, level, per_leg, pattern, spacing = plan[index]
+    caps = WALLET_LEVELS[level]
+    cap = caps["daily"]
+    thread_rng = random.Random(f"{SEED}-structuring-thread-{thread}")
+    slots = _slots(thread_rng)
+    mention, payee, resolution = _payee_mention(thread_rng)
+    # One verb, not two: "bhej do do" is what two slots next to each other produce.
+    text = f"{mention} ko {per_leg} {slots['send']}"
+    return Case(
+        id=f"str-{index}",
+        family="structuring",
+        text=" ".join(text.split()),
+        language="roman_urdu",
+        gold_amount=float(per_leg),
+        gold_intent="send_money",
+        gold_payee=payee,
+        gold_resolution=resolution,
+        gold_should_block=False,
+        wallet_level=level,
+        daily_cap=cap,
+        thread_id=f"str-{thread}",
+        turn=leg + 1,
+        recipe={
+            "legs": legs,
+            "per_leg": per_leg,
+            "total": per_leg * legs,
+            "pattern": pattern,
+            "days_between_legs": spacing,
+            "daily_cap": cap,
+            "monthly_cap": caps["monthly"],
+            "evades": "the daily cap" if pattern == "same_day" else "the monthly cap",
+            "stays_under_the_daily_cap_per_leg": per_leg < cap,
+            "crosses_the_daily_cap": pattern == "same_day" and per_leg * legs > cap,
+            "crosses_the_monthly_cap": per_leg * legs > caps["monthly"],
+            "style": "digits",
+            "mention": mention,
+        },
+    )
+
+
+THREAD_SHAPES = (
+    ("{payee} ko {amount} {send} {do}", "request"),
+    ("{reply}", "answer"),
+    ("{confirm}", "confirmation"),
+)
+
+
+def thread_case(index: int, rng: random.Random) -> Case:
+    """One turn of a conversation, with the thread it belongs to.
+
+    A wallet conversation is a sequence - a request, a question about the payee, an
+    answer, a confirmation - and the confirmation spine is built for exactly that. The
+    set tested it one sentence at a time.
+    """
+    turns = 3
+    thread = index // turns
+    turn = index % turns
+    rng = random.Random(f"{SEED}-thread-{thread}")
+    amount = render_amount(rng)
+    slots = _slots(rng)
+    mention, payee, resolution = _payee_mention(rng)
+    affirmative = rng.random() < 0.72
+
+    if turn == 0:
+        text = f"{mention} ko {amount.text} {slots['send']} {slots['do']}".strip()
+        return Case(
+            id=f"thr-{index}",
+            family="thread",
+            text=text,
+            language="roman_urdu",
+            gold_amount=amount.value,
+            gold_intent="send_money",
+            gold_payee=payee,
+            gold_resolution=resolution,
+            thread_id=f"thr-{thread}",
+            turn=1,
+            recipe={"shape": "request", "style": amount.style, "mention": mention},
+        )
+    if turn == 1:
+        # The answer to "which of these did you mean", or a restatement.
+        text = payee.split()[0] if payee else rng.choice(("pehla wala", "jo HBL wala hai"))
+        return Case(
+            id=f"thr-{index}",
+            family="thread",
+            text=text,
+            language="roman_urdu",
+            gold_payee=payee,
+            gold_resolution="resolved" if payee else "ask",
+            thread_id=f"thr-{thread}",
+            turn=2,
+            recipe={"shape": "answer", "style": "-"},
+        )
+    text, says_yes = rng.choice([pair for pair in REPLIES if pair[1] == affirmative])
+    return Case(
+        id=f"thr-{index}",
+        family="thread",
+        text=text,
+        language="roman_urdu",
+        gold_intent="affirmative" if says_yes else "negative",
+        thread_id=f"thr-{thread}",
+        turn=3,
+        recipe={"shape": "confirmation", "affirmative": says_yes, "style": "-"},
     )
 
 
@@ -675,6 +1061,8 @@ BUILDERS = {
     "coercion": coercion_case,
     "benign": benign_case,
     "reply": reply_case,
+    "structuring": structuring_case,
+    "thread": thread_case,
 }
 
 
@@ -697,13 +1085,19 @@ def build(plan: dict[str, int] | None = None, seed: int = SEED) -> dict[str, obj
     per_family: dict[str, int] = {}
     per_style: dict[str, int] = {}
     per_language: dict[str, int] = {}
+    per_obfuscation: dict[str, int] = {}
+    outside = 0
 
     def rows():
+        nonlocal outside
         for case in cases(plan, seed):
             per_family[case.family] = per_family.get(case.family, 0) + 1
             per_language[case.language] = per_language.get(case.language, 0) + 1
             style = str(case.recipe.get("style", "-"))
             per_style[style] = per_style.get(style, 0) + 1
+            if case.obfuscation:
+                per_obfuscation[case.obfuscation] = per_obfuscation.get(case.obfuscation, 0) + 1
+            outside += int(case.outside_the_vocabulary)
             yield case.as_row()
 
     written = datasets.write_jsonl(path(), rows())
@@ -713,7 +1107,10 @@ def build(plan: dict[str, int] | None = None, seed: int = SEED) -> dict[str, obj
         "by_family": dict(sorted(per_family.items())),
         "by_language": dict(sorted(per_language.items())),
         "by_amount_style": dict(sorted(per_style.items())),
+        "by_obfuscation": dict(sorted(per_obfuscation.items())),
+        "outside_the_vocabulary": outside,
         "contacts": len(BOOK),
+        "wallet_levels": WALLET_LEVELS,
         "seed": seed,
     }
 

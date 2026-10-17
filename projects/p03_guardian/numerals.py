@@ -263,9 +263,38 @@ class Amount:
         }
 
 
+#: Arabic letters that arrive where an Urdu one is meant, because the sender's keyboard
+#: or the copy-and-paste trail put them there. They look identical in most fonts and are
+#: different codepoints, so a lexicon entry written with one never matches text written
+#: with the other - and a scam message pasted from elsewhere routinely carries them.
+_ARABIC_TO_URDU = {
+    "\u064a": "\u06cc",  # Arabic yeh -> Farsi yeh
+    "\u0649": "\u06cc",  # Alef maksura -> Farsi yeh
+    "\u0643": "\u06a9",  # Arabic kaf -> Keheh
+    "\u0629": "\u06c3",  # Teh marbuta -> Urdu teh marbuta
+    "\u06c0": "\u06c2",  # Heh with yeh above -> heh goal with hamza
+}
+
+#: Zero-width characters. They are invisible, they are legal, and they break an exact
+#: match: "ک\u200cو\u200cڈ" and "کوڈ" are different strings and the same word.
+_ZERO_WIDTH = ("\u200b", "\u200c", "\u200d", "\u2060", "\ufeff")
+
+
 def normalise(text: str) -> str:
-    """Fold Urdu and Arabic-Indic digits to ASCII. Nothing else is changed."""
-    return text.translate(_URDU_DIGITS)
+    """Fold Urdu and Arabic-Indic digits, Arabic letter variants, and zero-width marks.
+
+    Digits were folded from the start. The letters and the zero-width marks were not, and
+    that was a hole: the lexicon is written in Urdu script, text arrives with Arabic
+    codepoints mixed in, and the two never matched. Nothing else is changed - no case
+    folding, no diacritic stripping, no fuzzy matching, because that is how ``saat``
+    becomes ``saath``.
+    """
+    folded = text.translate(_URDU_DIGITS)
+    for mark in _ZERO_WIDTH:
+        folded = folded.replace(mark, "")
+    for arabic, urdu in _ARABIC_TO_URDU.items():
+        folded = folded.replace(arabic, urdu)
+    return folded
 
 
 def find_all(text: str) -> list[Amount]:

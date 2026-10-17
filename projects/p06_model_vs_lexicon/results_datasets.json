@@ -73,30 +73,35 @@
     "why_four_cases_cannot_rank_the_arms": "The blind-spot family is the four scams phrased in words the lexicon does not have. With four cases, one case is 25 points, so 2 against 1 is a difference of one sentence. Scaling that family up needs new hand-written scams, not more generated ones: a generator that could write them would have to know which words the lexicon is missing, and then it would be writing the answer key."
   },
   "rules_on_the_whole_set": {
-    "amount_exact_rate": 0.9939,
+    "amount_exact_rate": 0.9943,
     "amount_off_by_ten_or_more": 0,
     "cases": 200000,
     "coercion_by_family": {
-      "account_redirect": 0.9812,
-      "lure": 0.9901,
-      "otp_solicitation": 0.9828,
-      "remote_access": 0.9806,
+      "account_redirect": 0.8342,
+      "advance_fee": 0.9931,
+      "investment_scam": 1.0,
+      "invoice_redirect": 1.0,
+      "lure": 0.9879,
+      "otp_solicitation": 0.9945,
+      "purchase_scam": 0.9909,
+      "remote_access": 0.9864,
+      "romance_scam": 0.9937,
       "staff_impersonation": 0.9871,
-      "threat": 0.9844,
-      "urgency": 0.8672
+      "threat": 0.9917,
+      "urgency": 0.9302
     },
-    "coercion_catch_rate": 0.9609,
+    "coercion_catch_rate": 0.861,
     "confirmation_accuracy": 0.8992,
     "false_block_rate_on_ordinary_traffic": 0.0211,
-    "intent_accuracy": 0.9746,
-    "payee_ask_rate": 0.9893,
-    "payee_resolve_rate": 0.9363
+    "intent_accuracy": 0.9759,
+    "payee_ask_rate": 0.9899,
+    "payee_resolve_rate": 0.9263
   },
   "the_same_dataset": {
     "key": "generated/p03_utterances",
     "note": "Project 03's generated set, unchanged. Both columns are scored on it, which is the only reason they can be put side by side.",
     "rows": 200000,
-    "sha256": "c89958269db4ad5cbdca619d96d0a23bb94f5767ad4f27c8bf76ef11aa3bfe08"
+    "sha256": "4dd390c75654a788e6261a92bb85c977f924bbe3d01fd67a89322e5833cd877e"
   },
   "what_this_comparison_can_and_cannot_say": [
     "It can say the rules answer 200,000 cases at a measured rate, with the false-block rate on ordinary traffic beside it.",

@@ -25,6 +25,12 @@ from dataclasses import dataclass
 
 from . import numerals
 
+#: The security words a scammer obfuscates once blocked: 0tp, o.t.p, ot p, O-T-P. The
+#: product matched them exactly, which is the one place in this project where an exact
+#: match is the wrong call - these are not numbers whose spelling carries meaning, they
+#: are three letters somebody is trying to smuggle past a filter.
+OBFUSCATED = ("otp", "pin", "cvv", "code", "password")
+
 OTP = "otp_solicitation"
 IMPERSONATION = "staff_impersonation"
 URGENCY = "urgency"
@@ -32,6 +38,17 @@ THREAT = "threat"
 REMOTE = "remote_access"
 LURE = "lure"
 REDIRECT = "account_redirect"
+#: The five families the published statistics put first and this product had no opinion
+#: about. A purchase scam is the largest single category of authorised push payment fraud
+#: in the UK regulator's breakdown - one summary puts it at 68% of cases - and it carries
+#: none of the markers the seven families above look for: nobody asks for a code, nobody
+#: impersonates the bank, nobody threatens. The victim is buying something that does not
+#: exist and is entirely willing.
+PURCHASE = "purchase_scam"
+INVESTMENT = "investment_scam"
+ROMANCE = "romance_scam"
+ADVANCE_FEE = "advance_fee"
+INVOICE = "invoice_redirect"
 
 FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
     OTP: (
@@ -178,6 +195,83 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "لاٹری",
         ),
     ),
+    PURCHASE: (
+        "Paying in advance for goods from someone you have not met",
+        (
+            "advance payment",
+            "advance bhej",
+            "pehle payment",
+            "pehle paisay",
+            "booking amount",
+            "token amount",
+            "parcel chhurwa",
+            "delivery charges bhej",
+            "courier charges",
+            "olx pe",
+            "facebook page se",
+            "stock last",
+            "last piece",
+            "\u0627\u06cc\u062f\u0648\u0627\u0646\u0633 \u067e\u06cc\u0645\u0646\u0679",
+        ),
+    ),
+    INVESTMENT: (
+        "A return that is promised rather than earned",
+        (
+            "double karwa",
+            "double ho jaye",
+            "profit guaranteed",
+            "guaranteed return",
+            "monthly profit",
+            "forex trading",
+            "crypto invest",
+            "bitcoin invest",
+            "trading account khol",
+            "50 percent profit",
+            "paisa barha",
+            "\u0645\u0646\u0627\u0641\u0639 \u06af\u0627\u0631\u0646\u0679\u06cc",
+        ),
+    ),
+    ROMANCE: (
+        "Money asked for by someone met online",
+        (
+            "shadi karna chahta",
+            "shadi karni hai",
+            "visa ke paisay",
+            "ticket ke paisay",
+            "hospital me hoon",
+            "mera phone band ho raha",
+            "tumse pyar",
+            "mujhse shadi",
+            "gift bheja hai customs",
+            "customs clearance",
+        ),
+    ),
+    ADVANCE_FEE: (
+        "A fee demanded before money that does not exist arrives",
+        (
+            "processing fee bhej",
+            "clearance fee",
+            "registration fee bhej",
+            "tax jama karwa",
+            "loan approve ho gaya fee",
+            "inheritance",
+            "warasat",
+            "ticket jeet",
+            "lottery fee",
+        ),
+    ),
+    INVOICE: (
+        "A supplier's account details changed just before payment",
+        (
+            "invoice ka account badal",
+            "naya invoice",
+            "updated bank details",
+            "account details update ho gay",
+            "supplier ka naya account",
+            "is bar is account me",
+            "iban change ho gaya",
+        ),
+    ),
     REDIRECT: (
         "Redirecting money to an account the user does not name",
         (
@@ -203,6 +297,12 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
             "naye number pe",
             "naye number par",
             "new number pe",
+            # The same three phrasings in Urdu script. The family had one Urdu entry and
+            # the Roman additions above do not match a message written in the script -
+            # which the generated Urdu-script scripts measured at 0.88 caught overall.
+            "اکاؤنٹ بدل",
+            "نئے نمبر پہ",
+            "دوسرے اکاؤنٹ",
             "اس اکاؤنٹ میں",
         ),
     ),
@@ -266,9 +366,29 @@ class Assessment:
         }
 
 
+#: Characters a scammer pushes between the letters of a security word, and the digits
+#: they swap in for letters. Folding these is the one place in this project where fuzzy
+#: matching is right: ``0tp`` is not a word whose spelling carries meaning, it is three
+#: letters being smuggled past a filter.
+_OBFUSCATION_FILL = re.compile(r"[\s.\-_*|/]+")
+_LEETSPEAK = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t"})
+
+
+def deobfuscate(text: str) -> str:
+    """A second reading of the text with the smuggling removed.
+
+    Returned alongside the original rather than instead of it: collapsing separators
+    would join words that were never one word - "pin" appears inside "pindi" the moment
+    a space is dropped - so the two readings are searched separately and only the
+    security vocabulary is looked for in this one.
+    """
+    return _OBFUSCATION_FILL.sub("", text.translate(_LEETSPEAK))
+
+
 def assess(text: str) -> Assessment:
     """Score ``text`` and return the verdict with every phrase that produced it."""
     folded = numerals.normalise(text).lower()
+    smuggled = deobfuscate(folded)
     hits: list[Hit] = []
     for family, (description, phrases) in FAMILIES.items():
         for phrase in phrases:
@@ -280,6 +400,23 @@ def assess(text: str) -> Assessment:
             match = re.search(pattern, folded)
             if match is not None:
                 hits.append(Hit(family, description, match.group(0), match.start(), match.end()))
+    # The obfuscated reading, for the security words only. Anything matched here is
+    # recorded with the family it belongs to and the fact that it was obfuscated, so the
+    # report can separate "asked for an OTP" from "asked for an 0.t.p".
+    if not any(hit.family == OTP for hit in hits):
+        for word in OBFUSCATED:
+            if word in smuggled and word not in folded:
+                hits.append(
+                    Hit(
+                        OTP,
+                        FAMILIES[OTP][0],
+                        f"{word} (obfuscated)",
+                        0,
+                        0,
+                    )
+                )
+                break
+
     families = sorted({hit.family for hit in hits})
 
     if len(families) >= 2:

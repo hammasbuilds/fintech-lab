@@ -1,0 +1,28 @@
+# This policy is here to be caught. It is what a nano-lending product looks like when
+# nobody has read the circular, and every rule it breaks is one the lint now reports:
+#
+#   R1  lends up to 50,000, where a single digital nano loan is capped at 25,000
+#   R2  never reads other_app_outstanding, so the 75,000 aggregate cap cannot hold
+#   R3  prices over three months, where the tenor is capped at 30 days
+#   R4  3% a month for three months plus a 5% fee is 14% of the principal - inside the
+#       "no more than the principal" rule, and the APR it implies is the thing to look at
+#   R5  reports the APR and the policy rate that would make it legal
+#   C1  the per-month charge is the structure the Shariah check exists for
+#
+# It is a fixture, not a proposal. It stays in the repo because a lint with nothing to
+# catch has not been shown to work - the same reason the mutation suite exists.
+policy "Nano loan - outside every cap"
+version 1
+currency PKR
+
+decline if age < 18 because "below the legal age to contract"
+decline if monthly_income < 12000 because "monthly income below the floor of 12,000"
+
+score +30 if wallet_months >= 3 because "three months of wallet history"
+score +20 if monthly_income >= 25000 because "income above 25,000"
+
+approve if score >= 30
+limit min(0.6 * monthly_income, 50000)
+term 3 months
+fee 5% of limit
+interest 3% of limit per month

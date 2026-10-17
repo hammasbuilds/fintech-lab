@@ -3,99 +3,99 @@
     "amounts": {
       "by_style": [
         {
-          "cases": 8066,
-          "exact_rate": 0.9812,
+          "cases": 7386,
+          "exact_rate": 0.9816,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digit_word_scale"
         },
         {
-          "cases": 18963,
+          "cases": 8385,
+          "exact_rate": 0.9833,
+          "none_found": 0,
+          "off_by_ten_or_more": 0,
+          "style": "word_two_scales"
+        },
+        {
+          "cases": 17395,
           "exact_rate": 0.9833,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "word_scale"
         },
         {
-          "cases": 9136,
-          "exact_rate": 0.9834,
-          "none_found": 0,
-          "off_by_ten_or_more": 0,
-          "style": "word_two_scales"
-        },
-        {
-          "cases": 15135,
-          "exact_rate": 0.9841,
+          "cases": 13849,
+          "exact_rate": 0.9848,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "word_fraction"
         },
         {
-          "cases": 10375,
-          "exact_rate": 0.9957,
+          "cases": 9547,
+          "exact_rate": 0.996,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "word_standalone"
         },
         {
-          "cases": 23772,
+          "cases": 26808,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits"
         },
         {
-          "cases": 14954,
+          "cases": 13684,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits_currency"
         },
         {
-          "cases": 20939,
+          "cases": 19145,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits_grouped"
         },
         {
-          "cases": 11766,
+          "cases": 10823,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "k_suffix"
         },
         {
-          "cases": 8998,
+          "cases": 8223,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "urdu_digits"
         },
         {
-          "cases": 7317,
+          "cases": 6637,
           "exact_rate": 1.0,
           "none_found": 0,
           "off_by_ten_or_more": 0,
           "style": "digits_slash"
         }
       ],
-      "cases": 149421,
-      "exact": 148515,
-      "exact_rate": 0.9939,
+      "cases": 141882,
+      "exact": 141067,
+      "exact_rate": 0.9943,
       "none_found": 0,
       "off_by_ten_or_more": 0,
       "off_by_ten_or_more_rate": 0.0,
       "reading": "An exact rate below one is not automatically a defect - some of these sentences carry two numbers and the gold names one of them - but a style whose rate is far below the others is a phrasing the parser does not handle, and that is a bug report with an address."
     },
     "beneficiaries": {
-      "ask_rate": 0.9893,
-      "asked": 32430,
+      "ask_rate": 0.9899,
+      "asked": 32073,
       "reading": "These two have to be read together. A resolver that never asks scores 1.000 on the first and 0.000 on the second, and pays whoever it guessed.",
-      "resolve_rate": 0.9363,
-      "resolved": 74080,
-      "should_ask": 32782,
-      "should_resolve": 79119
+      "resolve_rate": 0.9263,
+      "resolved": 71579,
+      "should_ask": 32401,
+      "should_resolve": 77275
     },
     "benign": {
       "blocked": 528,
@@ -104,94 +104,447 @@
     },
     "cases_scored": 200000,
     "coercion": {
-      "blocked": 38435,
+      "blocked": 39347,
       "by_family": {
         "account_redirect": {
-          "cases": 6950,
-          "catch_rate": 0.9812,
-          "caught": 6819,
-          "named": 6785,
-          "named_the_family_rate": 0.9763
+          "cases": 3932,
+          "catch_rate": 0.9873,
+          "caught": 3882,
+          "named": 3867,
+          "named_the_family_rate": 0.9835
+        },
+        "advance_fee": {
+          "cases": 3469,
+          "catch_rate": 0.9931,
+          "caught": 3445,
+          "named": 3435,
+          "named_the_family_rate": 0.9902
+        },
+        "investment_scam": {
+          "cases": 3204,
+          "catch_rate": 1.0,
+          "caught": 3204,
+          "named": 3204,
+          "named_the_family_rate": 1.0
+        },
+        "invoice_redirect": {
+          "cases": 2214,
+          "catch_rate": 1.0,
+          "caught": 2214,
+          "named": 2214,
+          "named_the_family_rate": 1.0
         },
         "lure": {
-          "cases": 6797,
-          "catch_rate": 0.9901,
-          "caught": 6730,
-          "named": 6705,
-          "named_the_family_rate": 0.9865
+          "cases": 1401,
+          "catch_rate": 0.9879,
+          "caught": 1384,
+          "named": 1381,
+          "named_the_family_rate": 0.9857
         },
         "otp_solicitation": {
-          "cases": 6988,
-          "catch_rate": 0.9828,
-          "caught": 6868,
-          "named": 6819,
-          "named_the_family_rate": 0.9758
+          "cases": 4348,
+          "catch_rate": 0.9945,
+          "caught": 4324,
+          "named": 4314,
+          "named_the_family_rate": 0.9922
+        },
+        "purchase_scam": {
+          "cases": 14257,
+          "catch_rate": 0.9909,
+          "caught": 14127,
+          "named": 14110,
+          "named_the_family_rate": 0.9897
         },
         "remote_access": {
-          "cases": 6911,
-          "catch_rate": 0.9806,
-          "caught": 6777,
-          "named": 6742,
-          "named_the_family_rate": 0.9755
+          "cases": 1836,
+          "catch_rate": 0.9864,
+          "caught": 1811,
+          "named": 1801,
+          "named_the_family_rate": 0.9809
+        },
+        "romance_scam": {
+          "cases": 2234,
+          "catch_rate": 0.9937,
+          "caught": 2220,
+          "named": 2216,
+          "named_the_family_rate": 0.9919
         },
         "staff_impersonation": {
-          "cases": 6994,
+          "cases": 3965,
           "catch_rate": 0.9871,
-          "caught": 6904,
-          "named": 6843,
-          "named_the_family_rate": 0.9784
+          "caught": 3914,
+          "named": 3881,
+          "named_the_family_rate": 0.9788
         },
         "threat": {
-          "cases": 6941,
-          "catch_rate": 0.9844,
-          "caught": 6833,
-          "named": 6801,
-          "named_the_family_rate": 0.9798
+          "cases": 2894,
+          "catch_rate": 0.9917,
+          "caught": 2870,
+          "named": 2864,
+          "named_the_family_rate": 0.9896
         },
         "urgency": {
-          "cases": 6935,
-          "catch_rate": 0.8672,
-          "caught": 6014,
-          "named": 5516,
-          "named_the_family_rate": 0.7954
+          "cases": 2952,
+          "catch_rate": 0.9302,
+          "caught": 2746,
+          "named": 2603,
+          "named_the_family_rate": 0.8818
         }
       },
-      "cases": 40000,
-      "catch_rate": 0.9609
+      "cases": 45000,
+      "catch_rate": 0.8744,
+      "catch_rate_outside_the_vocabulary": 0.0817,
+      "catch_rate_within_the_vocabulary": 0.9857
     },
     "intents": {
-      "accuracy": 0.9746,
+      "accuracy": 0.9759,
       "by_intent": {
         "balance": {
           "accuracy": 1.0,
-          "cases": 5579,
-          "correct": 5579
+          "cases": 4785,
+          "correct": 4785
         },
         "bill_payment": {
-          "accuracy": 0.9571,
-          "cases": 16236,
-          "correct": 15540
+          "accuracy": 0.9593,
+          "cases": 14412,
+          "correct": 13825
         },
         "mobile_topup": {
           "accuracy": 1.0,
-          "cases": 9709,
-          "correct": 9709
+          "cases": 8313,
+          "correct": 8313
         },
         "send_money": {
-          "accuracy": 0.9737,
-          "cases": 123476,
-          "correct": 120230
+          "accuracy": 0.9753,
+          "cases": 119157,
+          "correct": 116214
         }
       },
-      "cases": 155000,
-      "correct": 151058
+      "cases": 146667,
+      "correct": 143137
+    },
+    "obfuscated_security_words": {
+      "dashes": {
+        "cases": 379,
+        "catch_rate": 0.9974,
+        "caught": 378
+      },
+      "dots": {
+        "cases": 365,
+        "catch_rate": 0.9973,
+        "caught": 364
+      },
+      "leetspeak": {
+        "cases": 391,
+        "catch_rate": 0.9974,
+        "caught": 390
+      },
+      "mixed_case": {
+        "cases": 339,
+        "catch_rate": 0.9882,
+        "caught": 335
+      },
+      "spaces": {
+        "cases": 368,
+        "catch_rate": 0.9973,
+        "caught": 367
+      }
     },
     "replies": {
       "accuracy": 0.8992,
       "cases": 5000,
       "correct": 4496
     },
-    "seconds": 66.1,
+    "scam_types_with_no_vocabulary": {
+      "cases": 5542,
+      "catch_rate": 0.0817,
+      "caught": 453,
+      "reading": "Job offers, QR swaps, SIM swaps and refund-overpayment scripts. The product has no words for any of them, so this rate is the blind spot measured rather than asserted - and a generator cannot close it, because writing the missing words would be writing the answer key."
+    },
+    "seconds": 47.1,
+    "structuring": {
+      "by_pattern": {
+        "across_days": {
+          "catch_rate": 0.9867,
+          "caught": 520,
+          "threads": 527
+        },
+        "same_day": {
+          "catch_rate": 1.0,
+          "caught": 514,
+          "threads": 514
+        }
+      },
+      "catch_rate": 0.5812,
+      "caught_by_the_leg_that_crossed_the_cap": 605,
+      "escalated_before_the_cap_was_crossed": 114,
+      "examples_never_escalated": [
+        {
+          "cap": 25000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 8,
+          "per_leg": 5500.0,
+          "thread": "str-4"
+        },
+        {
+          "cap": 50000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 8,
+          "per_leg": 11000.0,
+          "thread": "str-114"
+        },
+        {
+          "cap": 50000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 8,
+          "per_leg": 11000.0,
+          "thread": "str-209"
+        },
+        {
+          "cap": 25000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 8,
+          "per_leg": 5500.0,
+          "thread": "str-214"
+        },
+        {
+          "cap": 25000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 8,
+          "per_leg": 5500.0,
+          "thread": "str-387"
+        },
+        {
+          "cap": 25000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 8,
+          "per_leg": 5500.0,
+          "thread": "str-707"
+        },
+        {
+          "cap": 25000.0,
+          "crossed_on_leg": 5,
+          "escalated_on_leg": null,
+          "legs": 5,
+          "per_leg": 6000.0,
+          "thread": "str-1040"
+        }
+      ],
+      "legs": 5000,
+      "never_escalated": 7,
+      "reading": "Read by_pattern, not the total. A same-day split crosses the daily cap and the daily-cap signal sees it. A split spread over several days never gets near the daily cap and goes over the *monthly* one - and the behavioural layer has no monthly view, which is the gap this family exists to measure.",
+      "threads": 1041
+    },
+    "threads": {
+      "a_yes_that_did_not_execute": 452,
+      "a_yes_the_layer_asked_to_strengthen": 358,
+      "completion_rate": 0.2214,
+      "examples_of_a_yes_that_did_not_execute": [
+        {
+          "ended_in": "awaiting_confirmation",
+          "thread": "thr-100",
+          "turns": [
+            "Yara Khalil ko sawa sau bhejna dedo",
+            "Yara",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "awaiting_confirmation",
+          "thread": "thr-1001",
+          "turns": [
+            "Omar ko \u06f1\u06f6\u06f6\u06f0 bhejo dedo",
+            "Omar",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1008",
+          "turns": [
+            "behen ko 285,000 bhejna dein",
+            "pehla wala",
+            "haan"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1012",
+          "turns": [
+            "abu ko 2720 send dedo",
+            "pehla wala",
+            "haan"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1015",
+          "turns": [
+            "Hamza ko sawa thousand bhej do dein",
+            "pehla wala",
+            "haan"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1016",
+          "turns": [
+            "Sadia ko dhai crore bhejna dein",
+            "jo HBL wala hai",
+            "yes"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1018",
+          "turns": [
+            "03857009691 ko 8 hundred bhej do dedo",
+            "jo HBL wala hai",
+            "confirm"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-102",
+          "turns": [
+            "chacha ko paune saat hundred bhejna dena",
+            "jo HBL wala hai",
+            "confirm"
+          ]
+        },
+        {
+          "ended_in": "awaiting_confirmation",
+          "thread": "thr-1022",
+          "turns": [
+            "Marie ko 4,160 bhejna den",
+            "Marie",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1026",
+          "turns": [
+            "behen ko 288k send dedo",
+            "pehla wala",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1027",
+          "turns": [
+            "abu ko 441,000 bhej do do",
+            "jo HBL wala hai",
+            "yes"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1029",
+          "turns": [
+            "Wei Lin ko 385,000 bhejna dein",
+            "jo HBL wala hai",
+            "confirm"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1035",
+          "turns": [
+            "abbu ko 7 lakh send den",
+            "pehla wala",
+            "haan"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1037",
+          "turns": [
+            "baji ko 492000 bhej do dein",
+            "jo HBL wala hai",
+            "confirm"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1045",
+          "turns": [
+            "03156517911 ko 282k bhej do",
+            "jo HBL wala hai",
+            "confirm"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1049",
+          "turns": [
+            "03473723562 ko 9 thousand bhejo dedo",
+            "jo HBL wala hai",
+            "yes"
+          ]
+        },
+        {
+          "ended_in": "awaiting_confirmation",
+          "thread": "thr-1053",
+          "turns": [
+            "Marie Dubois ko paanch sau send dena",
+            "Marie",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "awaiting_confirmation",
+          "thread": "thr-1055",
+          "turns": [
+            "Grace ko five hazar two hundred bhej do",
+            "Grace",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "awaiting_confirmation",
+          "thread": "thr-1056",
+          "turns": [
+            "Rashid Ali ko teen thousand bhejo dena",
+            "Rashid",
+            "haan bhej do"
+          ]
+        },
+        {
+          "ended_in": "needs_information",
+          "thread": "thr-1058",
+          "turns": [
+            "brother ko 242,000 send do",
+            "jo HBL wala hai",
+            "yes"
+          ]
+        }
+      ],
+      "executed_after_a_no": 0,
+      "executed_after_a_yes": 369,
+      "handled_correctly_rate": 0.7289,
+      "reading": "executed_after_a_no is the number that has to be zero: it would mean a refusal was read as consent. A yes the layer asked to strengthen is the step-up working, not a failure. A yes that does not execute and was not stepped up is the real miss, and the three are counted apart because they are three different things.",
+      "threads": 1667
+    },
+    "urdu_script_variants": {
+      "urdu": {
+        "cases": 2410,
+        "catch_rate": 1.0,
+        "caught": 2410
+      },
+      "urdu_arabic_codepoints": {
+        "cases": 2352,
+        "catch_rate": 1.0,
+        "caught": 2352
+      }
+    },
     "worst_amount_examples": [
       {
         "gold": 800.0,
@@ -478,23 +831,25 @@
   "setup": {
     "contacts": 60,
     "dataset": {
-      "bytes": 73081035,
+      "bytes": 97858700,
       "note": "200,000 labelled utterances. The gold label comes from how each sentence was composed, and the spellings are the ones attested in 37,220 real Roman Urdu sentences.",
       "role": "cohort",
       "role_means": "rows a measurement reports a rate over; has to hold between 50,000 and 1,000,000 of them",
       "rows": 200000,
       "sample": "data/samples/generated_p03_utterances.jsonl",
       "sample_rows": 200,
-      "sha256": "6adc21213622dacc6eb19b3a80c8e66f36c12dc2543a2cb200f793c4eecfe9ef",
+      "sha256": "4dd390c75654a788e6261a92bb85c977f924bbe3d01fd67a89322e5833cd877e",
       "source": "generated by projects/p03_guardian/generator.py",
       "within_the_size_policy": true
     },
     "plan": {
-      "action": 70000,
-      "amount": 60000,
+      "action": 60000,
+      "amount": 55000,
       "benign": 25000,
-      "coercion": 40000,
-      "reply": 5000
+      "coercion": 45000,
+      "reply": 5000,
+      "structuring": 5000,
+      "thread": 5000
     },
     "why_this_is_a_separate_file": "The generated set is 72 MB, so CI cannot re-derive these numbers. results.json stays the 140 hand-written cases, which need no data files."
   }

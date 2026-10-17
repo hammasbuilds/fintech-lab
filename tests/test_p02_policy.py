@@ -31,10 +31,15 @@ def compile_minimal() -> dsl.Policy:
 
 
 def test_every_bundled_policy_compiles() -> None:
+    # nano_v4_compliant writes the SECP caps into the policy; nano_v5_overcap breaks
+    # every one of them and is kept as a fixture, because a lint with nothing to catch
+    # has not been shown to work.
     assert sorted(path.stem for path in POLICIES.glob("*.policy")) == [
         "nano_v1",
         "nano_v2",
         "nano_v3_timepriced",
+        "nano_v4_compliant",
+        "nano_v5_overcap",
     ]
     for path in POLICIES.glob("*.policy"):
         policy = dsl.compile_policy(path.read_text(encoding="utf-8"))
@@ -305,7 +310,12 @@ def test_a_time_priced_charge_is_flagged_as_blocking() -> None:
 def test_the_bundled_policies_without_a_time_charge_are_clean() -> None:
     for name in ("nano_v1", "nano_v2"):
         policy = dsl.compile_policy((POLICIES / f"{name}.policy").read_text(encoding="utf-8"))
-        assert compliance.review(policy) == []
+        # "Clean" means no note about how the policy is written. The regulatory
+        # checks are a separate family with an R prefix: every policy that cannot
+        # see another app's loan earns an R2, and that is a finding about the
+        # policy rather than a flaw in this test.
+        written = [n for n in compliance.review(policy) if n.check.startswith("C")]
+        assert written == []
 
 
 def test_a_protected_attribute_in_a_rule_is_flagged() -> None:

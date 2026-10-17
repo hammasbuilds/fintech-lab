@@ -77,6 +77,10 @@ _FUNCTIONS = {
     "2": "advice",
     "3": "advice response",
     "4": "notification",
+    # A notification is answered with an acknowledgement, and 5 was missing from this
+    # table - so a chargeback (0440), which is a notification, had no answer the codec
+    # would build. The dispute path was unreachable for that one missing digit.
+    "5": "notification acknowledgement",
     "8": "response acknowledgement",
 }
 _ORIGINS = {
@@ -119,15 +123,32 @@ def describe_mti(mti: str) -> dict[str, str]:
     return out
 
 
+#: Functions that expect something back. A notification does not ask a question, and it
+#: is still answered - an unacknowledged chargeback is a dispute nobody has agreed to.
+_ANSWERABLE = {"request", "advice", "notification"}
+
+
 def is_request(mti: str) -> bool:
+    """Whether this message asks for a decision. Advices report one already made."""
     return describe_mti(mti)["function"] in {"request", "advice"}
+
+
+def expects_answer(mti: str) -> bool:
+    """Whether something has to come back.
+
+    Wider than :func:`is_request` and the distinction matters: a chargeback is a
+    notification, it asks for no decision, and it is still answered. Pairing on
+    ``is_request`` put every 0440 in the response pile, where it matched no request and
+    the dispute path reported four invariant breaches for existing at all.
+    """
+    return describe_mti(mti)["function"] in _ANSWERABLE
 
 
 def response_mti(mti: str) -> str:
     """The MTI a switch must answer ``mti`` with: the function digit gains one."""
     parts = describe_mti(mti)
-    if parts["function"] not in {"request", "advice"}:
-        raise CodecError(f"{mti} is not a request, so it has no response MTI")
+    if parts["function"] not in _ANSWERABLE:
+        raise CodecError(f"{mti} expects no answer, so it has no response MTI")
     return mti[:2] + str(int(mti[2]) + 1) + mti[3]
 
 

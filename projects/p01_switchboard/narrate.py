@@ -103,9 +103,19 @@ NETWORK_CODES = {
 }
 
 #: Currency code -> (alpha code, minor-unit exponent).
+#: The exponent is the part that bites. DE 4 is an amount in the **minor units of the
+#: currency in DE 49**, and the number of minor units is not always two: it is 0 for yen
+#: and won, and 3 for the Gulf dinars. A terminal that divides by 100 is right in rupees,
+#: wrong by a factor of 100 in yen and by a factor of 10 in dinars - and until the corpus
+#: carried transactions in those currencies, nothing here ever exercised the difference.
 CURRENCIES = {
+    "048": ("BHD", 3),
     "356": ("INR", 2),
     "392": ("JPY", 0),
+    "400": ("JOD", 3),
+    "410": ("KRW", 0),
+    "414": ("KWD", 3),
+    "512": ("OMR", 3),
     "586": ("PKR", 2),
     "682": ("SAR", 2),
     "784": ("AED", 2),

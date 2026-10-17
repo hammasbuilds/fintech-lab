@@ -1,7 +1,7 @@
 {
   "dictionary": {
-    "elements_defined": 50,
-    "elements_exercised": 28,
+    "elements_defined": 58,
+    "elements_exercised": 34,
     "exercised": [
       2,
       3,
@@ -11,6 +11,7 @@
       12,
       13,
       14,
+      15,
       18,
       22,
       25,
@@ -26,7 +27,12 @@
       52,
       54,
       55,
+      60,
       70,
+      74,
+      75,
+      86,
+      87,
       90,
       95,
       102,
@@ -34,8 +40,8 @@
     ]
   },
   "scenarios": {
-    "count": 14,
-    "messages": 33,
+    "count": 17,
+    "messages": 44,
     "steps_per_flow": {
       "atm_withdrawal_approved": 2,
       "atm_partial_approval": 2,
@@ -50,14 +56,17 @@
       "balance_inquiry": 2,
       "cardholder_transfer": 2,
       "network_echo_test": 2,
-      "network_sign_on": 2
+      "network_sign_on": 2,
+      "stand_in_authorisation_advice": 3,
+      "end_of_day_reconciliation": 2,
+      "chargeback_and_representment": 6
     }
   },
   "codec": {
-    "messages_checked": 33,
-    "round_trip_stable": 33,
-    "reparse_equal": 33,
-    "binary_round_trip_stable": 33,
+    "messages_checked": 44,
+    "round_trip_stable": 44,
+    "reparse_equal": 44,
+    "binary_round_trip_stable": 44,
     "binary_bytes_vs_ascii_characters": {
       "binary": 244,
       "ascii": 386
@@ -66,8 +75,8 @@
     "framings_tried": 3
   },
   "chip": {
-    "messages_with_de55": 12,
-    "tags_parsed": 132,
+    "messages_with_de55": 14,
+    "tags_parsed": 154,
     "distinct_tags": [
       "5F2A",
       "82",
@@ -90,7 +99,7 @@
   },
   "invariants": {
     "rules": 22,
-    "valid_flows_checked": 14,
+    "valid_flows_checked": 17,
     "valid_flows_with_findings": 0,
     "false_positives": {}
   },

@@ -165,6 +165,11 @@ class Session:
         if self.awaiting:
             return self._resolve_confirmation(text)
 
+        if self.state is State.NEEDS_INFORMATION and self.pending is not None:
+            filled = self._fill_the_gap(text)
+            if filled is not None:
+                return filled
+
         if assessment.verdict == coercion.BLOCK:
             self.state = State.BLOCKED
             self.assessment = assessment
@@ -238,6 +243,99 @@ class Session:
             "state": self.state.value,
             "reply": reply.text,
             "utterance": utterance.as_dict(),
+            "assessment": assessment.as_dict(),
+            "behaviour": conduct.as_dict(),
+            "action": None,
+        }
+
+    # -- answering the question that was just asked --
+    def _fill_the_gap(self, text: str) -> dict[str, object] | None:
+        """Read ``text`` as an answer to the pending question, or decline to.
+
+        Only the gap that was asked about is filled, and only when the answer resolves it
+        outright: a name that matches exactly one contact, or a single amount. Anything
+        else returns None and the message is parsed as a new instruction, which is what
+        the session did with every answer before this existed.
+
+        The narrowness is the point. A session that treats the next message as an answer
+        whatever it says will happily read "no, cancel that" as a payee.
+        """
+        pending = self.pending
+        if pending is None:
+            return None
+        issue = pending.issues[0] if pending.issues else ""
+
+        if issue in {nlu.NO_BENEFICIARY, nlu.AMBIGUOUS_BENEFICIARY, nlu.UNKNOWN_BENEFICIARY}:
+            resolution = nlu.resolve_beneficiary(text, self.contacts)
+            if resolution.contact is None:
+                return None
+            pending.beneficiary = resolution.contact
+            pending.beneficiary_mention = text.strip()
+            pending.candidates = []
+            pending.issues = [
+                name
+                for name in pending.issues
+                if name
+                not in {
+                    nlu.NO_BENEFICIARY,
+                    nlu.AMBIGUOUS_BENEFICIARY,
+                    nlu.UNKNOWN_BENEFICIARY,
+                }
+            ]
+            self.ledger.append(
+                "gap_filled",
+                {"issue": issue, "answer": text, "beneficiary": resolution.contact.name},
+            )
+        elif issue == nlu.NO_AMOUNT:
+            amounts = numerals.find_all(text)
+            if len(amounts) != 1:
+                return None
+            pending.amount = amounts[0]
+            pending.all_amounts = amounts
+            pending.issues = [name for name in pending.issues if name != nlu.NO_AMOUNT]
+            self.ledger.append(
+                "gap_filled", {"issue": issue, "answer": text, "amount": amounts[0].value}
+            )
+        else:
+            return None
+
+        if pending.issues:
+            question = nlu.question(pending.issues[0], self.language)
+            extra = self._candidate_list(pending)
+            reply = self.say(question + (("  " + extra) if extra else ""))
+            return {
+                "state": self.state.value,
+                "reply": reply.text,
+                "asking": pending.issues[0],
+                "utterance": pending.as_dict(),
+                "action": None,
+            }
+
+        # The gap is closed and the instruction is whole: ask for confirmation exactly as
+        # if it had arrived complete in the first place.
+        self.state = State.AWAITING_CONFIRMATION
+        payee = pending.beneficiary.name if pending.beneficiary else (pending.target_number or None)
+        assessment = coercion.assess(" ".join(turn.text for turn in self.transcript[-3:]))
+        conduct = behaviour.assess(
+            self.profile, payee, pending.amount.value if pending.amount else None
+        )
+        self.assessment = assessment
+        self.conduct = conduct
+        self.stepped_up = conduct.escalated
+        reply = self.say(self.read_back(pending, assessment, conduct))
+        self.ledger.append(
+            "confirmation_requested",
+            {
+                "action": pending.action(),
+                "behaviour": conduct.level,
+                "signals": [signal.name for signal in conduct.signals],
+                "after_filling": issue,
+            },
+        )
+        return {
+            "state": self.state.value,
+            "reply": reply.text,
+            "utterance": pending.as_dict(),
             "assessment": assessment.as_dict(),
             "behaviour": conduct.as_dict(),
             "action": None,

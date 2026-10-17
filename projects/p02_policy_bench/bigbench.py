@@ -28,7 +28,17 @@ import time
 
 from shared import datasets
 
-from . import backtest, cardbook, cohort, compliance, dsl, fairness, loanbook, sweep
+from . import (
+    backtest,
+    cardbook,
+    cohort,
+    compliance,
+    dsl,
+    fairness,
+    loanbook,
+    sweep,
+    timeline,
+)
 
 RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
 POLICIES = pathlib.Path(__file__).resolve().parent / "policies" / "real"
@@ -40,6 +50,13 @@ SYNTHETIC_SEGMENTS = ("region", "employment")
 
 #: The synthetic cohort size used here, against the 50,000 the CI benchmark runs.
 SYNTHETIC_SIZE = 250_000
+
+
+def _policy_from(path) -> dsl.Policy:
+    policy = dsl.compile_policy(path.read_text(encoding="utf-8"))
+    if dsl.compile_policy(policy.render()).render() != policy.render():
+        raise AssertionError(f"{path.name} does not round-trip through its own text")
+    return policy
 
 
 def _policy(name: str) -> dsl.Policy:
@@ -152,13 +169,41 @@ def run(verbose: bool = True) -> dict[str, object]:
         "cohort": cohort.summary(pool) if hasattr(cohort, "summary") else {"size": len(pool)},
         "policies": {},
     }
-    for name in ("nano_v1", "nano_v2"):
+    for name in ("nano_v1", "nano_v2", "nano_v4_compliant", "nano_v5_overcap"):
         say(f"    {name}")
         source = (POLICIES.parent / f"{name}.policy").read_text(encoding="utf-8")
         synthetic["policies"][name] = _one_policy(  # type: ignore[index]
             name, dsl.compile_policy(source), pool, SYNTHETIC_SEGMENTS
         )
     results["synthetic_at_scale"] = synthetic
+
+    # ---------------------------------------------------------------- the time axis
+    # Everything above happens at one instant. These four need a cohort with dates, and
+    # three of them are standard credit practice that this project could not do at all
+    # until the generator grew an origination window.
+    say("=== vintages, stability and out-of-time, on the synthetic cohort")
+    dated = cohort.generate()
+    reference = _policy_from(POLICIES.parent / "nano_v4_compliant.policy")
+    results["over_time"] = {
+        "policy": "nano_v4_compliant",
+        "cohort": len(dated),
+        "window_months": cohort.WINDOW_MONTHS,
+        "vintage_curves": timeline.vintage_curves(reference, dated),
+        "population_stability": timeline.psi(reference, dated),
+        "characteristic_stability": timeline.characteristic_psi(
+            dated,
+            (
+                "monthly_income",
+                "wallet_months",
+                "other_app_outstanding",
+                "avg_balance",
+                "txn_velocity",
+                "age",
+            ),
+        ),
+        "out_of_time": timeline.out_of_time(reference, dated),
+        "approvals_only": timeline.approvals_only_view(reference, dated),
+    }
 
     results["manifest"] = datasets.load_manifest()
     RESULTS.write_text(

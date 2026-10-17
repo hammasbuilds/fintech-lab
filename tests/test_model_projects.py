@@ -17,6 +17,7 @@ import json
 import pytest
 
 from projects.p01_switchboard import scenarios
+from projects.p03_guardian import testset
 from projects.p04_spec_to_wire import grade as g4
 from projects.p04_spec_to_wire import tasks as t4
 from projects.p05_policy_from_prose import grade as g5
@@ -282,8 +283,14 @@ def test_06_the_rules_score_perfectly_and_miss_exactly_the_published_blind_spot(
     assert summary[t6.AMOUNT]["accuracy"] == 1.0
     assert summary[t6.ACTION]["accuracy"] == 1.0
     assert summary[t6.COERCION]["accuracy"] == 1.0
-    # The point of the comparison: the rules catch none of the four, by construction.
-    assert summary[t6.COERCION]["cases_the_lexicon_misses"] == 4
+    # The point of the comparison: the rules catch none of the ones the words cannot
+    # see, by construction. The count was four and is three - the purchase-scam family
+    # added in the dataset round reads the property-token case - and the number is taken
+    # from the test set rather than written here, so the next one that moves is not a
+    # test failure waiting to be edited.
+    expected = sum(1 for case in testset.COERCION_CASES if case[3])
+    assert expected == 3
+    assert summary[t6.COERCION]["cases_the_lexicon_misses"] == expected
     assert summary[t6.COERCION]["caught_of_those"] == 0
     assert summary[t6.COERCION]["ordinary_traffic_blocked"] == 0
 
@@ -358,7 +365,7 @@ def test_06_a_coercion_verdict_is_compared_exactly() -> None:
 
 def test_06_the_blind_spot_cases_are_marked_in_the_rows() -> None:
     blind = [case for case in t6.cases() if case.family == t6.COERCION and case.note]
-    assert len(blind) == 4
+    assert len(blind) == sum(1 for case in testset.COERCION_CASES if case[3])
     for case in blind:
         row = g6.rules(case)
         assert row.columns["lexicon_misses_this"] is True

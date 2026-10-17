@@ -26,7 +26,7 @@ REPO = "https://github.com/hammasbuilds/fintech-lab"
 #: The suite size shown on the badge. A hand-written number here would be the first
 #: thing to go stale, so a test asserts it against what pytest actually collected -
 #: see test_the_published_page_quotes_the_real_test_count.
-TESTS = 668
+TESTS = 692
 
 sys.path.insert(0, str(ROOT))
 

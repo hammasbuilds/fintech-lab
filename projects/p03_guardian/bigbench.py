@@ -31,7 +31,7 @@ import time
 
 from shared import datasets
 
-from . import coercion, confirm, generator, nlu, numerals
+from . import behaviour, coercion, confirm, generator, nlu, numerals
 
 RESULTS = pathlib.Path(__file__).resolve().parent / "results_datasets.json"
 
@@ -50,6 +50,192 @@ def _rate(part: int, whole: int) -> float | None:
     return round(part / whole, 4) if whole else None
 
 
+def _score_structuring(legs: list[dict]) -> dict[str, object]:
+    """Does the behavioural layer notice a split once the legs add up?
+
+    Each leg is replayed into a profile in order, and the question is whether the layer
+    escalates on the leg that takes the running total past the wallet's daily cap. A
+    single-utterance test set cannot ask this: every leg is an ordinary transfer and the
+    pattern only exists across the sequence.
+    """
+    from datetime import datetime, timedelta
+
+    threads: dict[str, list[dict]] = {}
+    for leg in legs:
+        threads.setdefault(str(leg["thread_id"]), []).append(leg)
+
+    caught = 0
+    missed_entirely = 0
+    escalated_early = 0
+    by_pattern: dict[str, dict[str, int]] = {}
+    examples: list[dict[str, object]] = []
+    for name, rows in threads.items():
+        rows.sort(key=lambda row: int(row["turn"]))
+        cap = float(rows[0]["daily_cap"])
+        recipe = rows[0].get("recipe", {})
+        pattern = str(recipe.get("pattern", "same_day"))
+        spacing = int(recipe.get("days_between_legs", 0) or 0)
+        tally = by_pattern.setdefault(pattern, {"threads": 0, "caught": 0})
+        tally["threads"] += 1
+        # The payee is already known, with a history of ordinary transfers to them, so
+        # the first-time-payee signal cannot fire and what is left to catch the split is
+        # the cap itself. With an empty history every thread was "caught" on leg one for
+        # a reason that had nothing to do with structuring.
+        now = datetime(2026, 10, 15, 10, 0)
+        payee_name = str(rows[0]["gold_payee"] or "unknown")
+        history = [
+            behaviour.Transfer(
+                payee_name, float(rows[0]["gold_amount"] or 0), now - timedelta(days=day)
+            )
+            for day in (30, 23, 16, 9)
+        ]
+        monthly = float(recipe.get("monthly_cap") or 0) or cap * 2
+        profile = behaviour.Profile(
+            balance=cap * 20,
+            daily_cap=cap,
+            monthly_cap=monthly,
+            history=history,
+            now=now,
+        )
+        crossed_at = None
+        first_escalation = None
+        running = 0.0
+        for index, row in enumerate(rows, start=1):
+            amount = float(row["gold_amount"] or 0)
+            payee = str(row["gold_payee"] or "unknown")
+            # A split across days is replayed across days: each leg arrives on its own
+            # date, so the daily total resets exactly as it would in life. Replaying it
+            # as if it all happened at once would make the daily cap catch a pattern
+            # built to avoid it.
+            profile.now = now + timedelta(days=spacing * (index - 1))
+            verdict = behaviour.assess(profile, payee, amount)
+            if verdict.escalated and first_escalation is None:
+                first_escalation = index
+            running += amount
+            if crossed_at is None and running > cap:
+                crossed_at = index
+            profile.record(payee, amount)
+        if first_escalation is not None:
+            tally["caught"] += 1
+        if first_escalation is None:
+            missed_entirely += 1
+            if len(examples) < 20:
+                examples.append(
+                    {
+                        "thread": name,
+                        "legs": len(rows),
+                        "per_leg": rows[0]["gold_amount"],
+                        "cap": cap,
+                        "crossed_on_leg": crossed_at,
+                        "escalated_on_leg": None,
+                    }
+                )
+        elif crossed_at is not None and first_escalation <= crossed_at:
+            caught += 1
+            if first_escalation < crossed_at:
+                escalated_early += 1
+
+    return {
+        "threads": len(threads),
+        "legs": len(legs),
+        "by_pattern": {
+            name: {
+                **entry,
+                "catch_rate": round(entry["caught"] / entry["threads"], 4)
+                if entry["threads"]
+                else None,
+            }
+            for name, entry in sorted(by_pattern.items())
+        },
+        "caught_by_the_leg_that_crossed_the_cap": caught,
+        "catch_rate": round(caught / len(threads), 4) if threads else None,
+        "never_escalated": missed_entirely,
+        "escalated_before_the_cap_was_crossed": escalated_early,
+        "examples_never_escalated": examples,
+        "reading": (
+            "Read by_pattern, not the total. A same-day split crosses the daily cap and "
+            "the daily-cap signal sees it. A split spread over several days never gets "
+            "near the daily cap and goes over the *monthly* one - and the behavioural "
+            "layer has no monthly view, which is the gap this family exists to measure."
+        ),
+    }
+
+
+def _score_threads(turns: dict[str, list[dict]]) -> dict[str, object]:
+    """Replay whole conversations through the session, not one sentence at a time."""
+    from .confirm import Session, State
+
+    completed = 0
+    asked_for_a_stronger_word = 0
+    executed_when_it_should = 0
+    executed_when_it_should_not = 0
+    unfinished = 0
+    examples: list[dict[str, object]] = []
+
+    for name, rows in sorted(turns.items()):
+        rows.sort(key=lambda row: int(row["turn"]))
+        # The account's own contact book, not the shipped demo one. Scoring threads
+        # against seven contacts the generator never used made every one of them fail at
+        # turn one with "that name is not in your contacts" - a defect in this harness
+        # that looked like a defect in the product.
+        session = Session(contacts=CONTACTS)
+        said_yes = bool(rows[-1].get("recipe", {}).get("affirmative"))
+        for row in rows:
+            session.handle(str(row["text"]))
+        completed += 1
+        executed = session.state is State.EXECUTED
+        # A transfer the behavioural layer escalated needs the stronger word, and a plain
+        # "haan" is correctly refused. That is the product working, not a thread failing,
+        # so it is counted on its own rather than as a miss.
+        stepped_up = bool(getattr(session, "stepped_up", False)) and not executed
+        if said_yes and executed:
+            executed_when_it_should += 1
+        elif not said_yes and executed:
+            executed_when_it_should_not += 1
+        elif said_yes and stepped_up:
+            asked_for_a_stronger_word += 1
+        elif said_yes and not executed:
+            unfinished += 1
+            if len(examples) < 20:
+                examples.append(
+                    {
+                        "thread": name,
+                        "turns": [row["text"] for row in rows],
+                        "ended_in": str(session.state),
+                    }
+                )
+
+    return {
+        "threads": completed,
+        "executed_after_a_yes": executed_when_it_should,
+        "executed_after_a_no": executed_when_it_should_not,
+        "a_yes_that_did_not_execute": unfinished,
+        "a_yes_the_layer_asked_to_strengthen": asked_for_a_stronger_word,
+        "completion_rate": round(executed_when_it_should / completed, 4) if completed else None,
+        "handled_correctly_rate": (
+            round(
+                (
+                    executed_when_it_should
+                    + asked_for_a_stronger_word
+                    + (completed - executed_when_it_should - asked_for_a_stronger_word - unfinished)
+                )
+                / completed,
+                4,
+            )
+            if completed
+            else None
+        ),
+        "examples_of_a_yes_that_did_not_execute": examples,
+        "reading": (
+            "executed_after_a_no is the number that has to be zero: it would mean a "
+            "refusal was read as consent. A yes the layer asked to strengthen is the "
+            "step-up working, not a failure. A yes that does not execute and was not "
+            "stepped up is the real miss, and the three are counted apart because they "
+            "are three different things."
+        ),
+    }
+
+
 def score(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
     started = time.perf_counter()
 
@@ -62,6 +248,11 @@ def score(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
     by_family: dict[str, dict[str, int]] = {}
     benign = {"cases": 0, "blocked": 0}
     replies = {"cases": 0, "correct": 0}
+    outside = {"cases": 0, "caught": 0}
+    by_obfuscation: dict[str, dict[str, int]] = {}
+    by_script: dict[str, dict[str, int]] = {}
+    structuring_legs: list[dict[str, object]] = []
+    thread_turns: dict[str, list[dict[str, object]]] = {}
     examples: list[dict[str, object]] = []
     seen = 0
 
@@ -124,12 +315,38 @@ def score(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
             if utterance.beneficiary is None:
                 resolution["asked"] += 1
 
+        # --------------------------------------------------- splits and whole threads
+        if row["family"] == "structuring":
+            structuring_legs.append(row)
+        elif row["family"] == "thread":
+            thread_turns.setdefault(str(row["thread_id"]), []).append(row)
+
         # ------------------------------------------------------------------ coercion
         if row["family"] == "coercion":
             coercion_rows["cases"] += 1
             assessment = coercion.assess(text)
             caught = bool(assessment.families)
             coercion_rows["blocked"] += int(caught)
+
+            # Scam types the product has no vocabulary for at all. Reported separately,
+            # because mixing them into the catch rate would let a product look better by
+            # having fewer kinds of scam in its test set.
+            if row.get("outside_the_vocabulary"):
+                outside["cases"] += 1
+                outside["caught"] += int(caught)
+
+            technique = str(row.get("obfuscation") or "")
+            if technique:
+                bucket = by_obfuscation.setdefault(technique, {"cases": 0, "caught": 0})
+                bucket["cases"] += 1
+                bucket["caught"] += int(caught)
+
+            script = str(row.get("language", ""))
+            if script in {"urdu", "urdu_arabic_codepoints"}:
+                bucket = by_script.setdefault(script, {"cases": 0, "caught": 0})
+                bucket["cases"] += 1
+                bucket["caught"] += int(caught)
+
             for family in row["gold_coercion"]:
                 entry = by_family.setdefault(str(family), {"cases": 0, "caught": 0, "named": 0})
                 entry["cases"] += 1
@@ -149,6 +366,9 @@ def score(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
             read_as = confirm.classify_reply(text)
             want = "affirmative" if affirmative else "negative"
             replies["correct"] += int(read_as == want)
+
+    splits = _score_structuring(structuring_legs)
+    threads = _score_threads(thread_turns)
 
     worst_styles = sorted(
         (
@@ -199,6 +419,15 @@ def score(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
         "coercion": {
             **coercion_rows,
             "catch_rate": _rate(coercion_rows["blocked"], coercion_rows["cases"]),
+            # The headline above includes the scam types the product has no words for,
+            # which drags it down by design. These two say which part is which, because
+            # "0.87 of scam scripts" averages a family it knows with one it has never
+            # heard of and tells you about neither.
+            "catch_rate_within_the_vocabulary": _rate(
+                coercion_rows["blocked"] - outside["caught"],
+                coercion_rows["cases"] - outside["cases"],
+            ),
+            "catch_rate_outside_the_vocabulary": _rate(outside["caught"], outside["cases"]),
             "by_family": {
                 name: {
                     **entry,
@@ -212,6 +441,32 @@ def score(limit: int | None = None, verbose: bool = True) -> dict[str, object]:
             **benign,
             "false_block_rate": _rate(benign["blocked"], benign["cases"]),
         },
+        "scam_types_with_no_vocabulary": {
+            **outside,
+            "catch_rate": _rate(outside["caught"], outside["cases"]),
+            "reading": (
+                "Job offers, QR swaps, SIM swaps and refund-overpayment scripts. The "
+                "product has no words for any of them, so this rate is the blind spot "
+                "measured rather than asserted - and a generator cannot close it, "
+                "because writing the missing words would be writing the answer key."
+            ),
+        },
+        "obfuscated_security_words": {
+            name: {
+                **entry,
+                "catch_rate": _rate(entry["caught"], entry["cases"]),
+            }
+            for name, entry in sorted(by_obfuscation.items())
+        },
+        "urdu_script_variants": {
+            name: {
+                **entry,
+                "catch_rate": _rate(entry["caught"], entry["cases"]),
+            }
+            for name, entry in sorted(by_script.items())
+        },
+        "structuring": splits,
+        "threads": threads,
         "replies": {**replies, "accuracy": _rate(replies["correct"], replies["cases"])},
         "worst_amount_examples": examples,
     }

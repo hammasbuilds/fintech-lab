@@ -81,47 +81,92 @@ NO_AMOUNT_CASES: tuple[str, ...] = (
 ACTION_CASES: tuple[tuple[str, dict | None, str | None], ...] = (
     (
         "Rashid Ali ko paanch hazaar bhej do",
-        {"intent": "send_money", "amount": 5000, "beneficiary": "Rashid Ali", "account_tail": "4417"},
+        {
+            "intent": "send_money",
+            "amount": 5000,
+            "beneficiary": "Rashid Ali",
+            "account_tail": "4417",
+        },
         None,
     ),
     (
         "Imran ko 15 hazaar transfer karo",
-        {"intent": "send_money", "amount": 15000, "beneficiary": "Imran Shah", "account_tail": "3310"},
+        {
+            "intent": "send_money",
+            "amount": 15000,
+            "beneficiary": "Imran Shah",
+            "account_tail": "3310",
+        },
         None,
     ),
     (
         "Ayesha Noor ko dedh hazaar bhejna hai",
-        {"intent": "send_money", "amount": 1500, "beneficiary": "Ayesha Noor", "account_tail": "7725"},
+        {
+            "intent": "send_money",
+            "amount": 1500,
+            "beneficiary": "Ayesha Noor",
+            "account_tail": "7725",
+        },
         None,
     ),
     (
         "Bilal Traders ko sawa lakh bhejo",
-        {"intent": "send_money", "amount": 125000, "beneficiary": "Bilal Traders", "account_tail": "1194"},
+        {
+            "intent": "send_money",
+            "amount": 125000,
+            "beneficiary": "Bilal Traders",
+            "account_tail": "1194",
+        },
         None,
     ),
     (
         "bhejna hai Zubair ko teen hazaar",
-        {"intent": "send_money", "amount": 3000, "beneficiary": "Zubair Khan", "account_tail": "6628"},
+        {
+            "intent": "send_money",
+            "amount": 3000,
+            "beneficiary": "Zubair Khan",
+            "account_tail": "6628",
+        },
         None,
     ),
     (
         "send 2000 to Nasreen",
-        {"intent": "send_money", "amount": 2000, "beneficiary": "Nasreen Akhtar", "account_tail": "2051"},
+        {
+            "intent": "send_money",
+            "amount": 2000,
+            "beneficiary": "Nasreen Akhtar",
+            "account_tail": "2051",
+        },
         None,
     ),
     (
         "5 hazaar nahi nahi, pandrah hazaar Imran ko bhejo",
-        {"intent": "send_money", "amount": 15000, "beneficiary": "Imran Shah", "account_tail": "3310"},
+        {
+            "intent": "send_money",
+            "amount": 15000,
+            "beneficiary": "Imran Shah",
+            "account_tail": "3310",
+        },
         None,
     ),
     (
         "Ayesha ko 2 hazaar, sorry 4 hazaar bhejo",
-        {"intent": "send_money", "amount": 4000, "beneficiary": "Ayesha Noor", "account_tail": "7725"},
+        {
+            "intent": "send_money",
+            "amount": 4000,
+            "beneficiary": "Ayesha Noor",
+            "account_tail": "7725",
+        },
         None,
     ),
     (
         "پانچ ہزار Imran کو بھیج دو",
-        {"intent": "send_money", "amount": 5000, "beneficiary": "Imran Shah", "account_tail": "3310"},
+        {
+            "intent": "send_money",
+            "amount": 5000,
+            "beneficiary": "Imran Shah",
+            "account_tail": "3310",
+        },
         None,
     ),
     ("balance batao", {"intent": "balance"}, None),
@@ -268,10 +313,14 @@ COERCION_CASES: tuple[tuple[str, str, tuple[str, ...], bool], ...] = (
         True,
     ),
     (
+        # Added to the set as a case the words could not see, and no longer one: the
+        # purchase-scam family reads "token amount". It stays in the set with its real
+        # expectation, because deleting a case that started passing is how a test set
+        # quietly stops covering the thing it was written for.
         "property ka token amount aaj dena hoga warna deal nikal jayegi",
-        "allow",
-        (),
-        True,
+        "warn",
+        ("purchase_scam",),
+        False,
     ),
 )
 
@@ -338,30 +387,81 @@ PAIRED_CASES: tuple[tuple[str, str, str, float, str, str, bool], ...] = (
     (
         "ammi's friend",
         "beta main tumhari ammi ki saheli hoon, thori madad chahiye thi",
-        "Zubair Khan", 50000, "allow", "elevated", True,
+        "Zubair Khan",
+        50000,
+        "allow",
+        "elevated",
+        True,
     ),
     (
         "the fixer",
         "main wohi hoon jisne kal tumhara kaam karwaya tha, account number note karo",
-        "Zubair Khan", 40000, "allow", "elevated", True,
+        "Zubair Khan",
+        40000,
+        "allow",
+        "elevated",
+        True,
     ),
     (
         "hospital",
         "mera beta hospital mein hai, tum jitna kar sako bhej do",
-        "Rashida Bibi", 35000, "allow", "elevated", True,
+        "Rashida Bibi",
+        35000,
+        "allow",
+        "elevated",
+        True,
     ),
     (
+        # The words catch this one now; the behavioural layer still escalates it, so both
+        # layers fire and the transfer is stopped twice over. Kept as a paired case to
+        # show that happening rather than deleted for being easy.
         "property token",
         "property ka token amount aaj dena hoga warna deal nikal jayegi",
-        "Ayesha Noor", 45000, "allow", "elevated", True,
+        "Ayesha Noor",
+        45000,
+        "warn",
+        "elevated",
+        False,
     ),
     # Ordinary transfers. An escalation on any of these is a cost, not a catch.
-    ("usual shopkeeper", "Bilal Traders ko teen hazaar bhejo", "Bilal Traders", 3200, "allow", "none", False),
-    ("monthly to mother", "Nasreen ko barah hazaar bhejo", "Nasreen Akhtar", 12000, "allow", "none", False),
+    (
+        "usual shopkeeper",
+        "Bilal Traders ko teen hazaar bhejo",
+        "Bilal Traders",
+        3200,
+        "allow",
+        "none",
+        False,
+    ),
+    (
+        "monthly to mother",
+        "Nasreen ko barah hazaar bhejo",
+        "Nasreen Akhtar",
+        12000,
+        "allow",
+        "none",
+        False,
+    ),
     ("small to brother", "Imran ko hazaar bhejo", "Imran Shah", 1000, "allow", "none", False),
-    ("slightly larger, known payee", "Bilal Traders ko paanch hazaar bhejo", "Bilal Traders", 5000, "allow", "none", False),
+    (
+        "slightly larger, known payee",
+        "Bilal Traders ko paanch hazaar bhejo",
+        "Bilal Traders",
+        5000,
+        "allow",
+        "none",
+        False,
+    ),
     # A legitimate first large transfer. Escalating this is correct behaviour and is
     # counted as a cost rather than claimed as a catch: the system slows down, and the
     # user goes ahead.
-    ("new landlord", "Rashid Ali ko pandrah hazaar bhejo", "Rashid Ali", 15000, "allow", "elevated", False),
+    (
+        "new landlord",
+        "Rashid Ali ko pandrah hazaar bhejo",
+        "Rashid Ali",
+        15000,
+        "allow",
+        "elevated",
+        False,
+    ),
 )

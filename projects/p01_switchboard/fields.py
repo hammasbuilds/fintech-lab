@@ -81,6 +81,17 @@ _FIELDS: tuple[Field, ...] = (
     Field(62, "Reserved, private", "ans", 999, LLLVAR),
     Field(63, "Reserved, private", "ans", 999, LLLVAR),
     Field(70, "Network management information code", "n", 3),
+    # Reconciliation. A switch spends cutover on these and the dictionary had none of
+    # them, so the whole 05xx class was unreachable: the codec refused to pack a message
+    # it had no definitions for.
+    Field(74, "Credits, number", "n", 10),
+    Field(75, "Credits, reversal number", "n", 10),
+    Field(76, "Debits, number", "n", 10),
+    Field(77, "Debits, reversal number", "n", 10),
+    Field(86, "Credits, amount", "n", 16),
+    Field(87, "Credits, reversal amount", "n", 16),
+    Field(88, "Debits, amount", "n", 16),
+    Field(89, "Debits, reversal amount", "n", 16),
     Field(90, "Original data elements", "n", 42),
     Field(95, "Replacement amounts", "an", 42),
     Field(100, "Receiving institution identification code", "n", 11, LLVAR),

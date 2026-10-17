@@ -42,6 +42,7 @@
 <nav class="tabs" role="tablist">
   <button role="tab" id="t-chat" aria-selected="true" aria-controls="p-chat">Assistant</button>
   <button role="tab" id="t-inspect" aria-selected="false" aria-controls="p-inspect">Inspector</button>
+  <button role="tab" id="t-split" aria-selected="false" aria-controls="p-split">Splits and limits</button>
   <button role="tab" id="t-score" aria-selected="false" aria-controls="p-score">Scorecard</button>
   <button role="tab" id="t-ledger" aria-selected="false" aria-controls="p-ledger">Audit trail</button>
   <button role="tab" id="t-ref" aria-selected="false" aria-controls="p-ref">Reference</button>
@@ -111,6 +112,42 @@
       </div>
     </div>
     <div id="inspect-out"></div>
+  </section>
+
+<!-- --------------------------------------------------------------- split -->
+  <section class="panel" id="p-split" role="tabpanel" aria-labelledby="t-split">
+    <div class="card">
+      <h2>A transfer split into legs, and what notices</h2>
+      <p class="hint">
+        Every leg below is under the daily cap and perfectly legal on its own. The pattern
+        only exists across the sequence, which is why a product tested one message at a time
+        cannot see it. Two shapes behave completely differently:
+      </p>
+      <div class="note"><strong>Same day.</strong> The day&rsquo;s total crosses the daily cap, so the
+        daily-cap signal catches it on the leg that does.</div>
+      <div class="note warn"><strong>Across days.</strong> One leg a day, no day anywhere near the cap,
+        and the month over its limit. Nothing that looks at a single day can see this. Before
+        this layer had a monthly view, 527 splits of this shape in the generated set went
+        entirely unnoticed.</div>
+      <div class="row" style="margin-top:12px">
+        <label class="field">Wallet tier <select id="sp-level"></select></label>
+        <label class="field">Shape
+          <select id="sp-pattern">
+            <option value="same_day">same day</option>
+            <option value="across_days">across days</option>
+          </select>
+        </label>
+        <label class="field">Legs <select id="sp-legs"></select></label>
+        <label class="field">Per leg <input type="number" id="sp-per" min="0" step="500" placeholder="auto"></label>
+        <button class="btn" id="go-split" type="button">Replay the split</button>
+      </div>
+      <div class="note" id="sp-caps" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2>Leg by leg</h2>
+      <div id="sp-out"></div>
+      <div class="note" id="sp-reading" style="margin-top:12px"></div>
+    </div>
   </section>
 
   <!-- --------------------------------------------------------------- score -->
@@ -565,6 +602,91 @@ function renderPaired(pr) {
   ));
 }
 
+/* ---- splits and limits ------------------------------------------------- */
+function renderSplit(data) {
+  const caps = data.caps;
+  const rows = data.legs_detail.map((leg) => [
+    { cls: "num", text: String(leg.leg) },
+    leg.day,
+    { cls: "num", text: leg.amount.toLocaleString() },
+    { cls: "num", text: leg.day_total.toLocaleString() },
+    { cls: "num", text: leg.month_total.toLocaleString() },
+    { node: pill(leg.escalated ? "warn" : "good", leg.escalated ? leg.level : "nothing stands out") },
+    leg.signals.length ? leg.signals.map((signal) => signal.name).join(", ") : "\u2014",
+  ]);
+  mount("#sp-out", el("div", {}, [
+    table(
+      [
+        { label: "leg", num: true },
+        { label: "day" },
+        { label: "amount", num: true },
+        { label: "that day", num: true },
+        { label: "that month", num: true },
+        { label: "verdict" },
+        { label: "signals" },
+      ],
+      rows,
+    ),
+    el("div", { class: "tiles", style: "margin-top:12px" }, [
+      el("div", { class: "tile" }, [
+        el("div", { class: "k", text: "total moved" }),
+        el("div", { class: "v", text: data.total.toLocaleString() }),
+        el("div", { class: "n", text: data.legs + " legs of " + data.per_leg.toLocaleString() }),
+      ]),
+      el("div", { class: "tile" }, [
+        el("div", { class: "k", text: "crossed the daily cap" }),
+        el("div", { class: "v", text: data.crossed_the_daily_cap_on_leg ? "leg " + data.crossed_the_daily_cap_on_leg : "never" }),
+        el("div", { class: "n", text: "cap " + caps.daily.toLocaleString() }),
+      ]),
+      el("div", { class: "tile" }, [
+        el("div", { class: "k", text: "crossed the monthly cap" }),
+        el("div", { class: "v", text: data.crossed_the_monthly_cap_on_leg ? "leg " + data.crossed_the_monthly_cap_on_leg : "never" }),
+        el("div", { class: "n", text: "limit " + caps.monthly.toLocaleString() }),
+      ]),
+      el("div", { class: "tile" }, [
+        el("div", { class: "k", text: "first escalation" }),
+        el("div", { class: "v", text: data.first_escalation ? "leg " + data.first_escalation : "none" }),
+        el("div", { class: "n", text: data.first_escalation ? "the layer asked for the stronger word" : "nothing noticed the pattern" }),
+      ]),
+    ]),
+  ]));
+  mount("#sp-reading", el("p", { style: "margin:0", text: data.reading }));
+}
+
+function paintCaps() {
+  const level = $("#sp-level").value;
+  const caps = (META.wallet_levels || {})[level];
+  if (!caps) return;
+  mount("#sp-caps", el("p", { class: "hint", style: "margin:0" }, [
+    el("strong", { text: caps.label }),
+    el("span", { text: " \u2014 " + caps.daily.toLocaleString() + " a day, " + caps.monthly.toLocaleString()
+      + " a month, " + caps.yearly.toLocaleString() + " a year. Reported figures for the 2016 "
+      + "revision of the State Bank's branchless banking regulations; a bank's own page lists a "
+      + "different monthly number, so treat them as dated rather than as current law." }),
+  ]));
+}
+
+$("#go-split").addEventListener("click", async () => {
+  const button = $("#go-split");
+  button.disabled = true;
+  try {
+    const perLeg = Number($("#sp-per").value || 0);
+    const data = await api("/api/split", {
+      wallet_level: $("#sp-level").value,
+      pattern: $("#sp-pattern").value,
+      legs: Number($("#sp-legs").value),
+      per_leg: perLeg,
+    });
+    renderSplit(data);
+  } catch (error) {
+    mount("#sp-out", el("div", { class: "note bad", text: error.message }));
+    mount("#sp-reading", el("span", {}));
+  } finally {
+    button.disabled = false;
+  }
+});
+$("#sp-level").addEventListener("change", paintCaps);
+
 /* ---- scorecard --------------------------------------------------------- */
 function renderScorecard(data) {
   const n = data.numerals, a = data.actions, c = data.coercion, r = data.replies, p = data.properties;
@@ -653,6 +775,15 @@ function renderReference() {
 (async function boot() {
   try {
     META = await api("/api/meta");
+    for (const [key, caps] of Object.entries(META.wallet_levels || {})) {
+      $("#sp-level").append(el("option", { value: key, text: caps.label }));
+    }
+    $("#sp-level").value = "level_0";
+    for (const legs of [2, 3, 4, 5, 6]) {
+      $("#sp-legs").append(el("option", { value: String(legs), text: legs + " legs" }));
+    }
+    $("#sp-legs").value = "4";
+    paintCaps();
     const chips = $("#chips");
     for (const example of META.examples) {
       const button = el("button", { type: "button", text: example });

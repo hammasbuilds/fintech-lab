@@ -33,6 +33,7 @@ from . import (
     fairness,
     loanbook,
     sweep,
+    timeline,
 )
 
 STATIC = Path(__file__).with_name("static")
@@ -244,6 +245,69 @@ def run_sweep(request: Request) -> Response:
                     "known outcome"
                 )
             },
+        }
+    )
+
+
+#: How many borrowers the over-time panel uses by default. The whole cohort is 50,000 and
+#: four passes over it with a sweep in each takes most of a minute, which is too long for
+#: a click. The panel says which size it used, and the committed at-scale run in
+#: results_datasets.json is the one measured over everybody.
+TIMELINE_DEFAULT = 12_000
+TIMELINE_MAX = 50_000
+
+#: Characteristics worth a stability figure of their own. A score is a coarse number and
+#: hides a shift that is plain in its inputs.
+TIMELINE_FIELDS = (
+    "monthly_income",
+    "wallet_months",
+    "other_app_outstanding",
+    "avg_balance",
+    "txn_velocity",
+    "age",
+)
+
+
+@lru_cache(maxsize=16)
+def _dated_cohort(size: int) -> tuple:
+    return tuple(cohort.generate()[:size])
+
+
+@app.route("POST", "/api/timeline")
+def over_time(request: Request) -> Response:
+    """Vintages, stability, out-of-time and the approvals-only view.
+
+    All four need a cohort with dates, which is what the origination window added. They
+    are served together because they answer one question - what happens to this policy
+    as the book ages and the applicants change - and reading any one of them alone is
+    how a drifting population gets called stable.
+    """
+    payload = request.json()
+    policy = _compile(str(payload.get("source", "")))
+    try:
+        size = int(payload.get("size", TIMELINE_DEFAULT))
+    except (TypeError, ValueError):
+        raise BadRequest("size must be a whole number of borrowers") from None
+    if not 2_000 <= size <= TIMELINE_MAX:
+        raise BadRequest(f"size must be between 2,000 and {TIMELINE_MAX:,} borrowers")
+
+    people = list(_dated_cohort(size))
+    return Response.json(
+        {
+            "ok": True,
+            "borrowers": len(people),
+            "window_months": cohort.WINDOW_MONTHS,
+            "split_month": timeline.SPLIT_MONTH,
+            "vintages": timeline.vintage_curves(policy, people),
+            "stability": timeline.psi(policy, people),
+            "characteristics": timeline.characteristic_psi(people, TIMELINE_FIELDS),
+            "out_of_time": timeline.out_of_time(policy, people),
+            "approvals_only": timeline.approvals_only_view(policy, people),
+            "note": (
+                f"Measured on {len(people):,} of the cohort's {len(cohort.generate()):,} "
+                f"borrowers so the page answers in a few seconds. The committed at-scale "
+                f"run uses all of them."
+            ),
         }
     )
 

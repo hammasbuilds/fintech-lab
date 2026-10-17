@@ -258,6 +258,19 @@ def serve(app: App, host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTPServ
         def do_POST(self) -> None:  # noqa: N802 - name fixed by BaseHTTPRequestHandler
             self._dispatch("POST")
 
+        def handle_one_request(self) -> None:
+            """Serve one request, and treat a client hanging up as ordinary.
+
+            A browser closing a keep-alive connection raises ConnectionResetError inside
+            the standard library's handler, which prints a full traceback to stderr. It
+            is not an error - it is what a browser does when a page is closed - and a
+            server that logs a stack trace for it buries the real ones.
+            """
+            try:
+                super().handle_one_request()
+            except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+                self.close_connection = True
+
         def log_message(self, fmt: str, *args: Any) -> None:
             return  # the UI is the output; an access log on stdout only hides it
 

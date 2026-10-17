@@ -1,4 +1,4 @@
-.PHONY: install test lint demo bench bench01 bench02 bench03 bench-models bench04 bench05 bench06 serve01 serve02 serve03 serve04 serve05 serve06 observatory observatory-all models pages fetch datasets data bench-datasets big01 big02 big03 big04 big05 big06 all
+.PHONY: install test lint ui ui-smoke demo bench bench01 bench02 bench03 bench-models bench04 bench05 bench06 serve01 serve02 serve03 serve04 serve05 serve06 observatory observatory-all models pages fetch datasets data bench-datasets big01 big02 big03 big04 big05 big06 all
 
 install:
 	uv sync --extra dev
@@ -12,6 +12,18 @@ lint:
 
 demo:
 	uv run python demo.py
+
+# ------------------------------------------------------------------------- the UI
+# The dashboards are static pages the server hands over untouched, so Python never parses
+# them. `make ui` parses every one and checks that each field a renderer reads is in the
+# reply; `make ui-smoke` opens them in a real browser, clicks through the panels and fails
+# on an empty one or a console error. The second needs Node and Chrome and says so plainly
+# when they are missing, rather than skipping quietly.
+ui:
+	uv run python scripts/check_dashboard_scripts.py
+
+ui-smoke:
+	uv run python scripts/ui_smoke.py
 
 # ---------------------------------------------------------------------- datasets
 # Every project is measured on between 50,000 and a million rows. Two of those datasets
@@ -118,4 +130,4 @@ serve05:
 serve06:
 	uv run python -m projects.p06_model_vs_lexicon.app --port 8106
 
-all: install lint test bench pages demo
+all: install lint test ui bench pages demo

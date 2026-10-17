@@ -26,7 +26,7 @@ REPO = "https://github.com/hammasbuilds/fintech-lab"
 #: The suite size shown on the badge. A hand-written number here would be the first
 #: thing to go stale, so a test asserts it against what pytest actually collected -
 #: see test_the_published_page_quotes_the_real_test_count.
-TESTS = 692
+TESTS = 700
 
 sys.path.insert(0, str(ROOT))
 
@@ -274,6 +274,15 @@ uv run python -m observatory --start-all      # then open http://127.0.0.1:8100<
       on its port rather than merely spawned, reads each one's own counters, and links
       through to every project's dashboard, proof page, dataset page, source and README
       &mdash; so there is one place to open them from instead of a shortcut per project.
+    </p>
+    <p class="hint">
+      The pages are static files the server hands over untouched, so Python never parses
+      them. Three checks cover that: <code class="cmd">make ui</code> parses every script and
+      confirms each field a renderer reads is in the reply,
+      <code class="cmd">make ui-smoke</code> opens all five in headless Chrome and clicks
+      through the panels, and the test suite runs the first two. The browser pass found four
+      defects the Python suite could not &mdash; one of them a figure that had been committed,
+      pushed, and never once appeared on screen.
     </p>
     <p class="hint">
       Or run one on its own: <code class="cmd">make serve01</code>,

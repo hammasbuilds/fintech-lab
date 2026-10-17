@@ -40,6 +40,7 @@
   <button role="tab" id="t-threshold" aria-selected="false" aria-controls="p-threshold">Where to set the cutoff</button>
   <button role="tab" id="t-compare" aria-selected="false" aria-controls="p-compare">Compare versions</button>
   <button role="tab" id="t-applicant" aria-selected="false" aria-controls="p-applicant">One applicant</button>
+  <button role="tab" id="t-time" aria-selected="false" aria-controls="p-time">Over time</button>
   <button role="tab" id="t-cohort" aria-selected="false" aria-controls="p-cohort">The cohort</button>
 </nav>
 
@@ -194,6 +195,80 @@
       </div>
     </div>
     <div id="score-out"></div>
+  </section>
+
+<!-- ---------------------------------------------------------------- time -->
+  <section class="panel" id="p-time" role="tabpanel" aria-labelledby="t-time">
+    <div class="card">
+      <h2>What happens as the book ages and the applicants change</h2>
+      <p class="hint">
+        Four questions that need a cohort with dates, and that every other tab on this page
+        cannot ask. The borrowers arrive over a twenty-four month window and the population
+        drifts while the policy stands still &mdash; which is the situation a scorecard is
+        actually used in.
+      </p>
+      <div class="row">
+        <label class="field">Policy <select id="tl-policy"></select></label>
+        <label class="field">Borrowers
+          <select id="tl-size">
+            <option value="12000">12,000 (a few seconds)</option>
+            <option value="25000">25,000</option>
+            <option value="50000">50,000 (the whole cohort)</option>
+          </select>
+        </label>
+        <button class="btn" id="go-time" type="button">Measure</button>
+      </div>
+      <div class="note" id="tl-note" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Vintage curves &mdash; default rate by months on book</h2>
+      <p class="hint">
+        One line per origination quarter. Read <em>down</em> a column, never across a row: the
+        youngest vintage has had the least time to go bad, so its headline rate is lower for a
+        reason that has nothing to do with the policy. Four of the eight quarters are drawn;
+        the table has all of them.
+      </p>
+      <div class="legend" id="tl-vintage-legend"></div>
+      <div id="tl-vintages"></div>
+      <details style="margin-top:12px"><summary>Table view, all quarters</summary><div id="tl-vintage-table"></div></details>
+      <div class="note" id="tl-vintage-reading" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Population stability &mdash; the score, and then its inputs</h2>
+      <p class="hint">
+        PSI compares the early window with the later one. Under 0.10 is conventionally
+        &ldquo;stable&rdquo;, 0.10&ndash;0.25 worth looking at, over 0.25 a population that has
+        moved. The conventional reading is a convention, not a theorem, and it is quoted as one.
+      </p>
+      <div class="tiles" id="tl-psi-tiles"></div>
+      <div id="tl-psi-table" style="margin-top:12px"></div>
+      <div class="note warn" id="tl-psi-reading" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Out of time &mdash; what the cutoff promised, and what it earned</h2>
+      <p class="hint">
+        The cutoff is chosen on the early months and then applied to the later ones. The two
+        windows hold different numbers of applicants, so the totals are not comparable and the
+        per-loan figures are.
+      </p>
+      <div id="tl-oot"></div>
+      <div class="note" id="tl-oot-reading" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Only the approved have an outcome</h2>
+      <p class="hint">
+        A declined applicant never borrows, so never repays or defaults. This cohort is
+        generated and therefore knows what they would have done; a real book does not, and the
+        gap between these two numbers is the size of the bias that reject inference argues
+        about.
+      </p>
+      <div class="tiles" id="tl-censor-tiles"></div>
+      <div class="note" id="tl-censor-reading" style="margin-top:12px"></div>
+    </div>
   </section>
 
   <!-- -------------------------------------------------------------- cohort -->
@@ -860,7 +935,7 @@ async function renderCohort() {
    One y-axis, always. Two measures of different scale get two charts; two
    measures in the same units share one, which is what the rates chart does. */
 function lineChart(series, options) {
-  const opts = Object.assign({ height: 220, format: (v) => String(v), yMax: null, marks: [] }, options || {});
+  const opts = Object.assign({ height: 220, format: (v) => String(v), yMax: null, marks: [], xLabel: "cutoff" }, options || {});
   const width = 720, height = opts.height;
   const pad = { top: 18, right: 58, bottom: 30, left: 58 };
   const xs = series[0].points.map((p) => p.x);
@@ -941,7 +1016,7 @@ function lineChart(series, options) {
     crosshair.setAttribute("x1", px(xs[nearest]));
     crosshair.setAttribute("x2", px(xs[nearest]));
     crosshair.setAttribute("opacity", 1);
-    let html = "<strong>cutoff " + xs[nearest] + "</strong>";
+    let html = "<strong>" + opts.xLabel + " " + xs[nearest] + "</strong>";
     series.forEach((s, i) => {
       const point = s.points[nearest];
       dots[i].setAttribute("cx", px(point.x));
@@ -959,6 +1034,184 @@ function lineChart(series, options) {
   });
   return svg;
 }
+
+/* ---- over time --------------------------------------------------------- */
+const PSI_BANDS = [[0.10, "good", "stable"], [0.25, "warn", "worth looking at"], [Infinity, "bad", "the population has moved"]];
+
+function psiBand(value) {
+  for (const [limit, level, label] of PSI_BANDS) if (value < limit) return { level, label };
+  return { level: "bad", label: "the population has moved" };
+}
+
+function renderTimeline(data) {
+  mount("#tl-note", el("p", { class: "hint", style: "margin:0", text: data.note }));
+
+  /* vintages ---------------------------------------------------------- */
+  const curves = data.vintages.curves || [];
+  const colours = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)"];
+  const chosen = curves.length >= 4
+    ? [curves[0], curves[Math.floor(curves.length / 3)], curves[Math.floor((2 * curves.length) / 3)], curves[curves.length - 1]]
+    : curves;
+  const series = chosen.map((curve, index) => ({
+    name: "months " + curve.months,
+    color: colours[index % colours.length],
+    points: (curve.points || []).map((point) => ({
+      x: point.months_on_book,
+      y: point.rate === null ? 0 : point.rate,
+      note: point.loans + " loans",
+    })),
+  })).filter((item) => item.points.length);
+
+  const legend = $("#tl-vintage-legend");
+  legend.innerHTML = "";
+  for (const item of series) {
+    legend.append(el("span", { class: "item" }, [
+      el("span", { class: "swatch", style: "background:" + item.color }),
+      el("span", { text: item.name }),
+    ]));
+  }
+  if (series.length) {
+    mount("#tl-vintages", lineChart(series, {
+      height: 240,
+      format: (v) => (100 * v).toFixed(1) + "%",
+      xLabel: "months on book",
+    }));
+  } else {
+    mount("#tl-vintages", el("div", { class: "note", text: "No approved loans to follow." }));
+  }
+
+  const ages = [...new Set(curves.flatMap((c) => (c.points || []).map((p) => p.months_on_book)))].sort((a, b) => a - b);
+  const headers = [{ label: "origination" }, ...ages.map((age) => ({ label: "m" + age, num: true }))];
+  const rows = curves.map((curve) => {
+    const byAge = new Map((curve.points || []).map((p) => [p.months_on_book, p]));
+    return ["months " + curve.months, ...ages.map((age) => {
+      const point = byAge.get(age);
+      return { cls: "num", text: point ? (100 * point.rate).toFixed(2) + "%" : "\u2014" };
+    })];
+  });
+  mount("#tl-vintage-table", table(headers, rows));
+  mount("#tl-vintage-reading", el("p", { class: "hint", style: "margin:0", text: data.vintages.reading || "" }));
+
+  /* stability --------------------------------------------------------- */
+  const tiles = $("#tl-psi-tiles");
+  tiles.innerHTML = "";
+  const score = data.stability;
+  if (score.withheld) {
+    tiles.append(el("div", { class: "note warn", text: score.why }));
+  } else {
+    const band = psiBand(score.psi);
+    tiles.append(el("div", { class: "tile" }, [
+      el("div", { class: "k", text: "PSI on the score" }),
+      el("div", { class: "v", text: score.psi.toFixed(4) }),
+      el("div", { class: "n", text: band.label }),
+    ]));
+  }
+  const characteristics = Object.entries(data.characteristics || {})
+    .filter(([, value]) => !value.withheld)
+    .sort((a, b) => b[1].psi - a[1].psi);
+  if (characteristics.length) {
+    const worst = characteristics[0];
+    tiles.append(el("div", { class: "tile" }, [
+      el("div", { class: "k", text: "worst single input" }),
+      el("div", { class: "v", text: worst[1].psi.toFixed(4) }),
+      el("div", { class: "n", text: worst[0] }),
+    ]));
+    const ratio = score.withheld || score.psi === 0 ? null : worst[1].psi / score.psi;
+    tiles.append(el("div", { class: "tile" }, [
+      el("div", { class: "k", text: "input against score" }),
+      el("div", { class: "v", text: ratio === null ? "\u2014" : ratio.toFixed(1) + "x" }),
+      el("div", { class: "n", text: "how much further the input moved" }),
+    ]));
+  }
+  mount("#tl-psi-table", table(
+    [{ label: "what" }, { label: "PSI", num: true }, { label: "reading" }],
+    [
+      ...(score.withheld ? [] : [[{ text: "the score itself" }, { cls: "num", text: score.psi.toFixed(4) }, { node: pill(psiBand(score.psi).level, psiBand(score.psi).label) }]]),
+      ...characteristics.map(([name, value]) => [
+        { text: name },
+        { cls: "num", text: value.psi.toFixed(4) },
+        { node: pill(psiBand(value.psi).level, psiBand(value.psi).label) },
+      ]),
+    ],
+  ));
+  const worstPsi = characteristics.length ? characteristics[0][1].psi : 0;
+  mount("#tl-psi-reading", el("p", {
+    style: "margin:0",
+    text: score.withheld
+      ? "The score could not be binned on this sample."
+      : "A scorecard turns several fields into one coarse number, so a shift that is plain in "
+        + "an input can be nearly invisible in the score: " + worstPsi.toFixed(4) + " against "
+        + score.psi.toFixed(4) + " here. Reporting only the score's stability is how a drifting "
+        + "population gets called stable.",
+  }));
+
+  /* out of time ------------------------------------------------------- */
+  const oot = data.out_of_time;
+  if (oot.withheld) {
+    mount("#tl-oot", el("div", { class: "note warn", text: oot.why }));
+  } else {
+    const rowsOot = [
+      ["cutoff chosen on months 0\u2013" + (data.split_month - 1), { cls: "num", text: String(oot.cutoff_chosen_on_the_early_window) }, ""],
+      ["approvals", { cls: "num", text: oot.promised_in_sample.approvals.toLocaleString() }, { cls: "num", text: oot.delivered_out_of_time.approvals.toLocaleString() }],
+      ["approval rate", { cls: "num", text: (100 * oot.promised_in_sample.approval_rate).toFixed(1) + "%" }, { cls: "num", text: (100 * oot.delivered_out_of_time.approval_rate).toFixed(1) + "%" }],
+      ["bad rate among approvals", { cls: "num", text: (100 * oot.promised_in_sample.bad_rate).toFixed(2) + "%" }, { cls: "num", text: (100 * oot.delivered_out_of_time.bad_rate).toFixed(2) + "%" }],
+      ["net per loan", { cls: "num", text: oot.net_per_loan_promised.toFixed(2) }, { cls: "num", text: oot.net_per_loan_delivered.toFixed(2) }],
+    ];
+    mount("#tl-oot", el("div", {}, [
+      table([{ label: "" }, { label: "promised, in sample", num: true }, { label: "delivered, out of time", num: true }], rowsOot),
+      el("div", { class: "tiles", style: "margin-top:12px" }, [
+        el("div", { class: "tile" }, [
+          el("div", { class: "k", text: "optimism per loan" }),
+          el("div", { class: "v", text: oot.optimism_per_loan.toFixed(2) }),
+          el("div", { class: "n", text: oot.optimism_per_loan > 0 ? "the in-sample optimum overstated it" : "the later book did better" }),
+        ]),
+        el("div", { class: "tile" }, [
+          el("div", { class: "k", text: "best cutoff for the later window" }),
+          el("div", { class: "v", text: String(oot.best_for_the_late_window.threshold) }),
+          el("div", { class: "n", text: "chosen with hindsight" }),
+        ]),
+      ]),
+    ]));
+  }
+  mount("#tl-oot-reading", el("p", { style: "margin:0", text: oot.reading || "" }));
+
+  /* censoring --------------------------------------------------------- */
+  const censor = data.approvals_only;
+  const censorTiles = $("#tl-censor-tiles");
+  censorTiles.innerHTML = "";
+  for (const [label, value, note] of [
+    ["bad rate, approvals only", (100 * censor.approved_bad_rate).toFixed(2) + "%", "what a real book would see"],
+    ["bad rate, whole population", (100 * censor.population_bad_rate).toFixed(2) + "%", "what this generated cohort knows"],
+    ["no observable outcome", (100 * censor.share_of_the_population_with_no_observable_outcome).toFixed(1) + "%", "declined, so never borrowed"],
+    ["declined who would have repaid", censor.declined_who_would_have_repaid.toLocaleString(), "the cost of the policy"],
+  ]) {
+    censorTiles.append(el("div", { class: "tile" }, [
+      el("div", { class: "k", text: label }),
+      el("div", { class: "v", text: value }),
+      el("div", { class: "n", text: note }),
+    ]));
+  }
+  mount("#tl-censor-reading", el("p", { style: "margin:0", text: censor.reading || "" }));
+}
+
+$("#go-time").addEventListener("click", async () => {
+  const button = $("#go-time");
+  const chosen = META.policies.find((policy) => policy.key === $("#tl-policy").value);
+  if (!chosen) return;
+  button.disabled = true;
+  const previous = button.textContent;
+  button.textContent = "Measuring\u2026";
+  mount("#tl-note", el("p", { class: "hint", style: "margin:0", text: "Four passes over the cohort, one of them a sweep. A few seconds." }));
+  try {
+    const data = await api("/api/timeline", { source: chosen.source, size: Number($("#tl-size").value) });
+    renderTimeline(data);
+  } catch (error) {
+    mount("#tl-note", el("div", { class: "note bad", text: error.message }));
+  } finally {
+    button.disabled = false;
+    button.textContent = previous;
+  }
+});
 
 /* ---- threshold sweep --------------------------------------------------- */
 let COHORT_TOKEN = null;
@@ -1101,7 +1354,7 @@ $("#use-bundled").addEventListener("click", () => {
     META = await api("/api/meta");
     if (META.results) renderOverview(META.results);
 
-    for (const id of ["#policy-pick", "#cmp-base", "#cmp-cand", "#score-policy", "#sw-policy"]) {
+    for (const id of ["#policy-pick", "#cmp-base", "#cmp-cand", "#score-policy", "#sw-policy", "#tl-policy"]) {
       const select = $(id);
       for (const policy of META.policies) select.append(el("option", { value: policy.key, text: policy.key }));
     }
@@ -1110,6 +1363,7 @@ $("#use-bundled").addEventListener("click", () => {
     $("#policy-pick").value = "nano_v2";
     $("#score-policy").value = "nano_v2";
     $("#sw-policy").value = "nano_v2";
+    $("#tl-policy").value = "nano_v4_compliant";
 
     const load = () => {
       const chosen = META.policies.find((p) => p.key === $("#policy-pick").value);

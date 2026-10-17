@@ -85,6 +85,11 @@ class Project:
         return f"{GITHUB}/blob/main/projects/{self.folder}/README.md"
 
     @property
+    def gaps_url(self) -> str:
+        """The gap analysis, which is one document for all six rather than one each."""
+        return f"{GITHUB}/blob/main/GAPS.md"
+
+    @property
     def source_url(self) -> str:
         return f"{GITHUB}/tree/main/projects/{self.folder}"
 
@@ -109,6 +114,7 @@ class Project:
             {"label": "Datasets", "href": self.base_url + "/datasets", "kind": "local"},
             {"label": "Source", "href": self.source_url, "kind": "external"},
             {"label": "README", "href": self.readme_url, "kind": "external"},
+            {"label": "Gap analysis", "href": self.gaps_url, "kind": "external"},
             {"label": "Published page", "href": PAGES, "kind": "external"},
         ]
 

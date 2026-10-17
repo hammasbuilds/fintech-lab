@@ -132,12 +132,19 @@
         <label class="field">Currency
           <select id="currency"></select>
         </label>
+        <label class="field" style="min-width:250px">Flow
+          <select id="flow-kind">
+            <option value="valid">a scenario that is valid by construction</option>
+            <option value="invalid">a flow built to be wrong</option>
+          </select>
+        </label>
         <label class="field">Terminal
           <input type="text" id="terminal" value="ATM00417" size="10" spellcheck="false">
         </label>
         <button class="btn" id="go-build" type="button">Build</button>
       </div>
       <p class="hint" id="scenario-desc"></p>
+      <p class="hint" id="amount-reading"></p>
     </div>
     <div id="build-out"></div>
   </section>
@@ -573,6 +580,65 @@ $("#clear-decode").addEventListener("click", () => {
   $("#decode-out").innerHTML = "";
 });
 
+/* ---- which scenarios the picker offers --------------------------------- */
+function fillScenarioPicker() {
+  const invalid = $("#flow-kind").value === "invalid";
+  const picker = $("#scenario");
+  picker.innerHTML = "";
+  const options = invalid
+    ? (META.known_invalid || []).map((key) => ({ key, title: key.replace(/_/g, " "),
+        description: "Built to be caught. Every finding on this one is the invariant layer "
+          + "doing its job." }))
+    : META.scenarios;
+  for (const scenario of options) {
+    picker.append(el("option", { value: scenario.key, text: scenario.title || scenario.key }));
+  }
+  SCENARIO_OPTIONS = options;
+  describeScenario();
+}
+
+let SCENARIO_OPTIONS = [];
+
+function describeScenario() {
+  const chosen = SCENARIO_OPTIONS.find((option) => option.key === $("#scenario").value);
+  $("#scenario-desc").textContent = chosen ? chosen.description || "" : "";
+}
+
+/* ---- what the amount means in this currency ---------------------------- */
+let CURRENCIES = {};
+
+function formatMinorUnits(raw, code) {
+  const entry = CURRENCIES[code];
+  if (!entry) return String(raw);
+  const digits = String(raw).replace(/[^0-9]/g, "") || "0";
+  const value = Number(digits);
+  if (entry.exponent === 0) return value.toLocaleString() + " " + entry.alpha;
+  const scale = Math.pow(10, entry.exponent);
+  const major = Math.floor(value / scale);
+  const minor = String(value % scale).padStart(entry.exponent, "0");
+  return major.toLocaleString() + "." + minor + " " + entry.alpha;
+}
+
+function paintAmountReading() {
+  const code = $("#currency").value;
+  const entry = CURRENCIES[code];
+  if (!entry) return;
+  const raw = $("#amount").value || "0";
+  const others = ["586", "392", "414"].filter((other) => other !== code && CURRENCIES[other]);
+  const alternatives = others.map((other) => formatMinorUnits(raw, other)).join(", ");
+  // This page has no mount() helper - p02 and p03 do, and reaching for one here is how
+  // a panel ends up throwing ReferenceError in a browser while every Python test passes.
+  const host = $("#amount-reading");
+  host.innerHTML = "";
+  host.append(el("span", { text: "DE 4 holds "
+    + Number(String(raw).replace(/[^0-9]/g, "") || 0).toLocaleString()
+    + " minor units, which in " + entry.alpha + " is " }));
+  host.append(el("strong", { text: formatMinorUnits(raw, code) }));
+  host.append(el("span", { text: " \u2014 the same digits would be " + alternatives
+    + " elsewhere. The exponent comes from ISO 4217, and it is the reason a terminal that "
+    + "divides by 100 is right in rupees, wrong by a hundred in yen and by ten in dinars." }));
+}
+
 /* ---- build ------------------------------------------------------------- */
 let LAST_FLOW = null;
 
@@ -614,6 +680,7 @@ $("#go-build").addEventListener("click", async () => {
       pan: $("#pan").value,
       amount: $("#amount").value,
       currency: $("#currency").value,
+      known_invalid: $("#flow-kind").value === "invalid",
       terminal: $("#terminal").value,
     });
     LAST_FLOW = data;
@@ -707,20 +774,20 @@ $("#go-validate").addEventListener("click", async () => {
     renderRules();
     $("#fuzz-note").textContent = META.results ? META.results.fuzz.note : "";
 
-    const scenario = $("#scenario");
-    for (const option of META.scenarios) {
-      scenario.append(el("option", { value: option.key, text: option.title }));
-    }
-    const describeScenario = () => {
-      const chosen = META.scenarios.find((s) => s.key === scenario.value);
-      $("#scenario-desc").textContent = chosen ? chosen.description : "";
-    };
-    scenario.addEventListener("change", describeScenario);
-    describeScenario();
+    $("#scenario").addEventListener("change", describeScenario);
+    $("#flow-kind").addEventListener("change", fillScenarioPicker);
+    fillScenarioPicker();
 
     const currency = $("#currency");
-    for (const [code, alpha] of Object.entries(META.currencies)) {
-      currency.append(el("option", { value: code, text: alpha + " (" + code + ")", selected: code === "586" ? "selected" : null }));
+    CURRENCIES = META.currencies;
+    $("#currency").addEventListener("change", paintAmountReading);
+    $("#amount").addEventListener("input", paintAmountReading);
+    for (const [code, entry] of Object.entries(META.currencies)) {
+      currency.append(el("option", {
+        value: code,
+        text: entry.alpha + " (" + code + ", " + entry.exponent + " decimals)",
+        selected: code === "586" ? "selected" : null,
+      }));
     }
 
     const samples = $("#samples");

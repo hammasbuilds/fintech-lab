@@ -82,6 +82,10 @@ class Status:
             "detail": self.detail,
             "links": self.project.links(),
             "headline": headline_for(self.project),
+            # The cards are built from this payload, not from /api/meta - which is where
+            # the dataset sizes were added first, so the line never appeared. A browser
+            # pass over the panel is what noticed; nothing in Python could.
+            "datasets": self.project.datasets(),
             "log": str(self.project.log_path),
         }
 

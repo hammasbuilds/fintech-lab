@@ -388,6 +388,35 @@ One command runs all three and prints what they did. `uv run python demo.py`
 ```
 <!-- io:03:end -->
 
+## The dashboards, and how they are checked
+
+Each project serves a single-page dashboard, an input/output proof at `/io`, a dataset page
+at `/datasets` and its own request counters. What the gap analysis added, the pages show:
+
+| Where | What it does |
+| --- | --- |
+| **01**, Build a flow | A currency picker that carries the **ISO 4217 exponent**, and prints what the same DE 4 digits mean in rupees, yen and dinars. Also a *flow built to be wrong* option, so the invariants can be watched catching the duplicate-trace flow rather than taken on trust. |
+| **02**, Over time | Vintage curves by months on book, PSI on the score **and on each input**, out-of-time validation that prints what a cutoff promised against what it earned, and the approvals-only view that shows how much of the population a real book cannot see. |
+| **03**, Splits and limits | A wallet tier with its daily and monthly caps, and a transfer split into legs replayed either on one day or across several. The second shape is the one a daily cap cannot see. |
+| **05**, the page itself | The fourteen policy requirements this language cannot express, each run through the compiler **when the page is requested**, with the compiler's own error next to it. |
+| The Observatory | Every project's dataset sizes, read from the manifest, and a link to the gap analysis. |
+
+Three things check them, because a static page the server hands over untouched is a page
+Python never parses:
+
+```
+make ui         # every page's script parses, and every field a renderer reads is in the reply
+make ui-smoke   # opens all five in headless Chrome, clicks through the panels, fails on an
+                # empty one or a console error. Needs Node and Chrome, and says so when they
+                # are missing rather than skipping quietly.
+make test       # 700 tests, including the parse and contract checks above
+```
+
+The browser pass earns its keep. It found four real defects the Python suite could not see,
+including one line that had been committed, pushed and dead on arrival: the control panel's
+dataset figure was written against `/api/meta` while the cards are built from `/api/status`.
+Both endpoints were fine, every test passed, and the line had never once appeared on screen.
+
 ## What these products do not do
 
 [**GAPS.md**](GAPS.md) is the gap analysis: for each project, what the industry requires,

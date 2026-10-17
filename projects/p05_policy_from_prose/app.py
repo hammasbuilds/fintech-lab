@@ -14,7 +14,7 @@ from shared.modelpage import Column, Spec, Table, attach
 from shared.theme import attach_theme
 from shared.webkit import App, attach_metrics, run
 
-from . import bank
+from . import bank, inexpressible
 from .benchmark import RESULTS
 from .benchmark import run as measure
 
@@ -32,6 +32,80 @@ def _data() -> dict:
         except json.JSONDecodeError:
             pass
     return measure(live=False)
+
+
+#: A minimal policy with one line left to fill in. Everything else in it is valid, so a
+#: refusal is about the line under test and nothing else.
+PROBE = """policy "Probe"
+version 1
+currency PKR
+
+decline if age < 18 because "below the legal age"
+{line}
+
+score +50 if wallet_months >= 6 because "half a year of wallet history"
+
+approve if score >= 50
+limit min(0.25 * monthly_income, 20000)
+fee 2% of limit
+"""
+
+
+def _coverage_rows() -> list[dict[str, object]]:
+    """Each requirement, run through the real compiler now rather than quoted.
+
+    The error text is the compiler's, produced on this request. A page that quoted a
+    stored message would drift the moment the grammar changed, and the whole point of
+    this table is that it says what the language does today.
+    """
+    from ..p02_policy_bench import cohort, dsl, engine
+
+    applicant = cohort.generate(1)[0].record()
+    rows: list[dict[str, object]] = []
+    for item in inexpressible.REQUIREMENTS:
+        source = PROBE.format(line=item.attempt)
+        try:
+            policy = dsl.compile_policy(source)
+        except dsl.PolicyError as exc:
+            rows.append(
+                {
+                    "requirement": item.asked_for,
+                    "attempt": item.attempt,
+                    "outcome": "refused by the grammar",
+                    "message": str(exc),
+                    "needs": item.needs,
+                    "workaround": item.workaround,
+                    "compiles": False,
+                }
+            )
+            continue
+        try:
+            engine.evaluate(policy, applicant)
+        except Exception as exc:  # noqa: BLE001 - the message is the finding
+            rows.append(
+                {
+                    "requirement": item.asked_for,
+                    "attempt": item.attempt,
+                    "outcome": "compiles, then fails on the first applicant",
+                    "message": f"{type(exc).__name__}: {exc}",
+                    "needs": item.needs,
+                    "workaround": item.workaround,
+                    "compiles": True,
+                }
+            )
+            continue
+        rows.append(
+            {
+                "requirement": item.asked_for,
+                "attempt": item.attempt,
+                "outcome": "expressible today",
+                "message": "",
+                "needs": item.needs,
+                "workaround": item.workaround,
+                "compiles": True,
+            }
+        )
+    return rows
 
 
 def spec() -> Spec:
@@ -104,6 +178,27 @@ def spec() -> Spec:
         for row in data.get("compile_rows", [])
     ]
 
+    coverage = _coverage_rows()
+    refused = sum(1 for row in coverage if not row["compiles"])
+    silent = sum(1 for row in coverage if row["compiles"] and row["outcome"].startswith("compiles"))
+    coverage_tiles = [
+        (
+            "Requirements it cannot express",
+            str(refused + silent),
+            f"of {len(coverage)} taken from real policy documents",
+        ),
+        (
+            "Refused by the grammar",
+            str(refused),
+            "the safe failure: the policy never ships",
+        ),
+        (
+            "Compile, then fail on an applicant",
+            str(silent),
+            "they pass review first",
+        ),
+    ]
+
     return Spec(
         title="05 Policy from prose",
         subtitle="Can a model turn a written credit policy into one that runs the same way?",
@@ -117,7 +212,8 @@ def spec() -> Spec:
                 f"{usage.get('served_from_cache', 0)} from cache",
             ),
             ("Hit the token cap", str(usage.get("hit_the_token_cap", 0)), "truncated answers"),
-        ],
+        ]
+        + coverage_tiles,
         notes=[
             "A compiled policy can be run, so the grader runs it. The score is agreement "
             "with the hand-written reference over all 50,000 borrowers - decision for "
@@ -133,6 +229,24 @@ def spec() -> Spec:
             "the model column readable.",
         ],
         tables=[
+            Table(
+                title="What this language cannot say",
+                note=(
+                    "Requirements taken from how credit policies are actually written, each "
+                    "one put through the compiler when this page was requested. A compile "
+                    "rate of 1.0000 on the generated bank is 100% of what the language can "
+                    "say; this is the other half."
+                ),
+                columns=[
+                    Column("requirement", "What was asked for", "text"),
+                    Column("attempt", "The line somebody would write", "mono"),
+                    Column("outcome", "What happens", "text"),
+                    Column("message", "The compiler's words", "reply"),
+                    Column("needs", "What it would need", "text"),
+                    Column("workaround", "What a team does instead", "text"),
+                ],
+                rows=coverage,
+            ),
             Table(
                 title="Turning prose into a policy that runs",
                 note="Agreement is over the whole cohort. A policy that does not compile "

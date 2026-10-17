@@ -59,7 +59,17 @@ def meta(_request: Request) -> Response:
                 {"de": f.de, "name": f.name, "spec": f.spec, "var": f.var}
                 for f in (F.get(de) for de in F.known())
             ],
-            "currencies": {code: alpha for code, (alpha, _) in narrate.CURRENCIES.items()},
+            # The exponent travels with the code, because it is the part that bites: DE 4
+            # is an amount in the currency's own minor units, and 500,000 is 5,000.00 in
+            # rupees, 500,000 in yen and 500.000 in dinars. The page shows all three.
+            "currencies": {
+                code: {"alpha": alpha, "exponent": exponent}
+                for code, (alpha, exponent) in narrate.CURRENCIES.items()
+            },
+            # Flows that are wrong on purpose. They are kept out of SCENARIOS so the
+            # corpus can treat every finding as a false positive, and offered here so the
+            # invariants can be watched catching something.
+            "known_invalid": sorted(scenarios.KNOWN_INVALID),
             "results": _results(),
         }
     )
@@ -126,7 +136,14 @@ def decode(request: Request) -> Response:
 def build(request: Request) -> Response:
     payload = request.json()
     key = str(payload.get("scenario", ""))
-    if key not in scenarios.BY_KEY:
+    deliberately_invalid = bool(payload.get("known_invalid"))
+    if deliberately_invalid:
+        if key not in scenarios.KNOWN_INVALID:
+            raise BadRequest(
+                f"{key!r} is not one of the known-invalid flows; those are "
+                f"{', '.join(sorted(scenarios.KNOWN_INVALID))}"
+            )
+    elif key not in scenarios.BY_KEY:
         raise BadRequest(f"unknown scenario {key!r}")
     context = scenarios.Context()
     for name in ("pan", "terminal", "currency", "account"):
@@ -141,7 +158,11 @@ def build(request: Request) -> Response:
         if context.amount < 0:
             raise BadRequest("amount must not be negative")
     try:
-        flow = scenarios.build(key, context)
+        flow = (
+            scenarios.build_invalid(key, context)
+            if deliberately_invalid
+            else scenarios.build(key, context)
+        )
     except CodecError as exc:
         raise BadRequest(f"those values do not produce a valid message: {exc}") from None
     findings = lifecycle.check(flow)
@@ -162,6 +183,8 @@ def build(request: Request) -> Response:
                 for step in flow.steps
             ],
             "findings": [f.as_dict() for f in findings],
+            "known_invalid": deliberately_invalid,
+            "expected_to_be_caught": deliberately_invalid,
         }
     )
 

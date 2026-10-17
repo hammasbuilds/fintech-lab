@@ -112,6 +112,7 @@ def test_every_project_offers_the_same_set_of_openers() -> None:
             "Datasets",
             "Source",
             "README",
+            "Gap analysis",
             "Published page",
         ]
         if project.needs_model:

@@ -12,6 +12,7 @@ import json
 import pathlib
 import secrets
 from collections import OrderedDict
+from datetime import datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -60,6 +61,29 @@ def _text(payload: dict[str, Any], key: str = "text") -> str:
 # ------------------------------------------------------------------- endpoints
 
 
+#: Branchless banking tiers and their caps, as reported for the 2016 revision of the
+#: State Bank's regulations - Level 0 at Rs 25,000 a day and Rs 40,000 a month, Level 1 at
+#: Rs 50,000 and Rs 80,000. A bank's own page lists a different monthly figure for Level 0,
+#: so these are shown as *reported and dated* rather than as current law, and the page says
+#: so next to them.
+#:
+#: https://propakistani.pk/2016/07/14/sbp-revises-transactions-limits-for-branchless-banking-accounts/
+WALLET_LEVELS = {
+    "level_0": {
+        "label": "Level 0 (basic, no biometric)",
+        "daily": 25_000,
+        "monthly": 40_000,
+        "yearly": 200_000,
+    },
+    "level_1": {
+        "label": "Level 1 (biometrically verified)",
+        "daily": 50_000,
+        "monthly": 80_000,
+        "yearly": 800_000,
+    },
+}
+
+
 @app.route("GET", "/api/meta")
 def meta(_request: Request) -> Response:
     return Response.json(
@@ -76,12 +100,16 @@ def meta(_request: Request) -> Response:
                 "balance_sweep": f"at least {behaviour.SWEEP_SHARE:.0%} of the balance",
                 "exceeds_balance": "more than is in the account, so it cannot complete",
                 "beyond_daily_cap": "would push the day's total past the account's cap",
+                "beyond_monthly_cap": "would push the month's total past the account's "
+                "limit, which is what a transfer split across several days does without "
+                "ever coming near the daily cap",
                 "rapid_repeat": f"{behaviour.BURST_COUNT} or more transfers within the hour",
             },
             "coercion_families": {
                 family: {"description": description, "phrases": len(phrases)}
                 for family, (description, phrases) in coercion.FAMILIES.items()
             },
+            "wallet_levels": WALLET_LEVELS,
             "affirmative": sorted(confirm.AFFIRMATIVE),
             "negative": sorted(confirm.NEGATIVE),
             "examples": [
@@ -104,8 +132,14 @@ def new_session(request: Request) -> Response:
     language = str(payload.get("language", "en"))
     if language not in {"en", "ur"}:
         raise BadRequest("language must be en or ur")
+    level = str(payload.get("wallet_level", "level_1"))
+    if level not in WALLET_LEVELS:
+        raise BadRequest(f"wallet_level must be one of {', '.join(sorted(WALLET_LEVELS))}")
     token = secrets.token_urlsafe(12)
     session = confirm.Session(language=language)
+    caps = WALLET_LEVELS[level]
+    session.profile.daily_cap = float(caps["daily"])
+    session.profile.monthly_cap = float(caps["monthly"])
     _sessions[token] = session
     while len(_sessions) > MAX_SESSIONS:
         _sessions.popitem(last=False)
@@ -113,6 +147,8 @@ def new_session(request: Request) -> Response:
         {
             "session": token,
             "language": language,
+            "wallet_level": level,
+            "caps": caps,
             "state": "idle",
             "profile": _profile(session),
         }
@@ -133,6 +169,127 @@ def say(request: Request) -> Response:
             "transcript": [turn.as_dict() for turn in session.transcript],
             "ledger": session.ledger.as_dict(),
             "profile": _profile(session),
+        }
+    )
+
+
+@app.route("POST", "/api/split")
+def split(request: Request) -> Response:
+    """Replay a transfer split into several legs, and say what noticed.
+
+    This is the one thing a single-message demo cannot show. Each leg is an ordinary
+    transfer, under the cap and legal on its own; the pattern only exists across the
+    sequence. The two shapes behave completely differently and that is the point:
+
+    ``same_day``     the day's total crosses the daily cap, and the daily-cap signal
+                     sees it on the leg that does.
+    ``across_days``  one leg a day, no day anywhere near the cap, and the month over its
+                     limit. Nothing that looks at a single day can see this, which is why
+                     the monthly signal exists - and why this layer missed 527 of them
+                     before it had one.
+    """
+    payload = request.json()
+    level = str(payload.get("wallet_level", "level_0"))
+    if level not in WALLET_LEVELS:
+        raise BadRequest(f"wallet_level must be one of {', '.join(sorted(WALLET_LEVELS))}")
+    caps = WALLET_LEVELS[level]
+    pattern = str(payload.get("pattern", "same_day"))
+    if pattern not in {"same_day", "across_days"}:
+        raise BadRequest("pattern must be same_day or across_days")
+    try:
+        legs = int(payload.get("legs", 3))
+        per_leg = float(payload.get("per_leg", 0) or 0)
+    except (TypeError, ValueError):
+        raise BadRequest("legs and per_leg must be numbers") from None
+    if not 2 <= legs <= 10:
+        raise BadRequest("legs must be between 2 and 10")
+
+    target = caps["monthly"] if pattern == "across_days" else caps["daily"]
+    if per_leg <= 0:
+        # Just under the per-leg ceiling, so every leg is legal and the total is not.
+        per_leg = min(float(caps["daily"]) - 500, (target * 1.4) / legs)
+    if per_leg >= caps["daily"]:
+        raise BadRequest(
+            f"a leg of {per_leg:,.0f} is over the daily cap of {caps['daily']:,}, so it is "
+            f"not a split - it is one transfer the cap already refuses"
+        )
+
+    payee = str(payload.get("payee", "Rashid Ali")).strip() or "Rashid Ali"
+    spacing = 0 if pattern == "same_day" else int(payload.get("days_between", 2) or 2)
+    start = datetime(2026, 10, 1, 10, 0)
+    profile = behaviour.Profile(
+        balance=float(caps["monthly"]) * 4,
+        daily_cap=float(caps["daily"]),
+        monthly_cap=float(caps["monthly"]),
+        history=[
+            # The payee is already known and paid before, so the first-time-payee signal
+            # cannot do the work. Without this, every split "escalates" on leg one for a
+            # reason that has nothing to do with the split.
+            behaviour.Transfer(payee, per_leg, start - timedelta(days=40 + day))
+            for day in (0, 7, 14)
+        ],
+        now=start,
+    )
+
+    rows: list[dict[str, object]] = []
+    running = 0.0
+    month_total = 0.0
+    first_escalation: int | None = None
+    crossed_daily: int | None = None
+    crossed_monthly: int | None = None
+    for index in range(1, legs + 1):
+        profile.now = start + timedelta(days=spacing * (index - 1))
+        if spacing and index > 1:
+            running = 0.0
+        verdict = behaviour.assess(profile, payee, per_leg)
+        running += per_leg
+        month_total += per_leg
+        if verdict.escalated and first_escalation is None:
+            first_escalation = index
+        if crossed_daily is None and running > caps["daily"]:
+            crossed_daily = index
+        if crossed_monthly is None and month_total > caps["monthly"]:
+            crossed_monthly = index
+        rows.append(
+            {
+                "leg": index,
+                "day": profile.now.strftime("%d %b"),
+                "amount": round(per_leg, 2),
+                "day_total": round(running, 2),
+                "month_total": round(month_total, 2),
+                "level": verdict.level,
+                "escalated": verdict.escalated,
+                "signals": [
+                    {"name": signal.name, "detail": signal.detail} for signal in verdict.signals
+                ],
+            }
+        )
+        profile.record(payee, per_leg)
+
+    return Response.json(
+        {
+            "ok": True,
+            "wallet_level": level,
+            "caps": caps,
+            "pattern": pattern,
+            "payee": payee,
+            "legs": legs,
+            "per_leg": round(per_leg, 2),
+            "total": round(per_leg * legs, 2),
+            "days_between": spacing,
+            "legs_detail": rows,
+            "first_escalation": first_escalation,
+            "crossed_the_daily_cap_on_leg": crossed_daily,
+            "crossed_the_monthly_cap_on_leg": crossed_monthly,
+            "reading": (
+                "Every leg here is under the daily cap and legal on its own. "
+                + (
+                    "The day's total crosses the cap, so the daily signal catches it."
+                    if pattern == "same_day"
+                    else "No day comes near the daily cap - only the month's total breaks a "
+                    "limit, and only a monthly view can see that."
+                )
+            ),
         }
     )
 

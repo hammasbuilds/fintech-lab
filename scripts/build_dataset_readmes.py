@@ -301,6 +301,22 @@ def section_02() -> list[str]:
     return lines
 
 
+def threads_breakdown(data: object) -> str:
+    """The thread outcomes as one sentence, from named figures rather than nested calls."""
+    base = "generated.threads."
+    total = num(dig(data, base + "threads"))
+    on_a_yes = num(dig(data, base + "executed_after_a_yes"))
+    strengthened = num(dig(data, base + "a_yes_the_layer_asked_to_strengthen"))
+    on_a_no = num(dig(data, base + "correctly_stopped_because_the_reply_was_no"))
+    unknown = num(dig(data, base + "correctly_refused_because_the_payee_is_unknown"))
+    wrongly = num(dig(data, base + "executed_after_a_no"))
+    return (
+        f"{total} threads: {on_a_yes} executed on a yes, {strengthened} asked to "
+        f"strengthen it, {on_a_no} stopped on a no, {unknown} refused an unknown payee, "
+        f"and {wrongly} executed when they should not"
+    )
+
+
 def section_03() -> list[str]:
     data = read("p03_guardian")
     lines = dataset_lines(["generated/p03_utterances"])
@@ -404,16 +420,7 @@ def section_03() -> list[str]:
             (
                 "whole conversations handled correctly",
                 num(dig(data, "generated.threads.handled_correctly_rate")),
-                f"{num(dig(data, 'generated.threads.threads'))} threads: "
-                f"{num(dig(data, 'generated.threads.executed_after_a_yes'))} executed on a "
-                f"yes, {num(dig(data, 'generated.threads.a_yes_the_layer_asked_to_strengthen'))} "
-                f"asked to strengthen it, "
-                f"{num(dig(data, 'generated.threads.correctly_stopped_because_the_reply_was_no'))} "
-                f"stopped on a no, "
-                f"{num(dig(data, 'generated.threads.correctly_refused_because_the_payee_is_unknown'))} "
-                f"refused an unknown payee, and "
-                f"{num(dig(data, 'generated.threads.executed_after_a_no'))} executed when they "
-                f"should not",
+                threads_breakdown(data),
             ),
         ],
         ("The dimensions added this round", "Result", "Over"),
